@@ -38,6 +38,7 @@
 #include "../data/deps/MiniAudio/miniaudio.h"
 
 // WINDOWS
+#define NOMINMAX
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 
@@ -77,8 +78,8 @@ Win32MainWindowCallback(HWND WindowHandle, UINT Message,
         {
             RECT Rect = {};
             GetClientRect(WindowHandle, &Rect);
-            SizeData.width  = int32(Rect.right - Rect.left);
-            SizeData.height = int32(Rect.bottom - Rect.top);
+            SizeData.Width  = int32(Rect.right - Rect.left);
+            SizeData.Height = int32(Rect.bottom - Rect.top);
         }break;
             
         case WM_CLOSE:
@@ -254,10 +255,10 @@ WinMain(HINSTANCE hInstance,
 
     if(RegisterClass(&Window))
     {
-        RECT rect = {0, 0, SizeData.width, SizeData.height};
+        RECT rect = {0, 0, SizeData.Width, SizeData.Height};
         AdjustWindowRectEx(&rect, WS_OVERLAPPEDWINDOW, FALSE, WS_EX_CLIENTEDGE);
-        SizeData.width  = rect.right  - rect.left;
-        SizeData.height = rect.bottom - rect.top;
+        SizeData.Width  = rect.right  - rect.left;
+        SizeData.Height = rect.bottom - rect.top;
 
         Win32LoadWGLFunctions(Window, hInstance, &WGLFunctions);
 
@@ -268,8 +269,8 @@ WinMain(HINSTANCE hInstance,
                            WS_OVERLAPPEDWINDOW|WS_VISIBLE|CS_OWNDC,
                            CW_USEDEFAULT,
                            CW_USEDEFAULT,
-                           SizeData.width,
-                           SizeData.height,
+                           SizeData.Width,
+                           SizeData.Height,
                            0,
                            0,
                            hInstance,
@@ -409,13 +410,13 @@ WinMain(HINSTANCE hInstance,
                 ImGui_ImplWin32_NewFrame();
                 ImGui::NewFrame();
 
-                RenderData.AspectRatio = (real32)SizeData.width / (real32)SizeData.height;
+                RenderData.AspectRatio = (real32)SizeData.Width / (real32)SizeData.Height;
                 UpdateGame(&Memory, &RenderData, &State, Time);
 
                 ImGui::Render();
-                glClearColor(RenderData.ClearColor.r, RenderData.ClearColor.g, RenderData.ClearColor.b, RenderData.ClearColor.a);
-                glClearDepth(1.0f);
-                glViewport(0, 0, SizeData.width, SizeData.height);
+                glClearColor(RenderData.ClearColor.R, RenderData.ClearColor.G, RenderData.ClearColor.B, RenderData.ClearColor.A);
+                glClearDepth(0.0f);
+                glViewport(0, 0, SizeData.Width, SizeData.Height);
                 glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
                 CloverRender(&RenderData);
                 ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

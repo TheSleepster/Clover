@@ -73,15 +73,15 @@ DrawTexturedQuad(gl_render_data *RenderData,
         CloverRender(RenderData);
     }
 
-    real32 X      = Position.x;
-    real32 Y      = Position.y;
-    real32 Width  = Size.x;
-    real32 Height = Size.y;
+    real32 X      = Position.X;
+    real32 Y      = Position.Y;
+    real32 Width  = Size.X;
+    real32 Height = Size.Y;
 
-    real32 OffsetX = (real32)AtlasOffset.x;
-    real32 OffsetY = (real32)AtlasOffset.y;
-    real32 SizeX   = (real32)SpriteSize.x;
-    real32 SizeY   = (real32)SpriteSize.y;
+    real32 OffsetX = (real32)AtlasOffset.X;
+    real32 OffsetY = (real32)AtlasOffset.Y;
+    real32 SizeX   = (real32)SpriteSize.X;
+    real32 SizeY   = (real32)SpriteSize.Y;
     // NOTE(Sleepster): We do the UV's backwards on the Y axis here because the image will be filpped otherwise.
 
     // TOP LEFT
@@ -123,10 +123,10 @@ DrawQuad(gl_render_data *RenderData, vec2 Position, vec2 Size, vec4 Color)
         CloverRender(RenderData);
     }
 
-    real32 X      = Position.x;
-    real32 Y      = Position.y;
-    real32 Width  = Size.x;
-    real32 Height = Size.y;
+    real32 X      = Position.X;
+    real32 Y      = Position.Y;
+    real32 Width  = Size.X;
+    real32 Height = Size.Y;
 
     // TOP LEFT
     RenderData->DrawFrame.VertexBufferptr->Position      = {X, Y, 0};
@@ -207,21 +207,21 @@ DrawGameText(gl_render_data *RenderData,
     {
         if(Text.Data[StringIndex] == '\n')    
         {
-            Position.y += RenderData->LoadedFonts[Font].FontHeight * FontScale;
-            Position.x = TextOrigin.x;
+            Position.Y += RenderData->LoadedFonts[Font].FontHeight * FontScale;
+            Position.X = TextOrigin.X;
             continue;
         }
 
         char C = (Text.Data[StringIndex]);
         font_glyph Glyph = RenderData->LoadedFonts[Font].Glyphs[C];
 
-        vec2 WorldPosition = {(Position.x + Glyph.GlyphOffset.x) * FontScale, (Position.y) * FontScale};
-        vec2 RenderScale   = {Glyph.GlyphSize.x * FontScale, (real32)Glyph.GlyphSize.y};
+        vec2 WorldPosition = {(Position.X + Glyph.GlyphOffset.X) * FontScale, (Position.Y) * FontScale};
+        vec2 RenderScale   = {Glyph.GlyphSize.X * FontScale, (real32)Glyph.GlyphSize.Y};
         ivec2 AtlasOffset   = Glyph.GlyphUVs;
         ivec2 GlyphSize     = Glyph.GlyphSize;
 
         DrawTexturedQuad(RenderData, WorldPosition, RenderScale, AtlasOffset, GlyphSize, Color, 1);
-        Position.x += Glyph.GlyphAdvance.x;
+        Position.X += Glyph.GlyphAdvance.X;
     }
 }
 
@@ -243,7 +243,7 @@ DrawImGui(gl_render_data *RenderData, time Time)
 
     ImGui::Text("Clear Color:");
     ImGui::Separator();
-    ImGui::ColorPicker4( "ClearColor", &RenderData->ClearColor.r, ImGuiColorEditFlags_PickerHueWheel);
+    ImGui::ColorPicker4( "ClearColor", &RenderData->ClearColor.R, ImGuiColorEditFlags_PickerHueWheel);
     ImGui::SameLine();
     ImGui::End();
     //RenderData->GameCamera.Position += vec2{0.001f, 0.0} * Time.Delta;
@@ -284,29 +284,29 @@ HandleInput(game_state *State, entity *PlayerIn, time Time)
     PlayerIn->Acceleration = {};
     if(IsGameKeyDown(MOVE_UP, &State->GameInput))
     {
-        PlayerIn->Acceleration.y += 1.0f;
+        PlayerIn->Acceleration.Y += 1.0f;
     }
     else if(IsGameKeyDown(MOVE_DOWN, &State->GameInput))
     {
-        PlayerIn->Acceleration.y -= 1.0f;
+        PlayerIn->Acceleration.Y -= 1.0f;
     }
 
     if(IsGameKeyDown(MOVE_LEFT, &State->GameInput))
     {
-        PlayerIn->Acceleration.x -= 1.0f;
+        PlayerIn->Acceleration.X -= 1.0f;
     }
     else if(IsGameKeyDown(MOVE_RIGHT, &State->GameInput))
     {
-        PlayerIn->Acceleration.x += 1.0f;
+        PlayerIn->Acceleration.X += 1.0f;
     }
 
     v2Normalize(PlayerIn->Acceleration);
     vec2 OldPlayerP = PlayerIn->Position;
     real32 Friction = 0.9f;
 
-    vec2 NextPos = {PlayerIn->Position.x + (PlayerIn->Position.x - OldPlayerP.x) + (PlayerIn->Speed * PlayerIn->Acceleration.x) * Square(Time.Delta),
-                    PlayerIn->Position.y + (PlayerIn->Position.y - OldPlayerP.y) + (PlayerIn->Speed * PlayerIn->Acceleration.y) * Square(Time.Delta)};
-    PlayerIn->Position = v2Lerp(NextPos, OldPlayerP, Time.Delta);
+    vec2 NextPos = {PlayerIn->Position.X + (PlayerIn->Position.X - OldPlayerP.X) + (PlayerIn->Speed * PlayerIn->Acceleration.X) * Square(Time.Delta),
+                    PlayerIn->Position.Y + (PlayerIn->Position.Y - OldPlayerP.Y) + (PlayerIn->Speed * PlayerIn->Acceleration.Y) * Square(Time.Delta)};
+    PlayerIn->Position = v2Lerp(NextPos, Time.Delta, OldPlayerP);
 }
 
 internal void
@@ -360,7 +360,7 @@ FixedUpdate(game_memory *Memory, gl_render_data *RenderData, game_state *State, 
         if((Temp->Flags & IS_VALID) && (Temp->Archetype == PLAYER))
         {
             HandleInput(State, Temp, Time);
-            RenderData->GameCamera.Position = vec2{Temp->Position.x, Temp->Position.y};
+            RenderData->GameCamera.Position = vec2{Temp->Position.X, Temp->Position.Y};
         }
     }
 }
@@ -386,15 +386,15 @@ UpdateGame(game_memory *Memory, gl_render_data *RenderData, game_state *State, t
 
     RenderData->GameCamera.Zoom = 5.3f;
 
-//    mat4 ScaleMatrix                            = mat4MakeScale(vec3{1.0f / RenderData->GameCamera.Zoom, 1.0f / RenderData->GameCamera.Zoom, 1.0f});
-//    mat4 TranslationMatrix                      = mat4MakeTranslation(v2Expand(-RenderData->GameCamera.Position, 0.0f));
-//    RenderData->GameCamera.ViewMatrix           = mat4Multiply(mat4Multiply(TranslationMatrix, ScaleMatrix), RenderData->GameCamera.ViewMatrix);
     RenderData->GameCamera.ViewMatrix            = mat4Identity(1.0f);
-    RenderData->GameCamera.ViewMatrix            = mat4Multiply(RenderData->GameCamera.ViewMatrix, mat4MakeScale(vec3{1.0f / RenderData->GameCamera.Zoom, 1.0f / RenderData->GameCamera.Zoom, 1.0}));
-    RenderData->GameCamera.ViewMatrix            = mat4Multiply(RenderData->GameCamera.ViewMatrix, mat4MakeTranslation(v2Expand(-Player->Position, 0.0f)));
-    RenderData->GameCamera.ViewMatrix            = mat4Inverse(RenderData->GameCamera.ViewMatrix);
+    mat4 ScaleMatrix                             = mat4MakeScale(vec3{1.0f / RenderData->GameCamera.Zoom, 1.0f / RenderData->GameCamera.Zoom, 1.0f});
+    mat4 TranslationMatrix                       = mat4Translate(v2Expand(Player->Position, 0.0f));
 
-    RenderData->GameCamera.ProjectionMatrix      = mat4Ortho((real32)SizeData.width * -0.5f, (real32)SizeData.width * 0.5f, (real32)SizeData.height * 0.5f, (real32)SizeData.height * -0.5f, -1.0f, 1.0f); 
+    RenderData->GameCamera.ViewMatrix            = mat4Multiply(ScaleMatrix, RenderData->GameCamera.ViewMatrix);
+    RenderData->GameCamera.ViewMatrix            = mat4Multiply(TranslationMatrix, RenderData->GameCamera.ViewMatrix);
+    RenderData->GameCamera.ViewMatrix            = mat4Inverse(RenderData->GameCamera.ViewMatrix);
+    
+    RenderData->GameCamera.ProjectionMatrix      = mat4RHGLOrtho((real32)SizeData.Width * -0.5f, (real32)SizeData.Width * 0.5f, (real32)SizeData.Height * -0.5f, (real32)SizeData.Height * 0.5f, -1.0f, 1.0f); 
     RenderData->GameCamera.ProjectionViewMatrix  = mat4Multiply(RenderData->GameCamera.ProjectionMatrix, RenderData->GameCamera.ViewMatrix);
 
     for(uint32 EntityIndex = 0;

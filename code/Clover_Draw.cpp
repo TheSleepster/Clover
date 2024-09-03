@@ -86,7 +86,7 @@ CloverLoadFont(memory_arena *Memory, gl_render_data *RenderData, string Filepath
     Check(Error != FT_Err_Unknown_File_Format, "Failed to load the font file, it is found but not supported\n");
 
     // NOTE(Sleepster): Test, we would normally use FT_Set_Pixel_Sizes(); 
-    Error = FT_Set_Char_Size(Font.FontFace, 0, Font.FontSize, SizeData.width, SizeData.height);
+    Error = FT_Set_Char_Size(Font.FontFace, 0, Font.FontSize, SizeData.Width, SizeData.Height);
     Check(Error == 0, "Issue setting the pixel size of the font\n");
     
     Font.AtlasPadding = 20;
@@ -297,7 +297,7 @@ CloverSetupRenderer(memory_arena *Memory, gl_render_data *RenderData)
         glEnable(GL_DEBUG_OUTPUT);
 
         glEnable(GL_DEPTH_TEST);
-        glDepthFunc(GL_LEQUAL);
+        glDepthFunc(GL_GREATER);
  
         glEnable(GL_BLEND);        // ImGui might use blending for its UI elements
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -364,10 +364,7 @@ CloverSetupRenderer(memory_arena *Memory, gl_render_data *RenderData)
 
     // CAMERAS/MATRICES
     {
-        RenderData->GameCamera.ViewMatrix           = mat4Translate(mat4Identity(1.0f), v2Expand(RenderData->GameCamera.Position, 0.0f));
-        RenderData->GameCamera.ProjectionMatrix     = mat4Ortho(-(real32)SizeData.width, (real32)SizeData.width, (real32)SizeData.height, -(real32)SizeData.height, -1.0f, 1.0f); 
-        RenderData->GameCamera.ProjectionViewMatrix = mat4Multiply(RenderData->GameCamera.ProjectionMatrix, RenderData->GameCamera.ViewMatrix);
-
+        RenderData->GameCamera.ViewMatrix  = mat4Identity(1.0f);
         RenderData->ProjectionViewMatrixID = glGetUniformLocation(RenderData->BasicShader.Shader, "ProjectionViewMatrix");
     }
 
