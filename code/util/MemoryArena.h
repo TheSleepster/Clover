@@ -75,6 +75,7 @@ ArenaDealloc(memory_arena *Arena, void *Data)
 internal inline void 
 ArenaReset(memory_arena *Arena) 
 {
+    memset(Arena->Memory, 0, sizeof(Arena->Capacity));
     Arena->Used = 0;
     Arena->FreeList = 0;
 }

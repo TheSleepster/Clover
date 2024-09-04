@@ -34,6 +34,10 @@
 #include <string.h>
 #include <stdio.h>
 
+// NOTE(Sleepster): Freetype must come first due to the #define internal static inside of the intrinsics header
+#include "../data/deps/Freetype/include/ft2build.h"
+#include FT_FREETYPE_H
+
 #define global_variable static
 #define local_persist   static
 #define internal        static

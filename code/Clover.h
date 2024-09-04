@@ -39,6 +39,8 @@ struct time
     real32 Alpha;
     real32 Current;
     real32 Next;
+    
+    int32 FPSCounter;
 };
 
 enum entity_flags
@@ -72,11 +74,12 @@ struct entity
     sprite_type Sprite;
     uint32      Archetype;
     uint32      Flags;
-
+    
     vec2        Position;
     vec2        Acceleration;
     vec2        Size;
     real32      Speed;
+    real32      Rotation;
 };
 
 struct world
@@ -89,29 +92,50 @@ struct game_state
 {
     KeyCodeID KeyCodeLookup[KEY_COUNT];
     Input GameInput;
-
+    
     world World;
-
+    
     struct
     {   
         ma_engine AudioEngine;
-
+        
         sound_instance Instances[MAX_SOUNDS];
         sound_instance SoundTracks[MAX_TRACKS];
-
+        
         uint32 ActiveInstances;
         uint32 LoadedTracks;
     }SFXData;
 };
 
+#define GAME_ON_AWAKE(name) void name(game_memory *Memory, gl_render_data *RenderData, game_state *State)
+typedef GAME_ON_AWAKE(game_on_awake);
+GAME_ON_AWAKE(GameOnAwakeStub)
+{
+}
 
-internal void DeleteSound(sound_instance *Instance);
-internal void PlayTrackFromDisk(memory_arena *Memory, game_state *State, string Filepath, real32 Volume);
-internal void PlaySound(memory_arena *Memory, game_state *State, string Filepath, real32 Volume);
-internal void HandleLoadedSounds(game_state *State);
-internal void HandleLoadedTracks(game_state *State);
+#define GAME_FIXED_UPDATE(name) void name(game_memory *Memory, gl_render_data *RenderData, game_state *State, time Time)
+typedef GAME_FIXED_UPDATE(game_fixed_update);
+GAME_FIXED_UPDATE(GameFixedUpdateStub)
+{
+}
 
-internal sound_instance* CreateSound(game_state *State);
-internal sound_instance* CreateTrack(game_state *State);
+#define GAME_UPDATE_AND_RENDER(name) void name(game_memory *Memory, gl_render_data *RenderData, game_state *State, time Time, ivec4 SizeData)
+typedef GAME_UPDATE_AND_RENDER(game_update_and_render);
+GAME_UPDATE_AND_RENDER(GameUpdateAndRenderStub)
+{
+}
+
+struct game_functions
+{
+    HMODULE  GameCodeDLL;
+    FILETIME LastWriteTime;
+    
+    game_on_awake          *OnAwake;
+    game_fixed_update      *FixedUpdate;
+    game_update_and_render *UpdateAndRender;
+    
+    bool IsLoaded;
+    bool IsValid;
+};
 
 #endif // _CLOVER_H

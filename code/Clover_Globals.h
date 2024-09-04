@@ -10,7 +10,7 @@
 #include "util/FileIO.h"
 #include "util/CustomStrings.h"
 
-global_variable ivec4 SizeData = {};
+global_variable ivec4 SizeData = {1920, 1080};
 global_variable bool  Running  = 0;
 
 

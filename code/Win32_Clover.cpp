@@ -14,7 +14,6 @@
 
 // GLAD
 #define GLAD_OPENGL_IMPL
-#include "../data/deps/OpenGL/glad/src/glad.c"
 #include "../data/deps/OpenGL/glad/include/glad/glad.h"
 
 // OPENGL HEADERS
@@ -52,13 +51,12 @@
 
 // FILES FOR UNITY BUILD
 #include "Clover_Draw.cpp"
-#include "Clover_Audio.cpp"
 #include "Clover_Input.cpp"
-#include "Clover.cpp"
 
 
 // NOTE(Sleepster): ImGui WNDPROC. It uses this for input
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
 
 internal inline real32
 GetLastTime()
@@ -71,7 +69,7 @@ Win32MainWindowCallback(HWND WindowHandle, UINT Message,
                         WPARAM wParam, LPARAM lParam)
 {
     LRESULT Result = {};
-
+    
     switch(Message)
     {
         case WM_SIZE:
@@ -81,7 +79,7 @@ Win32MainWindowCallback(HWND WindowHandle, UINT Message,
             SizeData.Width  = int32(Rect.right - Rect.left);
             SizeData.Height = int32(Rect.bottom - Rect.top);
         }break;
-            
+        
         case WM_CLOSE:
         {
             Running = false;
@@ -107,7 +105,7 @@ internal void
 Win32ProcessInputMessages(MSG Message, HWND WindowHandle, game_state *State)
 {
     ImGuiIO &io = ImGui::GetIO();
-
+    
     while(PeekMessageA(&Message, WindowHandle, 0, 0, PM_REMOVE))
     {
         // NOTE(Sleepster): ImGui Is a little goofy ahhhhh if you don't give it complete processing of inputs 
@@ -119,26 +117,26 @@ Win32ProcessInputMessages(MSG Message, HWND WindowHandle, game_state *State)
                 case WM_SYSKEYUP:
                 case WM_KEYDOWN:
                 case WM_KEYUP:
+                {
+                    uint32 VKCode = (uint32)Message.wParam;
+                    bool WasDown = ((Message.lParam & (1 << 30)) != 0);
+                    bool IsDown = ((Message.lParam & (1 << 31)) == 0);
+                    
+                    KeyCodeID KeyCode = State->KeyCodeLookup[Message.wParam];
+                    Key *Key = &State->GameInput.Keyboard.Keys[KeyCode];
+                    Key->JustPressed = !Key->JustPressed && !Key->IsDown && IsDown;
+                    Key->JustReleased = !Key->JustReleased && Key->IsDown && !IsDown;
+                    Key->IsDown = IsDown;
+                    
+                    
+                    bool AltKeyIsDown = ((Message.lParam & (1 << 29)) != 0);
+                    if(VKCode == VK_F4 && AltKeyIsDown)
                     {
-                        uint32 VKCode = (uint32)Message.wParam;
-                        bool WasDown = ((Message.lParam & (1 << 30)) != 0);
-                        bool IsDown = ((Message.lParam & (1 << 31)) == 0);
-
-                        KeyCodeID KeyCode = State->KeyCodeLookup[Message.wParam];
-                        Key *Key = &State->GameInput.Keyboard.Keys[KeyCode];
-                        Key->JustPressed = !Key->JustPressed && !Key->IsDown && IsDown;
-                        Key->JustReleased = !Key->JustReleased && Key->IsDown && !IsDown;
-                        Key->IsDown = IsDown;
-
-
-                        bool AltKeyIsDown = ((Message.lParam & (1 << 29)) != 0);
-                        if(VKCode == VK_F4 && AltKeyIsDown)
-                        {
-                            Running = false;
-                        }
-                    }break;
-
-
+                        Running = false;
+                    }
+                }break;
+                
+                
                 case WM_LBUTTONDOWN:
                 case WM_RBUTTONDOWN:
                 case WM_MBUTTONDOWN:
@@ -147,16 +145,16 @@ Win32ProcessInputMessages(MSG Message, HWND WindowHandle, game_state *State)
                 case WM_RBUTTONUP:
                 case WM_MBUTTONUP:
                 case WM_XBUTTONUP:
-                    {
-                        uint32 VKCode = (uint32)Message.wParam;
-                        bool IsDown = (GetKeyState(VKCode) & (1 << 15));
-
-                        KeyCodeID KeyCode = State->KeyCodeLookup[Message.wParam];
-                        Key *Key = &State->GameInput.Keyboard.Keys[KeyCode];
-                        Key->JustPressed = !Key->JustPressed && !Key->IsDown && IsDown;
-                        Key->JustReleased = !Key->JustReleased && Key->IsDown && !IsDown;
-                        Key->IsDown = IsDown;
-                    }break;
+                {
+                    uint32 VKCode = (uint32)Message.wParam;
+                    bool IsDown = (GetKeyState(VKCode) & (1 << 15));
+                    
+                    KeyCodeID KeyCode = State->KeyCodeLookup[Message.wParam];
+                    Key *Key = &State->GameInput.Keyboard.Keys[KeyCode];
+                    Key->JustPressed = !Key->JustPressed && !Key->IsDown && IsDown;
+                    Key->JustReleased = !Key->JustReleased && Key->IsDown && !IsDown;
+                    Key->IsDown = IsDown;
+                }break;
                 default:
                 {
                     TranslateMessage(&Message);
@@ -164,10 +162,10 @@ Win32ProcessInputMessages(MSG Message, HWND WindowHandle, game_state *State)
                 }break;
             }
         }
-
+        
         if(ImGui_ImplWin32_WndProcHandler(WindowHandle, Message.message, Message.wParam, Message.lParam) != 0)
             return;
-
+        
         TranslateMessage(&Message);
         DispatchMessage(&Message);
     }
@@ -226,42 +224,89 @@ Win32LoadWGLFunctions(WNDCLASS Window, HINSTANCE hInstance, wgl_function_pointer
     DestroyWindow(DummyWindow);
 }
 
+internal game_functions
+Win32LoadGameCode(string SourceDLLName)
+{
+    game_functions Result = {};
+    string TempDLLName = STR("GameTemp.dll");
+    Result.LastWriteTime = Win32GetLastWriteTime(SourceDLLName);
+    Result.IsLoaded      = 0;
+    while(!Result.IsLoaded)
+    {
+        CopyFile((char *)SourceDLLName.Data, (char *)TempDLLName.Data, FALSE);
+        Result.IsLoaded = 1;
+    }
+    
+    Result.GameCodeDLL = LoadLibraryA((const char *)TempDLLName.Data);
+    if(Result.GameCodeDLL)
+    {
+        Result.OnAwake         = (game_on_awake *)          GetProcAddress(Result.GameCodeDLL, "GameOnAwake");
+        Result.FixedUpdate     = (game_fixed_update *)      GetProcAddress(Result.GameCodeDLL, "GameFixedUpdate");
+        Result.UpdateAndRender = (game_update_and_render *) GetProcAddress(Result.GameCodeDLL, "GameUpdateAndRender");
+    }
+    else
+    {
+        Result.OnAwake         = GameOnAwakeStub;
+        Result.FixedUpdate     = GameFixedUpdateStub;
+        Result.UpdateAndRender = GameUpdateAndRenderStub;
+    }
+    Sleep(200);
+    return(Result);
+}
+
+internal void
+Win32UnloadGameCode(game_functions *GameCode)
+{
+    if(GameCode->GameCodeDLL)
+    {
+        FreeLibrary(GameCode->GameCodeDLL);
+        GameCode->GameCodeDLL = 0;
+        GameCode->IsLoaded    = 0;
+        GameCode->IsValid     = 0;
+    }
+    
+    GameCode->OnAwake         = GameOnAwakeStub;
+    GameCode->FixedUpdate     = GameFixedUpdateStub;
+    GameCode->UpdateAndRender = GameUpdateAndRenderStub;
+}
+
 int CALLBACK
 WinMain(HINSTANCE hInstance,
         HINSTANCE hPrevInstance,
         LPSTR lpCmdLine,
         int32 nShowCmd)
 {
-    WNDCLASS    Window = {};
-    time        Time   = {};
-    game_state  State  = {};
-    game_memory Memory = {};
-    wgl_function_pointers WGLFunctions = {};
-    gl_render_data        RenderData   = {};
-
+    WNDCLASS              Window = {};
+    time                  Time   = {};
+    game_state            State  = {};
+    game_memory           Memory = {};
+    game_functions        Game          = {};
+    wgl_function_pointers WGLFunctions  = {};
+    gl_render_data        RenderData    = {};
+    
     // NOTE(Sleepster): Accumulator is for Delta Time
     real32 Accumulator = {};
-
+    
     LARGE_INTEGER PerfCountFrequencyResult;
     QueryPerformanceFrequency(&PerfCountFrequencyResult);
     PerfCountFrequency = PerfCountFrequencyResult.QuadPart;
-
+    
     Window.style = CS_OWNDC|CS_VREDRAW|CS_HREDRAW;
     Window.lpfnWndProc = Win32MainWindowCallback;
     Window.hInstance = hInstance;
     Window.lpszClassName = "MakeshiftWindow";
-
+    
     SizeData = {100, 100, 1920, 1080};
-
+    
     if(RegisterClass(&Window))
     {
         RECT rect = {0, 0, SizeData.Width, SizeData.Height};
         AdjustWindowRectEx(&rect, WS_OVERLAPPEDWINDOW, FALSE, WS_EX_CLIENTEDGE);
         SizeData.Width  = rect.right  - rect.left;
         SizeData.Height = rect.bottom - rect.top;
-
+        
         Win32LoadWGLFunctions(Window, hInstance, &WGLFunctions);
-
+        
         HWND WindowHandle =
             CreateWindowEx(WS_EX_CLIENTEDGE,
                            Window.lpszClassName,
@@ -278,19 +323,19 @@ WinMain(HINSTANCE hInstance,
         if(WindowHandle)
         {
             HDC WindowDC = GetDC(WindowHandle);
-
+            
             LARGE_INTEGER LastCounter;
             QueryPerformanceCounter(&LastCounter);
-
+            
             Memory.TemporaryStorage = ArenaCreate(Megabytes(200));
             Memory.PermanentStorage = ArenaCreate(Megabytes(100));
-
+            
             RenderData.DrawFrame.Vertices = (vertex *)ArenaAlloc(&Memory.PermanentStorage, sizeof(vertex) * MAX_VERTICES);
             RenderData.DrawFrame.VertexBufferptr = &RenderData.DrawFrame.Vertices[0];
-
+            
             Win32LoadKeyData(&State);
             Win32LoadDefaultBindings(&State.GameInput);
-
+            
             const int32 PixelAttributes[] =
             {
                 WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
@@ -313,7 +358,7 @@ WinMain(HINSTANCE hInstance,
                 WGL_CONTEXT_FLAGS_ARB,         WGL_CONTEXT_DEBUG_BIT_ARB,
                 0
             };
-
+            
             UINT NumPixelFormats;
             int32 PixelFormat = 0;
             if(!WGLFunctions.wglChoosePixelFormatARB(WindowDC, PixelAttributes, 0, 1, &PixelFormat, &NumPixelFormats))
@@ -332,14 +377,17 @@ WinMain(HINSTANCE hInstance,
             // VSYNC
             WGLFunctions.wglSwapIntervalEXT(0);
             // VSYNC
-
-
+            
+            
             CloverSetupRenderer(&Memory.TemporaryStorage, &RenderData);
-
-
+            Game = Win32LoadGameCode(STR("CloverGame.dll"));
+            
+            
             // NOTE(Sleepster): ImGui Setup 
             IMGUI_CHECKVERSION();
-            ImGui::CreateContext();
+            RenderData.CurrentImGuiContext = ImGui::CreateContext();
+            ImGui::SetCurrentContext(RenderData.CurrentImGuiContext);
+            
             ImGuiIO& io = ImGui::GetIO(); (void)io;
             io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;   // Enable Keyboard Controls
             io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;    // Enable Gamepad Controls
@@ -347,46 +395,84 @@ WinMain(HINSTANCE hInstance,
             io.WantCaptureKeyboard = 1;
             io.WantCaptureMouse = 1;
             io.DeltaTime = Time.Delta > 0 ? SIMRATE : Time.Delta;
-
+            
             // Choose Dear ImGui style
             ImGui::StyleColorsDark();
-
+            
             // Setup Platform/Renderer backends
             ImGui_ImplWin32_InitForOpenGL(WindowHandle);
             ImGui_ImplOpenGL3_Init();
-
-
-            // NOTE(Sleepster): Audio Engine setup, MiniAudio makes the REALLLLLLYYYYYYYY easy 
+            
+            
+            // NOTE(Sleepster): Audio Engine setup, MiniAudio makes this REALLLLLLYYYYYYYY easy 
             State.SFXData.AudioEngine = {};
             Assert(ma_engine_init(0, &State.SFXData.AudioEngine) == MA_SUCCESS);
             Assert(ma_engine_set_volume(&State.SFXData.AudioEngine, 0.1f) == MA_SUCCESS);
-
-            GameOnAwake(&Memory, &RenderData, &State);
-
+            
+            Game.OnAwake(&Memory, &RenderData, &State);
+            
+            real32 FPSTimer = 0;
             Running = 1;
             while(Running)
             {
                 MSG Message = {};
                 Win32ProcessInputMessages(Message, WindowHandle, &State);
-
+                
                 Time.Delta   = SIMRATE/1000;
                 Time.Current = GetLastTime();
                 Time.Next    = Time.Current + Time.Delta;
-
-
-
+                
+                
+                
                 //DATA RELOADING
 #if CLOVER_SLOW
+                FILETIME NewDLLWriteTime = Win32GetLastWriteTime(STR("CloverGame.dll"));
+                if(CompareFileTime(&Game.LastWriteTime, &NewDLLWriteTime) != 0)
+                {
+                    Win32UnloadGameCode(&Game);
+                    Game = Win32LoadGameCode(STR("CloverGame.dll"));
+                    
+                    // NOTE(Sleepster): Audio Engine setup, MiniAudio makes this REALLLLLLYYYYYYYY easy 
+                    
+                    for(uint32 i = 0; i < MAX_SOUNDS; i++)
+                    {
+                        sound_instance *Sound = &State.SFXData.Instances[i];
+                        ma_sound_stop(&Sound->Sound);
+                        ma_sound_uninit(&Sound->Sound);
+                        Sound->IsPlaying = 0;
+                        Sound->IsActive = 0;
+                    }
+                    
+                    for(uint32 i = 0; i < MAX_TRACKS; i++)
+                    {
+                        sound_instance *Sound = &State.SFXData.SoundTracks[i];
+                        ma_sound_stop(&Sound->Sound);
+                        ma_sound_uninit(&Sound->Sound);
+                        Sound->IsPlaying = 0;
+                        Sound->IsActive = 0;
+                    }
+                    
+                    if(ma_engine_stop(&State.SFXData.AudioEngine) == MA_SUCCESS)
+                    {
+                        ma_engine_uninit(&State.SFXData.AudioEngine);
+                    }
+                    Assert(ma_engine_init(0, &State.SFXData.AudioEngine) == MA_SUCCESS);
+                    Assert(ma_engine_set_volume(&State.SFXData.AudioEngine, 0.1f) == MA_SUCCESS);
+                    
+                    Game.OnAwake(&Memory, &RenderData, &State);
+                }
+                
+                
                 FILETIME NewTextureWriteTime        = Win32GetLastWriteTime(RenderData.GameAtlas.Filepath);    
                 FILETIME NewVertexShaderWriteTime   = Win32GetLastWriteTime(RenderData.BasicShader.VertexShader.Filepath);
                 FILETIME NewFragmentShaderWriteTime = Win32GetLastWriteTime(RenderData.BasicShader.FragmentShader.Filepath);
-
+                
                 if(CompareFileTime(&NewTextureWriteTime, &RenderData.GameAtlas.LastWriteTime) != 0)
                 {
                     CloverReloadTexture(&RenderData, &RenderData.GameAtlas, 0);
                     Sleep(100);
                 }
-
+                
                 if(CompareFileTime(&NewVertexShaderWriteTime,   &RenderData.BasicShader.VertexShader.LastWriteTime) != 0 ||
                    CompareFileTime(&NewFragmentShaderWriteTime, &RenderData.BasicShader.FragmentShader.LastWriteTime) != 0)
                 {
@@ -395,24 +481,24 @@ WinMain(HINSTANCE hInstance,
                     Sleep(100);
                 }
 #endif
-
-
+                
+                
                 
                 while(Accumulator >= SIMRATE)
                 {
-                    FixedUpdate(&Memory, &RenderData, &State, Time);
+                    Game.FixedUpdate(&Memory, &RenderData, &State, Time);
                     Accumulator -= Time.Delta;
                 }
                 Time.Alpha = Accumulator / Time.Delta;
-
+                
                 // Start the Dear ImGui frame
                 ImGui_ImplOpenGL3_NewFrame();
                 ImGui_ImplWin32_NewFrame();
                 ImGui::NewFrame();
-
+                
                 RenderData.AspectRatio = (real32)SizeData.Width / (real32)SizeData.Height;
-                UpdateGame(&Memory, &RenderData, &State, Time);
-
+                Game.UpdateAndRender(&Memory, &RenderData, &State, Time, SizeData);
+                
                 ImGui::Render();
                 glClearColor(RenderData.ClearColor.R, RenderData.ClearColor.G, RenderData.ClearColor.B, RenderData.ClearColor.A);
                 glClearDepth(0.0f);
@@ -420,27 +506,32 @@ WinMain(HINSTANCE hInstance,
                 glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
                 CloverRender(&RenderData);
                 ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
+                
                 SwapBuffers(WindowDC);
-
+                
                 ArenaReset(&Memory.TemporaryStorage);
                 RenderData.DrawFrame.VertexBufferptr = &RenderData.DrawFrame.Vertices[0];
                 RenderData.DrawFrame.QuadCount = 0;
-
+                
                 // DELTA
                 LARGE_INTEGER EndCounter;
                 QueryPerformanceCounter(&EndCounter);
                 
                 DeltaCounter = real64(EndCounter.QuadPart - LastCounter.QuadPart);
                 real32 MSPerFrame = GetLastTime();
-                int32 FPS = int32(PerfCountFrequency / DeltaCounter);
                 LastCounter = EndCounter;
-
+                
                 Accumulator += Time.Delta;
-
+                
+                FPSTimer += Time.Delta;
+                if(FPSTimer >= 10)
+                {
+                    Time.FPSCounter = int32(PerfCountFrequency / DeltaCounter);
+                    FPSTimer = 0;
+                }
                 //printm("%.02fms\n", MSPerFrame);
                 //printm("FPS: %d\n", FPS);
-
+                
                 if(IsKeyDown(KEY_ESCAPE, &State.GameInput))
                 {
                     Running = 0;

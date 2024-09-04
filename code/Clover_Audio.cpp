@@ -26,7 +26,7 @@ CreateSound(game_state *State)
         }
     }
     Assert(Result);
-
+    
     Result->IsActive = 1;
     State->SFXData.ActiveInstances++;
     return(Result);
@@ -48,7 +48,7 @@ CreateTrack(game_state *State)
         }
     }
     Assert(Result);
-
+    
     Result->IsActive = 1;
     State->SFXData.LoadedTracks++;
     return(Result);
@@ -57,6 +57,7 @@ CreateTrack(game_state *State)
 internal void
 DeleteSound(sound_instance *Instance)
 {
+    
     memset(Instance, 0, sizeof(struct sound_instance));
     Instance->IsActive = 0;
 }
@@ -64,18 +65,16 @@ DeleteSound(sound_instance *Instance)
 internal void
 PlayTrackFromDisk(memory_arena *Memory, game_state *State, string Filepath, real32 Volume)
 {
-    string DataPath    = STR("../data/res/sounds/");
-    string FileExtension   = STR(".mp3");
-    string Temp        = ConcatinatePair(Memory, DataPath, Filepath);
-    string NewFilepath = ConcatinatePair(Memory, Temp, FileExtension); 
-
+    string DataPath    = STR("../data/res/sounds/\0");
+    string NewFilepath = ConcatinatePair(Memory, DataPath, Filepath);
+    
     sound_instance *NewSound = CreateTrack(State);
     if(ma_sound_init_from_file(&State->SFXData.AudioEngine, 
-                              CSTR(NewFilepath.Data), 
-                              MA_SOUND_FLAG_ASYNC|MA_SOUND_FLAG_STREAM, 
-                              0, 
-                              0, 
-                              &NewSound->Sound) == MA_SUCCESS)
+                               (const char *)NewFilepath.Data, 
+                               MA_SOUND_FLAG_ASYNC|MA_SOUND_FLAG_STREAM, 
+                               0, 
+                               0, 
+                               &NewSound->Sound) == MA_SUCCESS)
     {
         ma_sound_set_looping(&NewSound->Sound, 1);
         ma_sound_set_volume(&NewSound->Sound, Volume);
@@ -92,22 +91,21 @@ PlayTrackFromDisk(memory_arena *Memory, game_state *State, string Filepath, real
 internal void
 PlaySound(memory_arena *Memory, game_state *State, string Filepath, real32 Volume)
 {
-    string DataPath    = STR("../data/res/sounds/");
-    string FileExtension   = STR(".wav");
-    string Temp        = ConcatinatePair(Memory, DataPath, Filepath);
-    string NewFilepath = ConcatinatePair(Memory, Temp, FileExtension); 
-
+    // TODO(Sleepster): Weird shit going on with ConcatinatePair  
+    string DataPath      = STR("../data/res/sounds/\0");
+    string NewFilepath   = ConcatinatePair(Memory, DataPath, Filepath);
+    
     sound_instance *NewSound = CreateSound(State);
     if(ma_sound_init_from_file(&State->SFXData.AudioEngine, 
-                                CSTR(NewFilepath.Data), 
-                                MA_SOUND_FLAG_ASYNC, 
-                                0, 
-                                0, 
-                                &NewSound->Sound) == MA_SUCCESS) 
+                               (const char *)NewFilepath.Data, 
+                               MA_SOUND_FLAG_ASYNC, 
+                               0, 
+                               0, 
+                               &NewSound->Sound) == MA_SUCCESS) 
     {
         ma_sound_set_volume(&NewSound->Sound, Volume);
         ma_sound_start(&NewSound->Sound);
-
+        
         NewSound->IsPlaying = 1;
         return;
     }
@@ -130,7 +128,7 @@ HandleLoadedSounds(game_state *State)
         {
             ma_sound_uninit(&Found->Sound);
             Found->IsPlaying = false;
-
+            
             DeleteSound(Found);
         }
     }
@@ -148,7 +146,7 @@ HandleLoadedTracks(game_state *State)
         {
             ma_sound_uninit(&Found->Sound);
             Found->IsPlaying = false;
-
+            
             DeleteSound(Found);
         }
     }

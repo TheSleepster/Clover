@@ -14,7 +14,6 @@ struct string
 };
 
 #define STR(s)  (string{GetStringLength((const char *)s), (uint8 *)s})
-#define CSTR(string) ((const char *) string)
 
 const string NULL_STRING = {};
 
@@ -35,7 +34,7 @@ StringsMatch(string A, string B)
 {
     if(A.Length != B.Length) return(0);
     if(A.Data == B.Data) return(1);
-
+    
     return(memcmp(A.Data, B.Data, A.Length) == 0);
 }
 
@@ -45,7 +44,7 @@ HeapString(memory_arena *Scratch, uint64 Length)
     string S;
     S.Length = Length;
     S.Data = (uint8 *)ArenaAlloc(Scratch, Length);
-
+    
     return(S);
 }
 
@@ -54,7 +53,7 @@ StringCopy(string A, memory_arena *Scratch)
 {
     string C = HeapString(Scratch, A.Length);
     memcpy(C.Data, A.Data, A.Length);
-
+    
     return(C);
 }
 
@@ -64,14 +63,21 @@ ConcatinatePair(memory_arena *Arena, const string Left, const string Right)
     if(Right.Length + Left.Length == 0) return(NULL_STRING);
     if(Left.Length == 0) return(Right);
     if(Right.Length == 0) return(Left);
-
+    
     string Result = {};
     Result.Length = Left.Length + Right.Length;
     Result.Data = (uint8 *)ArenaAlloc(Arena, Result.Length);
-
-    memcpy(Result.Data, Left.Data, Left.Length);
-    memcpy(Result.Data + Left.Length, Right.Data, Right.Length);
-
+    
+    const char *LeftS = (const char *)Left.Data;
+    const char *RightS = (const char *)Right.Data;
+    
+    strcpy((char *)Result.Data, LeftS);
+    strcpy((char *)Result.Data + Left.Length, RightS);
+    
+    // NOTE(Sleepster): memcpy is replaced because it caused weirdness when hotreloading (Shader Header was ending up in a sound filepath)
+    //    memcpy(Result.Data, Left.Data, Left.Length);
+    //    memcpy(Result.Data + Left.Length, Right.Data, Right.Length);
+    
     return(Result);
 }
 
@@ -81,7 +87,7 @@ CStringToString(const char *CString)
     string Result = {};
     Result.Data = (uint8 *)CString;
     Result.Length = strlen(CString);
-
+    
     return(Result);
 }
 
@@ -91,7 +97,7 @@ StringToCString(memory_arena *Memory, const string String)
     char *CString = ArenaAlloc(Memory, sizeof(String.Data + 1));
     memcpy(CString, String.Data, String.Length);
     CString[String.Length] = 0;
-
+    
     return(CString);
 }
 
@@ -99,10 +105,10 @@ internal uint64
 FormatStringToBuffer(char *Buffer, uint64 Count, const char* fmt, va_list args)
 {
     if(!Buffer) (Count = UINT64_MAX);
-
+    
     const char *temp = fmt;
     char *Bufferp = Buffer;
-
+    
     while(*temp != '\0' && uint64((Bufferp - Buffer)) < Count - 1)
     {
         if(*temp == '%')
@@ -145,11 +151,11 @@ FormatStringToBuffer(char *Buffer, uint64 Count, const char* fmt, va_list args)
             else
             {
                 // NOTE(Sleepster): Standard vsnprintf 
-
+                
                 char TempFallback[512] = {};
                 char FormatSpecifier[64] = {};
                 int32 SpecifierLength = 0;
-
+                
                 FormatSpecifier[SpecifierLength++] = '%';
                 while(*temp != '\0' && strchr("diuoxXfFeEgGaAcCpn%", *temp) == NULL)
                 {
@@ -160,7 +166,7 @@ FormatStringToBuffer(char *Buffer, uint64 Count, const char* fmt, va_list args)
                     FormatSpecifier[SpecifierLength++] = *temp++;
                 }
                 FormatSpecifier[SpecifierLength] = '\0';
-
+                
                 int32 TempLength = vsnprintf(TempFallback, sizeof(TempFallback), FormatSpecifier, args);
                 switch (FormatSpecifier[SpecifierLength - 1]) 
                 {
@@ -173,12 +179,12 @@ FormatStringToBuffer(char *Buffer, uint64 Count, const char* fmt, va_list args)
                     case 'n': va_arg(args, int*); break;
                     default: break;
                 }
-
+                
                 if(TempLength < 0)
                 {
                     return 0; // Error;
                 }
-
+                
                 for(int32 Index = 0;
                     Index < TempLength && uint64(Bufferp - Buffer) < Count - 1;
                     ++Index)
@@ -199,7 +205,7 @@ FormatStringToBuffer(char *Buffer, uint64 Count, const char* fmt, va_list args)
         }
     }
     if(Buffer) *Bufferp = '\0';
-
+    
     return(Bufferp - Buffer);
 }
 
@@ -210,7 +216,7 @@ SprintCStringArgsToBuffer(const char *fmt, va_list args, void *Buffer, uint64 Bu
     
     string Result = {};
     Result.Data = (uint8 *)Buffer;
-
+    
     if(FormatLength >= 0 && FormatLength < BufferSize)
     {
         Result.Length = FormatLength;
@@ -219,7 +225,7 @@ SprintCStringArgsToBuffer(const char *fmt, va_list args, void *Buffer, uint64 Bu
     {
         Result.Length = BufferSize - 1;
     }
-
+    
     return(Result);
 }
 
@@ -228,10 +234,10 @@ SprintVAList(memory_arena *Memory, const string fmt, va_list args)
 {
     char *fmt_cstring = StringToCString(Memory, fmt);
     uint64 Count = FormatStringToBuffer(NULL, 0, fmt_cstring, args) + 1;
-
+    
     char* Buffer = {};
     Buffer = ArenaAlloc(Memory, Count);
-
+    
     return(SprintCStringArgsToBuffer(fmt_cstring, args, Buffer, Count));
 }
 
@@ -242,12 +248,12 @@ sprints(memory_arena *Memory, const string Text, ...)
     string sfmt = {};
     sfmt.Data = Text.Data;
     sfmt.Length = Text.Length;
-
+    
     va_list args;
     va_start(args, Text);
     string S = SprintVAList(Memory, sfmt, args);
     va_end(args);
-
+    
     return(S);
 }
 
@@ -258,12 +264,12 @@ sprintd(memory_arena *Memory, const char *Text, ...)
     string sfmt = {};
     sfmt.Data = (uint8 *)Text;
     sfmt.Length = strlen(Text);
-
+    
     va_list args;
     va_start(args, Text);
     string S = SprintVAList(Memory, sfmt, args);
     va_end(args);
-
+    
     return(S);
 }
 
