@@ -91,7 +91,6 @@ PlayTrackFromDisk(memory_arena *Memory, game_state *State, string Filepath, real
 internal void
 PlaySound(memory_arena *Memory, game_state *State, string Filepath, real32 Volume)
 {
-    // TODO(Sleepster): Weird shit going on with ConcatinatePair  
     string DataPath      = STR("../data/res/sounds/\0");
     string NewFilepath   = ConcatinatePair(Memory, DataPath, Filepath);
     

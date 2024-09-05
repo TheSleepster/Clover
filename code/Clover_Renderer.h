@@ -9,6 +9,11 @@
 // GLAD
 #define GLAD_OPENGL_IMPL
 #include "../data/deps/OpenGL/glad/include/glad/glad.h"
+
+#define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "../data/deps/stb/stb_image.h"
+#include "../data/deps/stb/stb_image_write.h"
 #endif
 
 #include "util/Math.h"
@@ -139,7 +144,6 @@ struct quad
         vertex Elements[4];
     };
     
-    // TODO(Sleepster): Are these even necessary?
     vec4   DrawColor;
     real32 TextureIndex;
     
@@ -179,7 +183,7 @@ struct gl_render_data
     // GAME ASSETS
     struct 
     { 
-        static_sprite_data Sprites[3];
+        static_sprite_data Sprites[20];
     }GameData;
     
     // DRAW FRAME DATA

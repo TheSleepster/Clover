@@ -121,7 +121,7 @@ internal void
 Win32LoadImGuiInputData()
 {
     ImGuiIO& io = ImGui::GetIO();
-
+    
     // Alphabet (A-Z)
     io.KeyMap[ImGuiKey_A] = 'A';
     io.KeyMap[ImGuiKey_B] = 'B';
@@ -149,7 +149,7 @@ Win32LoadImGuiInputData()
     io.KeyMap[ImGuiKey_X] = 'X';
     io.KeyMap[ImGuiKey_Y] = 'Y';
     io.KeyMap[ImGuiKey_Z] = 'Z';
-
+    
     // Numbers (0-9)
     io.KeyMap[ImGuiKey_0] = '0';
     io.KeyMap[ImGuiKey_1] = '1';
@@ -161,7 +161,7 @@ Win32LoadImGuiInputData()
     io.KeyMap[ImGuiKey_7] = '7';
     io.KeyMap[ImGuiKey_8] = '8';
     io.KeyMap[ImGuiKey_9] = '9';
-
+    
     // Punctuation and Special Characters
     io.KeyMap[ImGuiKey_Space] = VK_SPACE;
     io.KeyMap[ImGuiKey_Enter] = VK_RETURN;
@@ -179,7 +179,7 @@ Win32LoadImGuiInputData()
     io.KeyMap[ImGuiKey_Period] = VK_OEM_PERIOD;          
     io.KeyMap[ImGuiKey_Slash] = VK_OEM_2;                
     io.KeyMap[ImGuiKey_GraveAccent] = VK_OEM_3;          
-
+    
     // Additional special characters that may be needed
     io.KeyMap[ImGuiKey_Insert] = VK_INSERT;
     io.KeyMap[ImGuiKey_Delete] = VK_DELETE;
@@ -194,7 +194,6 @@ Win32LoadImGuiInputData()
 }
 #endif
 
-// TODO(Sleepster): Alternative mapping no worky
 internal inline Keymapping
 AddKeyBinding(KeyCodeID MainKey, KeyCodeID AltKey)
 {

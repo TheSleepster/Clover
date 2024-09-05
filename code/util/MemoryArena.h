@@ -2,7 +2,7 @@
 #include "../Intrinsics.h"
 
 #ifndef WIN32_LEAN_AND_MEAN
-    #define WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
 #endif
 #include <Windows.h>
 
@@ -36,7 +36,6 @@ ArenaCreate(uint64 Size)
     return(Arena);
 }
 
-// TODO(Sleepster): Check that the allignment size is actually correct
 internal char *
 ArenaAlloc(memory_arena *Arena, uint64 Size) 
 {

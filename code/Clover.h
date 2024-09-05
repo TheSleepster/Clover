@@ -18,8 +18,6 @@
 
 #include "../data/deps/MiniAudio/miniaudio.h"
 
-constexpr uint32 MAX_ENTITIES = 1000;
-
 struct sound_instance
 {
     ma_sound Sound;
@@ -36,9 +34,9 @@ struct game_memory
 struct time
 {
     real32 Delta;
-    real32 Alpha;
     real32 Current;
-    real32 Next;
+    real64 Alpha;
+    real64 Next;
     
     int32 FPSCounter;
 };
@@ -58,6 +56,7 @@ enum entity_arch
     NIL    = 0,
     PLAYER = 1,
     ROCK   = 2,
+    TREE00 = 3,
     COUNT
 };
 
@@ -66,7 +65,8 @@ enum sprite_type
     SPRITE_Nil    = 0,
     SPRITE_Player = 1,
     SPRITE_Rock   = 2,
-    SPRITE_Count  = 3,
+    SPRITE_Tree00 = 3,
+    SPRITE_Count,
 };
 
 struct entity
@@ -119,9 +119,9 @@ GAME_FIXED_UPDATE(GameFixedUpdateStub)
 {
 }
 
-#define GAME_UPDATE_AND_RENDER(name) void name(game_memory *Memory, gl_render_data *RenderData, game_state *State, time Time, ivec4 SizeData)
-typedef GAME_UPDATE_AND_RENDER(game_update_and_render);
-GAME_UPDATE_AND_RENDER(GameUpdateAndRenderStub)
+#define GAME_UPDATE_AND_DRAW(name) void name(game_memory *Memory, gl_render_data *RenderData, game_state *State, time Time, ivec4 SizeData)
+typedef GAME_UPDATE_AND_DRAW(game_update_and_draw);
+GAME_UPDATE_AND_DRAW(GameUpdateAndDrawStub)
 {
 }
 
@@ -132,7 +132,7 @@ struct game_functions
     
     game_on_awake          *OnAwake;
     game_fixed_update      *FixedUpdate;
-    game_update_and_render *UpdateAndRender;
+    game_update_and_draw *UpdateAndDraw;
     
     bool IsLoaded;
     bool IsValid;

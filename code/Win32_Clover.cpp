@@ -50,18 +50,24 @@
 #include "Win32_Clover.h"
 
 // FILES FOR UNITY BUILD
-#include "Clover_Draw.cpp"
+#include "Clover_Audio.cpp"
+#include "Clover_Renderer.cpp"
 #include "Clover_Input.cpp"
-
 
 // NOTE(Sleepster): ImGui WNDPROC. It uses this for input
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 
 internal inline real32
-GetLastTime()
+GetFPSTime()
 {
     return((1000 *(real32)DeltaCounter) / real32(PerfCountFrequency));
+}
+
+internal inline real64
+GetLastTime()
+{
+    return(real64(DeltaCounter) / real64(PerfCountFrequency));
 }
 
 LRESULT CALLBACK
@@ -242,13 +248,13 @@ Win32LoadGameCode(string SourceDLLName)
     {
         Result.OnAwake         = (game_on_awake *)          GetProcAddress(Result.GameCodeDLL, "GameOnAwake");
         Result.FixedUpdate     = (game_fixed_update *)      GetProcAddress(Result.GameCodeDLL, "GameFixedUpdate");
-        Result.UpdateAndRender = (game_update_and_render *) GetProcAddress(Result.GameCodeDLL, "GameUpdateAndRender");
+        Result.UpdateAndDraw = (game_update_and_draw *) GetProcAddress(Result.GameCodeDLL, "GameUpdateAndDraw");
     }
     else
     {
         Result.OnAwake         = GameOnAwakeStub;
         Result.FixedUpdate     = GameFixedUpdateStub;
-        Result.UpdateAndRender = GameUpdateAndRenderStub;
+        Result.UpdateAndDraw = GameUpdateAndDrawStub;
     }
     Sleep(200);
     return(Result);
@@ -267,7 +273,7 @@ Win32UnloadGameCode(game_functions *GameCode)
     
     GameCode->OnAwake         = GameOnAwakeStub;
     GameCode->FixedUpdate     = GameFixedUpdateStub;
-    GameCode->UpdateAndRender = GameUpdateAndRenderStub;
+    GameCode->UpdateAndDraw = GameUpdateAndDrawStub;
 }
 
 int CALLBACK
@@ -280,12 +286,13 @@ WinMain(HINSTANCE hInstance,
     time                  Time   = {};
     game_state            State  = {};
     game_memory           Memory = {};
-    game_functions        Game          = {};
+    game_functions        Game   = {};
     wgl_function_pointers WGLFunctions  = {};
     gl_render_data        RenderData    = {};
     
     // NOTE(Sleepster): Accumulator is for Delta Time
-    real32 Accumulator = {};
+    real64 Accumulator = {};
+    real32 FPSTimer = 0;
     
     LARGE_INTEGER PerfCountFrequencyResult;
     QueryPerformanceFrequency(&PerfCountFrequencyResult);
@@ -323,9 +330,6 @@ WinMain(HINSTANCE hInstance,
         if(WindowHandle)
         {
             HDC WindowDC = GetDC(WindowHandle);
-            
-            LARGE_INTEGER LastCounter;
-            QueryPerformanceCounter(&LastCounter);
             
             Memory.TemporaryStorage = ArenaCreate(Megabytes(200));
             Memory.PermanentStorage = ArenaCreate(Megabytes(100));
@@ -382,7 +386,6 @@ WinMain(HINSTANCE hInstance,
             CloverSetupRenderer(&Memory.TemporaryStorage, &RenderData);
             Game = Win32LoadGameCode(STR("CloverGame.dll"));
             
-            
             // NOTE(Sleepster): ImGui Setup 
             IMGUI_CHECKVERSION();
             RenderData.CurrentImGuiContext = ImGui::CreateContext();
@@ -411,19 +414,16 @@ WinMain(HINSTANCE hInstance,
             
             Game.OnAwake(&Memory, &RenderData, &State);
             
-            real32 FPSTimer = 0;
             Running = 1;
+            LARGE_INTEGER LastCounter;
+            QueryPerformanceCounter(&LastCounter);
+            
+            real64 CurrentTime = GetLastTime();
+            real64 T = 0.0;
             while(Running)
             {
                 MSG Message = {};
                 Win32ProcessInputMessages(Message, WindowHandle, &State);
-                
-                Time.Delta   = SIMRATE/1000;
-                Time.Current = GetLastTime();
-                Time.Next    = Time.Current + Time.Delta;
-                
-                
-                
                 //DATA RELOADING
 #if CLOVER_SLOW
                 FILETIME NewDLLWriteTime = Win32GetLastWriteTime(STR("CloverGame.dll"));
@@ -433,63 +433,22 @@ WinMain(HINSTANCE hInstance,
                     Game = Win32LoadGameCode(STR("CloverGame.dll"));
                     
                     // NOTE(Sleepster): Audio Engine setup, MiniAudio makes this REALLLLLLYYYYYYYY easy 
-                    
-                    for(uint32 i = 0; i < MAX_SOUNDS; i++)
-                    {
-                        sound_instance *Sound = &State.SFXData.Instances[i];
-                        ma_sound_stop(&Sound->Sound);
-                        ma_sound_uninit(&Sound->Sound);
-                        Sound->IsPlaying = 0;
-                        Sound->IsActive = 0;
-                    }
-                    
-                    for(uint32 i = 0; i < MAX_TRACKS; i++)
-                    {
-                        sound_instance *Sound = &State.SFXData.SoundTracks[i];
-                        ma_sound_stop(&Sound->Sound);
-                        ma_sound_uninit(&Sound->Sound);
-                        Sound->IsPlaying = 0;
-                        Sound->IsActive = 0;
-                    }
-                    
-                    if(ma_engine_stop(&State.SFXData.AudioEngine) == MA_SUCCESS)
-                    {
-                        ma_engine_uninit(&State.SFXData.AudioEngine);
-                    }
-                    Assert(ma_engine_init(0, &State.SFXData.AudioEngine) == MA_SUCCESS);
-                    Assert(ma_engine_set_volume(&State.SFXData.AudioEngine, 0.1f) == MA_SUCCESS);
-                    
                     Game.OnAwake(&Memory, &RenderData, &State);
                 }
-                
-                
-                FILETIME NewTextureWriteTime        = Win32GetLastWriteTime(RenderData.GameAtlas.Filepath);    
-                FILETIME NewVertexShaderWriteTime   = Win32GetLastWriteTime(RenderData.BasicShader.VertexShader.Filepath);
-                FILETIME NewFragmentShaderWriteTime = Win32GetLastWriteTime(RenderData.BasicShader.FragmentShader.Filepath);
-                
-                if(CompareFileTime(&NewTextureWriteTime, &RenderData.GameAtlas.LastWriteTime) != 0)
-                {
-                    CloverReloadTexture(&RenderData, &RenderData.GameAtlas, 0);
-                    Sleep(100);
-                }
-                
-                if(CompareFileTime(&NewVertexShaderWriteTime,   &RenderData.BasicShader.VertexShader.LastWriteTime) != 0 ||
-                   CompareFileTime(&NewFragmentShaderWriteTime, &RenderData.BasicShader.FragmentShader.LastWriteTime) != 0)
-                {
-                    glDeleteProgram(RenderData.BasicShader.Shader);
-                    CloverCreateShader(&Memory.TemporaryStorage, RenderData.BasicShader.VertexShader.Filepath, RenderData.BasicShader.FragmentShader.Filepath);
-                    Sleep(100);
-                }
 #endif
+                real64 NewTime     = GetLastTime();
+                real64 FrameTime   = NewTime - CurrentTime;
+                CurrentTime = NewTime;
                 
-                
-                
+                Time.Delta = (real32)GetLastTime();
                 while(Accumulator >= SIMRATE)
                 {
                     Game.FixedUpdate(&Memory, &RenderData, &State, Time);
                     Accumulator -= Time.Delta;
+                    T += Time.Delta;
                 }
-                Time.Alpha = Accumulator / Time.Delta;
+                
+                Accumulator += Time.Delta;
                 
                 // Start the Dear ImGui frame
                 ImGui_ImplOpenGL3_NewFrame();
@@ -497,16 +456,11 @@ WinMain(HINSTANCE hInstance,
                 ImGui::NewFrame();
                 
                 RenderData.AspectRatio = (real32)SizeData.Width / (real32)SizeData.Height;
-                Game.UpdateAndRender(&Memory, &RenderData, &State, Time, SizeData);
+                Game.UpdateAndDraw(&Memory, &RenderData, &State, Time, SizeData);
                 
                 ImGui::Render();
-                glClearColor(RenderData.ClearColor.R, RenderData.ClearColor.G, RenderData.ClearColor.B, RenderData.ClearColor.A);
-                glClearDepth(0.0f);
-                glViewport(0, 0, SizeData.Width, SizeData.Height);
-                glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-                CloverRender(&RenderData);
+                CloverRender(&Memory.TemporaryStorage, &RenderData);
                 ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-                
                 SwapBuffers(WindowDC);
                 
                 ArenaReset(&Memory.TemporaryStorage);
@@ -518,13 +472,11 @@ WinMain(HINSTANCE hInstance,
                 QueryPerformanceCounter(&EndCounter);
                 
                 DeltaCounter = real64(EndCounter.QuadPart - LastCounter.QuadPart);
-                real32 MSPerFrame = GetLastTime();
+                real32 MSPerFrame = GetFPSTime();
                 LastCounter = EndCounter;
                 
-                Accumulator += Time.Delta;
-                
                 FPSTimer += Time.Delta;
-                if(FPSTimer >= 10)
+                if(FPSTimer >= 1)
                 {
                     Time.FPSCounter = int32(PerfCountFrequency / DeltaCounter);
                     FPSTimer = 0;
