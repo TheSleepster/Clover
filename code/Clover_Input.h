@@ -107,7 +107,7 @@ struct KeyboardInput
 {
     ivec2 LastMouse;
     ivec2 CurrentMouse;
-    ivec2 MouseDiff;
+    ivec2 DeltaMouse;
     
     Key Keys[KEY_COUNT];
     Keymapping Bindings[BINDING_COUNT];
@@ -138,7 +138,7 @@ IsGameKeyDown(KeyBindings InputType, Input *GameInput)
     Keycode = GameInput->Keyboard.Bindings[InputType].AltKey;
     Key = GameInput->Keyboard.Keys[Keycode];
     if(Key.IsDown) return(1);
-
+    
     return(0);
 }
 

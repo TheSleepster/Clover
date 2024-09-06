@@ -9,7 +9,7 @@ Set CommonCompilerFlags=-nologo -std:c++20 -permissive -F52428800 -fp:fast -Fm -
 Set CommonLinkerFlags=-ignore:4099 -incremental:no shell32.lib kernel32.lib user32.lib gdi32.lib opengl32.lib "../data/deps/ImGUI/ImGuiDEBUG.lib" "../data/deps/Freetype/freetype.lib" "../data/deps/MiniAudio/miniaudio.lib" "../data/deps/OpenGL/glad/src/Glad.lib"
 Set CommonIncludes=-I"../data/deps" -I"../data/deps/Freetype/include/"
 
-Set Exports=-EXPORT:GameOnAwake -EXPORT:GameUpdateAndRender -EXPORT:GameFixedUpdate
+Set Exports=-EXPORT:GameOnAwake -EXPORT:GameUpdateAndDraw -EXPORT:GameFixedUpdate
 
 IF NOT EXIST ..\build mkdir ..\build
 pushd ..\build

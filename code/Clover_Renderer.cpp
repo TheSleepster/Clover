@@ -95,7 +95,7 @@ CloverLoadFont(memory_arena *Memory, gl_render_data *RenderData, string Filepath
             }
             // NOTE(Sleepster): Leaving this here would make it only work for one font, perhaps make it so we pass in a font index into an array of 
             //                  fonts? Simply have a cap for the amount of fonts that can be loaded at any one point.
-            RenderData->LoadedFonts[FontIndex].FontHeight = Max((Font.FontFace->size->metrics.ascender - Font.FontFace->size->metrics.descender) >> 6,
+            RenderData->LoadedFonts[FontIndex].FontHeight = MAX((Font.FontFace->size->metrics.ascender - Font.FontFace->size->metrics.descender) >> 6,
                                                                 (int32)RenderData->LoadedFonts[FontIndex].FontHeight);
             for(uint32 YIndex = 0;
                 YIndex < Font.FontFace->glyph->bitmap.rows;

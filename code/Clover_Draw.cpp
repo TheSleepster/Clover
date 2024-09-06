@@ -123,7 +123,7 @@ DrawQuadXForm(gl_render_data *RenderData, quad *Quad, mat4 *Transform)
 internal void
 DrawQuadProjected(gl_render_data *RenderData, quad *Quad)
 {
-    mat4 Translation = mat4Multiply(mat4Identity(1.0f), mat4Translate(v2Expand(Quad->Position, 0.0f)));
+    mat4 Translation = mat4Multiply(mat4Identity(1.0f), mat4Translate(v2Expand(vec2{Quad->Position.X - (Quad->Size.X * 0.5f), Quad->Position.Y}, 0.0f)));
     mat4 Rotation    = mat4Multiply(mat4Identity(1.0f), mat4RHRotate(AngleRad(Quad->Rotation), vec3{0.0f, 0.0f, 1.0f}));
     mat4 Scale       = mat4MakeScale(v2Expand(Quad->Size, 1.0f));
     
@@ -177,7 +177,7 @@ DrawGameText(gl_render_data *RenderData,
         char C = (Text.Data[StringIndex]);
         font_glyph Glyph = RenderData->LoadedFonts[Font].Glyphs[C];
         
-        vec2 WorldPosition = {(Position.X + Glyph.GlyphOffset.X) * FontScale, (Position.Y) * FontScale};
+        vec2 WorldPosition = {(Position.X + Glyph.GlyphOffset.X) * FontScale, (Position.Y - Glyph.GlyphOffset.Y) * FontScale};
         vec2 RenderScale   = {Glyph.GlyphSize.X * FontScale, (real32)Glyph.GlyphSize.Y * (FontScale * 2)};
         ivec2 AtlasOffset   = Glyph.GlyphUVs;
         ivec2 GlyphSize     = Glyph.GlyphSize;
@@ -194,11 +194,10 @@ DrawImGui(gl_render_data *RenderData, time Time)
     
     ImGui::Begin("Render Quad Color Picker");
     ImGui::Text("Famerate: %i", Time.FPSCounter);
+    ImGui::Text("FrameTime: %.02f", Time.MSPerFrame);
     ImGui::Separator();
-    ImGui::SameLine();
     
     ImGui::Text("Clear Color:");
-    ImGui::Separator();
     ImGui::ColorPicker4("ClearColor", &RenderData->ClearColor.R, ImGuiColorEditFlags_PickerHueWheel);
     ImGui::SameLine();
     ImGui::End();

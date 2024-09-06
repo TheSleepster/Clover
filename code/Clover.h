@@ -38,7 +38,17 @@ struct time
     real64 Alpha;
     real64 Next;
     
-    int32 FPSCounter;
+    int32  FPSCounter;
+    real32 MSPerFrame;
+};
+
+enum sprite_type
+{
+    SPRITE_Nil    = 0,
+    SPRITE_Player = 1,
+    SPRITE_Rock   = 2,
+    SPRITE_Tree00 = 3,
+    SPRITE_Count,
 };
 
 enum entity_flags
@@ -60,13 +70,21 @@ enum entity_arch
     COUNT
 };
 
-enum sprite_type
+struct range_r32
 {
-    SPRITE_Nil    = 0,
-    SPRITE_Player = 1,
-    SPRITE_Rock   = 2,
-    SPRITE_Tree00 = 3,
-    SPRITE_Count,
+    real32 Minimum;
+    real32 Maximum;
+};
+
+struct range_v2
+{
+    vec2 Min;
+    vec2 Max;
+};
+
+struct box2d : range_v2
+{
+    bool IsActive;
 };
 
 struct entity
@@ -76,10 +94,12 @@ struct entity
     uint32      Flags;
     
     vec2        Position;
-    vec2        Acceleration;
     vec2        Size;
     real32      Speed;
     real32      Rotation;
+    
+    box2d SelectionBox;
+    box2d BoxCollider;
 };
 
 struct world

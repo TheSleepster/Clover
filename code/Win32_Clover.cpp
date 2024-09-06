@@ -161,6 +161,20 @@ Win32ProcessInputMessages(MSG Message, HWND WindowHandle, game_state *State)
                     Key->JustReleased = !Key->JustReleased && Key->IsDown && !IsDown;
                     Key->IsDown = IsDown;
                 }break;
+                
+                case WM_MOUSEMOVE:
+                {
+                    
+                    POINT MousePoint;
+                    GetCursorPos(&MousePoint);
+                    ScreenToClient(WindowHandle, &MousePoint);
+                    
+                    State->GameInput.Keyboard.LastMouse    = State->GameInput.Keyboard.CurrentMouse;
+                    State->GameInput.Keyboard.CurrentMouse = ivec2{MousePoint.x, MousePoint.y};
+                    State->GameInput.Keyboard.DeltaMouse   = State->GameInput.Keyboard.CurrentMouse - State->GameInput.Keyboard.LastMouse;
+                    
+                }break;
+                
                 default:
                 {
                     TranslateMessage(&Message);
@@ -472,13 +486,13 @@ WinMain(HINSTANCE hInstance,
                 QueryPerformanceCounter(&EndCounter);
                 
                 DeltaCounter = real64(EndCounter.QuadPart - LastCounter.QuadPart);
-                real32 MSPerFrame = GetFPSTime();
                 LastCounter = EndCounter;
                 
                 FPSTimer += Time.Delta;
                 if(FPSTimer >= 1)
                 {
                     Time.FPSCounter = int32(PerfCountFrequency / DeltaCounter);
+                    Time.MSPerFrame = GetFPSTime();
                     FPSTimer = 0;
                 }
                 //printm("%.02fms\n", MSPerFrame);

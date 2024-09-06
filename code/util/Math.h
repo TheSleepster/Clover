@@ -201,8 +201,8 @@
 # endif
 #endif
 
-#define Min(a, b) ((a) > (b) ? (b) : (a))
-#define Max(a, b) ((a) < (b) ? (b) : (a))
+#define MIN(a, b) ((a) > (b) ? (b) : (a))
+#define MAX(a, b) ((a) < (b) ? (b) : (a))
 #define ABS(a) ((a) > 0 ? (a) : -(a))
 #define Modulous(a, m) (((a) % (m)) >= 0 ? ((a) % (m)) : (((a) % (m)) + (m)))
 #define Square(x) ((x) * (x))

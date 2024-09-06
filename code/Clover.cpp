@@ -31,6 +31,7 @@
 
 global_variable entity *Player = {};
 
+#define WORLDTOTILE(Position) (TileToWorldPos(WorldToTilePos(Position)))
 
 internal inline uint64 
 GetRandom()
@@ -85,10 +86,10 @@ DrawSprite(gl_render_data    *RenderData,
 }
 
 internal void
-DrawEntity(gl_render_data *RenderData, entity *Entity, vec4 Color)
+DrawEntity(gl_render_data *RenderData, entity *Entity, vec2 Position, vec4 Color)
 {
     static_sprite_data SpriteData = RenderData->GameData.Sprites[Entity->Sprite];
-    return(DrawSprite(RenderData, SpriteData, Entity->Position + v2Cast(SpriteData.SpriteSize) * 0.5f, v2Cast(SpriteData.SpriteSize), Color, Entity->Rotation, 0));
+    return(DrawSprite(RenderData, SpriteData, Entity->Position, v2Cast(SpriteData.SpriteSize), Color, Entity->Rotation, 0));
 }
 
 internal entity *
@@ -155,9 +156,11 @@ SetupPlayer(entity *Entity)
     Entity->Archetype = PLAYER;
     Entity->Sprite    = SPRITE_Player; 
     Entity->Flags    += IS_ACTIVE|IS_ACTOR;
+    Entity->Size       = {12, 11};
     Entity->Position = {};
     Entity->Rotation = 0;
     Entity->Speed    = 100.0f;              // PIXELS PER SECOND
+    Entity->BoxCollider = {};
 }
 
 internal void
@@ -166,9 +169,11 @@ SetupRock(entity *Entity)
     Entity->Archetype = ROCK;
     Entity->Sprite    = SPRITE_Rock; 
     Entity->Flags    += IS_ACTIVE|IS_SOLID;
+    Entity->Size      = {12, 11};
     Entity->Position  = {};
     Entity->Rotation = 0;
     Entity->Speed     = 1.0f;
+    Entity->BoxCollider = {};
 }
 
 internal void
@@ -177,9 +182,11 @@ SetupTree00(entity *Entity)
     Entity->Archetype = TREE00;
     Entity->Sprite    = SPRITE_Tree00; 
     Entity->Flags    += IS_ACTIVE|IS_SOLID;
+    Entity->Size      = {12, 12};
     Entity->Position  = {};
-    Entity->Rotation = 0;
+    Entity->Rotation  = 0;
     Entity->Speed     = 1.0f;
+    Entity->BoxCollider = {};
 }
 
 internal void
@@ -195,6 +202,118 @@ ResetGame(gl_render_data *RenderData, game_state *State)
     {
         RenderData->GameData.Sprites[i] = {};
     }
+}
+
+internal vec2
+ConvertMouseToWorldPos(gl_render_data *RenderData, ivec2 MousePos, ivec4 WindowSizeData)
+{
+    vec2 TransformedMousePos  = {};
+    
+    vec2 NDC = {(MousePos.X / (WindowSizeData.Width * 0.5f)) - 1.0f, 1.0f - (MousePos.Y / (WindowSizeData.Height * 0.5f))};
+    vec4 NDCPosition = v2Expand(NDC, 0.0f, 1.0f);
+    
+    mat4 InverseProjection = mat4Inverse(RenderData->GameCamera.ProjectionMatrix);
+    mat4 InverseViewMatrix = mat4Inverse(RenderData->GameCamera.ViewMatrix);
+    
+    NDCPosition = mat4Transform(InverseProjection, NDCPosition);
+    NDCPosition = mat4Transform(InverseViewMatrix, NDCPosition);
+    
+    TransformedMousePos = {NDCPosition.X, NDCPosition.Y};
+    
+    return(TransformedMousePos);
+}
+
+internal real32
+TileToWorldInt32(real32 Tile)
+{
+    return(Tile * (real32)TILE_SIZE);
+}
+
+internal vec2
+TileToWorldPos(vec2 TilePos)
+{
+    vec2 Result = {};
+    Result.X = TileToWorldInt32(TilePos.X);
+    Result.Y = TileToWorldInt32(TilePos.Y);
+    
+    return(Result);
+}
+
+internal int32
+WorldToTileReal32(real32 World)
+{
+    return(int32(World) / int32(TILE_SIZE));
+}
+
+internal vec2
+WorldToTilePos(vec2 WorldPosition)
+{
+    vec2 Result = {};
+    Result.X = (real32)WorldToTileReal32(WorldPosition.X);
+    Result.Y = (real32)WorldToTileReal32(WorldPosition.Y);
+    
+    return(Result);
+}
+
+internal inline range_v2
+CreateRange(vec2 Min, vec2 Max)
+{
+    range_v2 Result = {};
+    Result.Min = Min;
+    Result.Max = Max;
+    
+    return(Result);
+}
+
+internal inline range_v2
+RangeShift(range_v2 Range, vec2 Shift)
+{
+    range_v2 NewRange = {};
+    NewRange.Min = Range.Min + Shift;
+    NewRange.Max = Range.Max + Shift;
+    
+    return(NewRange);
+}
+
+internal inline vec2 
+MakeCentered(vec2 Position, vec2 Size)
+{
+    vec2 Centered = {};
+    
+    Centered.X = Position.X + (Size.X * 0.5f);
+    Centered.Y = Position.Y + (Size.Y * 0.5f);
+    
+    return(Centered);
+}
+
+internal inline range_v2
+RangeMakeCentered(vec2 Size)
+{
+    range_v2 CenteredRange = {};
+    
+    CenteredRange.Max = Size;
+    CenteredRange = RangeShift(CenteredRange, vec2{Size.X * -0.5f, 0.0f});
+    
+    return(CenteredRange);
+}
+
+internal inline vec2
+RangeSize(range_v2 Range)
+{
+    vec2 Size = {};
+    
+    Size = Range.Min - Range.Max;
+    Size.X = fabsf(Size.X);
+    Size.Y = fabsf(Size.Y);
+    
+    return(Size);
+}
+
+internal inline bool
+IsRangeWithinBounds(range_v2 Bounds, vec2 Test)
+{
+    return (Test.X >= Bounds.Min.X && Test.X <= Bounds.Max.X && 
+            Test.Y >= Bounds.Min.Y && Test.Y <= Bounds.Max.Y);
 }
 
 extern
@@ -219,23 +338,24 @@ GAME_ON_AWAKE(GameOnAwake)
         entity *En = CreateEntity(State);
         SetupRock(En);
         En->Position = vec2{GetRandomReal32_Range(-WORLD_SIZE * 10, WORLD_SIZE * 10), GetRandomReal32_Range(-WORLD_SIZE * 20, WORLD_SIZE * 20)};
+        En->Position = TileToWorldPos(WorldToTilePos(En->Position));
         
         entity *En2 = CreateEntity(State);
         SetupTree00(En2);
         En2->Position = vec2{GetRandomReal32_Range(-WORLD_SIZE * 10, WORLD_SIZE * 10), GetRandomReal32_Range(-WORLD_SIZE * 20, WORLD_SIZE * 20)};
+        En2->Position = TileToWorldPos(WorldToTilePos(En2->Position));
     }
     
 }
 
 extern
-GAME_UPDATE_AND_DRAW(GameUpdateAndRender)
+GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
 {
     DrawImGui(RenderData, Time);
     
     HandleLoadedSounds(State);
     HandleLoadedTracks(State);
     
-    RenderData->GameCamera.Target = Player->Position;
     RenderData->GameCamera.Zoom = 5.3f;
     
     RenderData->GameCamera.ViewMatrix           = mat4Identity(1.0f);
@@ -248,6 +368,8 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndRender)
     RenderData->GameCamera.ProjectionMatrix     = mat4RHGLOrtho((real32)SizeData.Width * -0.5f, (real32)SizeData.Width * 0.5f, (real32)SizeData.Height * -0.5f, (real32)SizeData.Height * 0.5f, -1.0f, 1.0f); 
     RenderData->GameCamera.ProjectionViewMatrix = mat4Multiply(RenderData->GameCamera.ProjectionMatrix, RenderData->GameCamera.ViewMatrix);
     
+    vec2 MouseToWorld = ConvertMouseToWorldPos(RenderData, State->GameInput.Keyboard.CurrentMouse, SizeData);
+    DrawGameText(RenderData, STR("Test"), MouseToWorld, 0.1f, UBUNTU_MONO, BLACK);
     // TODO(Sleepster): Perhaps make it where we have solids, and actors. Solids will be placed without matrix transforms.
     //                  STATIC SOLIDS if you would. Actors will be Dynamic and will require matrix calculations.
     for(uint32 EntityIndex = 0;
@@ -261,18 +383,55 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndRender)
             {
                 case PLAYER:
                 {
-                    HandleInput(State, Player, Time);
+                    HandleInput(State, Temp, Time);
+                    RenderData->GameCamera.Target = Temp->Position;
                     v2Approach(&RenderData->GameCamera.Position, RenderData->GameCamera.Target, 5.0f, Time.Delta);
-                    DrawEntity(RenderData, Temp, WHITE);
+                    DrawEntity(RenderData, Temp, Temp->Position, WHITE);
                 }break;
                 default:
                 {
-                    DrawEntity(RenderData, Temp, WHITE);
+                    ivec2 EntityPosInt = iv2Cast(Temp->Position);
+                    DrawGameText(RenderData, sprints(&Memory->TemporaryStorage, STR("%d, %d"), EntityPosInt.X, EntityPosInt.Y - 100), {Temp->Position.X - 5, Temp->Position.Y - 5}, 0.10f, UBUNTU_MONO, BLACK);
+                    DrawEntity(RenderData, Temp, Temp->Position, WHITE);
+                    
+                    static_sprite_data *Sprite = GetSprite(RenderData, Temp->Sprite);
+                    range_v2 Bounds = RangeMakeCentered(v2Cast(Sprite->SpriteSize));
+                    Bounds = RangeShift(Bounds, Temp->Position - (Temp->Size * 0.5f));
+                    vec4 Color = BLUE;
+                    Color.A = 0.1f;
+                    
+                    if(IsRangeWithinBounds(Bounds, MouseToWorld))
+                    {
+                        Color.A = 1.0f;
+                    }
+                    DrawQuad(RenderData, Temp->Position, RangeSize(Bounds), 0, Color);
                 }break;
             }
         }
     }
-    DrawGameText(RenderData, STR("This is an incredibly long string that I am using to test the engine's font rendering capabities oh god oh fuck oh shit running out of characters can it even render this?"), {-300, -100}, 0.5f, UBUNTU_MONO, BLACK);
+    
+    DrawGameText(RenderData, sprints(&Memory->TemporaryStorage, STR("%f, %f"), MouseToWorld.X, MouseToWorld.Y), {-100, 0}, 0.25f, UBUNTU_MONO, BLACK);
+    DrawQuad(RenderData, {0, 0}, {10, 10}, 0, vec4{1.0f, 0.0, 0.0, 1.0f});
+    
+    ivec2 PlayerOffset = iv2Cast(WorldToTilePos(Player->Position));
+    ivec2  TileRadius   = {15, 20};
+    
+    for(int32 TileX = PlayerOffset.X - TileRadius.X;
+        TileX < PlayerOffset.X + TileRadius.Y;
+        ++TileX)
+    {
+        for(int32 TileY = PlayerOffset.Y - TileRadius.Y;
+            TileY < PlayerOffset.Y + TileRadius.Y;
+            ++TileY)
+        {
+            if((TileX + (TileY % 2 == 0)) % 2 == 0)
+            {
+                real32 X = TileX * TILE_SIZE;
+                real32 Y = TileY * TILE_SIZE;
+                DrawQuad(RenderData, {X, Y - (TILE_SIZE * -0.20f)}, {TILE_SIZE, TILE_SIZE}, 0, DARK_GRAY);
+            }
+        }
+    }
 }
 
 extern
