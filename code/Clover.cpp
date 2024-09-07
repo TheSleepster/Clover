@@ -31,7 +31,6 @@
 
 global_variable entity *Player = {};
 
-#define WORLDTOTILE(Position) (TileToWorldPos(WorldToTilePos(Position)))
 
 internal inline uint64 
 GetRandom()

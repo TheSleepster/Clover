@@ -118,6 +118,52 @@ struct Input
     KeyboardInput Keyboard;
 };
 
+
+// NOTE(Sleepster): Perhaps instead of return(InputKey.IsDown && InputKey.HalfTransitionCount >= 1); 
+//                                                               use InputKey.HalfTransitionCounter > 1 as well
+internal inline bool
+IsKeyPressed(KeyCodeID Keycode, Input *GameInput)
+{
+    Key InputKey = GameInput->Keyboard.Keys[Keycode];
+    return(InputKey.IsDown && InputKey.HalfTransitionCount >= 1);
+}
+
+internal inline bool
+IsKeyReleased(KeyCodeID Keycode, Input *GameInput)
+{
+    Key InputKey = GameInput->Keyboard.Keys[Keycode];
+    return(!InputKey.IsDown && InputKey.HalfTransitionCount >= 1);
+}
+
+internal inline bool 
+IsKeyDown(KeyCodeID Keycode, Input *GameInput)
+{
+    return(GameInput->Keyboard.Keys[Keycode].IsDown);
+}
+
+internal inline bool 
+IsGameKeyDown(KeyBindings InputType, Input *GameInput)
+{
+    Key InputKey = GameInput->Keyboard.Keys[GameInput->Keyboard.Bindings[InputType].MainKey];
+    return(InputKey.IsDown);
+}
+
+internal inline bool
+IsGameKeyPressed(KeyBindings InputType, Input *GameInput)
+{
+    Key InputKey = GameInput->Keyboard.Keys[GameInput->Keyboard.Bindings[InputType].MainKey];
+    return(InputKey.IsDown && InputKey.HalfTransitionCount >= 1);
+}
+
+internal inline bool
+IsGameKeyReleased(KeyBindings InputType, Input *GameInput)
+{
+    Key InputKey = GameInput->Keyboard.Keys[GameInput->Keyboard.Bindings[InputType].MainKey];
+    return(!InputKey.IsDown && InputKey.HalfTransitionCount >= 1);
+}
+
+// NOTE(Sleepster): OLD INPUT
+#if 0
 internal inline bool
 IsKeyDown(KeyCodeID KeyCode, Input *GameInput) 
 {
@@ -145,6 +191,8 @@ IsGameKeyPressed(KeyBindings InputType, Input *GameInput)
     if(LoadedKey.JustPressed) return(1);
     else return(0);
 }
+#endif
+
 
 #endif // _CLOVER_INPUT_H
 

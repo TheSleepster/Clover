@@ -112,6 +112,17 @@ Win32ProcessInputMessages(MSG Message, HWND WindowHandle, game_state *State)
 {
     ImGuiIO &io = ImGui::GetIO();
     
+    // NOTE(Sleepster): Makes sure to clear the mouse inputs. Why? Windows is dumb
+    for(int32 KeycodeIndex = 0;
+        KeycodeIndex <= KEY_RIGHT_MOUSE;
+        ++KeycodeIndex)
+    {
+        State->GameInput.Keyboard.Keys[KeycodeIndex].JustPressed         = 0;
+        State->GameInput.Keyboard.Keys[KeycodeIndex].JustReleased        = 0;
+        State->GameInput.Keyboard.Keys[KeycodeIndex].IsDown              = 0;
+        State->GameInput.Keyboard.Keys[KeycodeIndex].HalfTransitionCount = 0;
+    }
+    
     while(PeekMessageA(&Message, WindowHandle, 0, 0, PM_REMOVE))
     {
         // NOTE(Sleepster): ImGui Is a little goofy ahhhhh if you don't give it complete processing of inputs 
@@ -152,30 +163,25 @@ Win32ProcessInputMessages(MSG Message, HWND WindowHandle, game_state *State)
                 case WM_MBUTTONDOWN:
                 case WM_XBUTTONDOWN:
                 {
-                    uint32 VKCode = 0;
-                    switch (Message.message)
-                    {
-                        case WM_LBUTTONDOWN:
-                        case WM_LBUTTONUP: VKCode = VK_LBUTTON; break;
-                        case WM_RBUTTONDOWN:
-                        case WM_RBUTTONUP: VKCode = VK_RBUTTON; break;
-                        case WM_MBUTTONDOWN:
-                        case WM_MBUTTONUP: VKCode = VK_MBUTTON; break;
-                        case WM_XBUTTONDOWN:
-                        case WM_XBUTTONUP:
-                        VKCode = (GET_XBUTTON_WPARAM(Message.wParam) == XBUTTON1) ? VK_XBUTTON1 : VK_XBUTTON2;
-                        break;
-                    }
+                    // NOTE(Sleepster): This is the longest fucking "if" check ever holy moly. Unfortunately Windows is dumb, 
+                    //                  so checking the Message's wParam doesn't always work right. Hence this crime of ternary
+                    bool8 IsDown = 
+                    (Message.message == WM_LBUTTONDOWN) || (Message.message == WM_RBUTTONDOWN)|| 
+                    (Message.message == WM_MBUTTONDOWN) || (Message.message == WM_XBUTTONDOWN);
                     
-                    bool IsDown = (Message.message == WM_LBUTTONDOWN || Message.message == WM_RBUTTONDOWN ||
-                                   Message.message == WM_MBUTTONDOWN || Message.message == WM_XBUTTONDOWN);
+                    int32 MouseCode = 
+                    (Message.message == WM_LBUTTONDOWN || Message.message == WM_LBUTTONUP) ? VK_LBUTTON:
+                    (Message.message == WM_RBUTTONDOWN || Message.message == WM_RBUTTONUP) ? VK_RBUTTON:
+                    (Message.message == WM_MBUTTONDOWN || Message.message == WM_MBUTTONUP) ? VK_MBUTTON:
+                    (Message.message == WM_XBUTTONDOWN || Message.message == WM_XBUTTONUP) ? 
+                    (GET_XBUTTON_WPARAM(Message.wParam) == XBUTTON1 ? VK_XBUTTON1 : VK_XBUTTON2) : 0;
                     
-                    KeyCodeID KeyCode = State->KeyCodeLookup[VKCode];
+                    KeyCodeID KeyCode  = State->KeyCodeLookup[MouseCode];
                     Key *Key = &State->GameInput.Keyboard.Keys[KeyCode];
-                    Key->JustPressed = IsDown && !Key->IsDown;
-                    Key->JustReleased = !IsDown && Key->IsDown;
-                    Key->IsDown = IsDown;
-                    
+                    Key->JustPressed   = !Key->JustPressed && !Key->IsDown && IsDown;
+                    Key->JustReleased  = !Key->JustReleased && Key->IsDown && !IsDown;
+                    Key->IsDown        = IsDown;
+                    Key->HalfTransitionCount++;
                 }break;
                 
                 
