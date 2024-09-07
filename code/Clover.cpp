@@ -32,6 +32,8 @@
 global_variable entity *Player = {};
 
 
+constexpr real32 ItemPickupDist = 30.0f;
+
 internal inline uint64 
 GetRandom()
 {
@@ -70,8 +72,6 @@ LoadSpriteData(game_state *State)
     
     State->GameData.Sprites[SPRITE_Tree01]   = {.AtlasOffset = {64,  0}, .SpriteSize = { 9, 12}};
     State->GameData.Sprites[SPRITE_Trunk]    = {.AtlasOffset = {64, 16}, .SpriteSize = { 6,  6}};
-    
-    
 }
 
 internal inline static_sprite_data *
@@ -169,6 +169,8 @@ SetupPlayer(entity *Entity)
     Entity->Rotation    = 0;
     Entity->Speed       = 100.0f;              // PIXELS PER SECOND
     Entity->BoxCollider = {};
+    
+    Entity->ItemID      = ITEM_Nil;
 }
 
 internal void
@@ -183,6 +185,8 @@ SetupRock(entity *Entity)
     Entity->Rotation    = 0;
     Entity->Speed       = 1.0f;
     Entity->BoxCollider = {};
+    
+    Entity->ItemID      = ITEM_Pebbles;
 }
 
 internal void
@@ -197,7 +201,26 @@ SetupTree00(entity *Entity)
     Entity->Rotation    = 0;
     Entity->Speed       = 1.0f;
     Entity->BoxCollider = {};
+    
+    Entity->ItemID      = ITEM_Branches;
 }
+
+internal void
+SetupTree01(entity *Entity)
+{
+    Entity->Archetype   = TREE;
+    Entity->Sprite      = SPRITE_Tree01; 
+    Entity->Flags      += IS_ACTIVE|IS_SOLID|IS_DESTRUCTABLE;
+    Entity->Size        = {9, 12};
+    Entity->Health      = TreeHealth;
+    Entity->Position    = {};
+    Entity->Rotation    = 0;
+    Entity->Speed       = 1.0f;
+    Entity->BoxCollider = {};
+    
+    Entity->ItemID      = ITEM_Trunk;
+}
+
 
 internal void
 SetupItemPebbles(entity *Entity)
@@ -229,7 +252,6 @@ SetupItemTrunk(entity *Entity)
     Entity->Size      = {6, 6};
     Entity->ItemID    = ITEM_Trunk;
 }
-
 
 internal void
 ResetGame(gl_render_data *RenderData, game_state *State)
@@ -425,66 +447,99 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
     //                  STATIC SOLIDS if you would. Actors will be Dynamic and will require matrix calculations.
     
     // NOTE(Sleepster): SELECTED ENTITY
+    // TODO(Sleepster): IsValid?
     real32 MinimumDistance = 0;
     for(uint32 EntityIndex = 0;
         EntityIndex <= State->World.EntityCounter;
         ++EntityIndex)
     {
         entity *Temp = &State->World.Entities[EntityIndex];
-        
-        static_sprite_data *Sprite = GetSprite(State, Temp->Sprite);
-        range_v2 Bounds = RangeMakeCentered(v2Cast(Sprite->SpriteSize));
-        Bounds = RangeShift(Bounds, Temp->Position - (Temp->Size * 0.5f));
-        Bounds.Min = Bounds.Min - vec2{20, 20};
-        Bounds.Max = Bounds.Max + vec2{20, 20};
-        
-        real32 Distance = fabsf(v2Distance(Temp->Position, MouseToWorld));
-        
-        if(IsRangeWithinBounds(Bounds, MouseToWorld))
+        if((Temp->Flags & IS_VALID))
         {
-            if(!State->World.WorldFrame.SelectedEntity || (Distance < MinimumDistance))
-            {
-                State->World.WorldFrame.SelectedEntity = Temp;
-                MinimumDistance = Distance;
-            }
+            static_sprite_data *Sprite = GetSprite(State, Temp->Sprite);
+            range_v2 Bounds = RangeMakeCentered(v2Cast(Sprite->SpriteSize));
+            Bounds = RangeShift(Bounds, Temp->Position - (Temp->Size * 0.5f));
+            Bounds.Min = Bounds.Min - vec2{20, 20};
+            Bounds.Max = Bounds.Max + vec2{20, 20};
             
-            if(IsGameKeyPressed(ATTACK, &State->GameInput) && (Temp->Flags & IS_DESTRUCTABLE))
+            real32 Distance = fabsf(v2Distance(Temp->Position, MouseToWorld));
+            
+            if(IsRangeWithinBounds(Bounds, MouseToWorld))
             {
-                entity *SelectedEntity = State->World.WorldFrame.SelectedEntity;
-                --Temp->Health;
-                if(Temp->Health <= 0)
+                if(!State->World.WorldFrame.SelectedEntity || (Distance < MinimumDistance))
                 {
-                    switch(SelectedEntity->Archetype)
+                    State->World.WorldFrame.SelectedEntity = Temp;
+                    MinimumDistance = Distance;
+                }
+                
+                if(IsGameKeyPressed(ATTACK, &State->GameInput) && (Temp->Flags & IS_DESTRUCTABLE))
+                {
+                    entity *SelectedEntity = State->World.WorldFrame.SelectedEntity;
+                    --Temp->Health;
+                    if(Temp->Health <= 0)
                     {
-                        case ROCK:
+                        switch(SelectedEntity->Archetype)
                         {
-                            entity *Pebbles = CreateEntity(State);
-                            SetupItemPebbles(Pebbles);
-                            Pebbles->Position = SelectedEntity->Position;
-                        }break;
-                        
-                        case TREE:
-                        {
-                            switch(SelectedEntity->Sprite)
+                            case ROCK:
                             {
-                                case SPRITE_Tree00:
+                                entity *Pebbles = CreateEntity(State);
+                                SetupItemPebbles(Pebbles);
+                                Pebbles->Position = SelectedEntity->Position;
+                            }break;
+                            
+                            case TREE:
+                            {
+                                switch(SelectedEntity->Sprite)
                                 {
-                                    entity *Branches = CreateEntity(State);
-                                    SetupItemBranches(Branches);
-                                    Branches->Position = SelectedEntity->Position;
-                                }break;
-                                
-                                case SPRITE_Tree01:
-                                {
-                                    entity *Trunk = CreateEntity(State);
-                                    SetupItemBranches(Trunk);
-                                    Trunk->Position = SelectedEntity->Position;
+                                    case SPRITE_Tree00:
+                                    {
+                                        entity *Branches = CreateEntity(State);
+                                        SetupItemBranches(Branches);
+                                        Branches->Position = SelectedEntity->Position;
+                                    }break;
+                                    
+                                    case SPRITE_Tree01:
+                                    {
+                                        entity *Trunk = CreateEntity(State);
+                                        SetupItemBranches(Trunk);
+                                        Trunk->Position = SelectedEntity->Position;
+                                    }break;
                                 }break;
                             }break;
-                        }break;
+                        }
+                        //PlaySound(&Memory->TemporaryStorage, State, STR("boop.wav"), 1);
+                        DeleteEntity(Temp);
+                    }
+                }
+            }
+            
+            // NOTE(Sleepster): Inventory
+            if(Temp->Flags & IS_ITEM && Temp->Archetype == ITEM)
+            {
+                real32 ItemDistance = fabsf(v2Distance(Temp->Position, Player->Position));
+                if(ItemDistance <= ItemPickupDist)
+                {
+                    if(Player->Inventory.Items[Temp->ItemID].ItemID == 0)
+                    {
+                        item NewItem = {};
+                        NewItem.Archetype  = Temp->Archetype;
+                        NewItem.Flags      = IS_VALID|IS_ITEM|IS_IN_INVENTORY;
+                        NewItem.Sprite     = Temp->Sprite;
+                        NewItem.ItemID     = Temp->ItemID;
+                        NewItem.StackCount = 128;
+                        
+                        Player->Inventory.Items[NewItem.ItemID] = NewItem;
                     }
                     
-                    //PlaySound(&Memory->TemporaryStorage, State, STR("boop.wav"), 1);
+                    if(Player->Inventory.Items[Temp->ItemID].CurrentStack < Player->Inventory.Items[Temp->ItemID].StackCount)
+                    {
+                        Player->Inventory.Items[Temp->ItemID].CurrentStack++;
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                    
                     DeleteEntity(Temp);
                 }
             }

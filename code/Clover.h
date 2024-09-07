@@ -43,6 +43,23 @@ struct time
     real32 CurrentTimeInSeconds;
 };
 
+struct range_r32
+{
+    real32 Minimum;
+    real32 Maximum;
+};
+
+struct range_v2
+{
+    vec2 Min;
+    vec2 Max;
+};
+
+struct box2d : range_v2
+{
+    bool IsActive;
+};
+
 enum sprite_type
 {
     SPRITE_Nil      = 0,
@@ -66,6 +83,7 @@ enum entity_flags
     IS_ACTIVE       = 1 << 4,
     IS_ITEM         = 1 << 5,
     IS_DESTRUCTABLE = 1 << 6,
+    IS_IN_INVENTORY = 1 << 7,
     ENTITY_FLAGS_COUNT,
 };
 
@@ -79,7 +97,6 @@ enum entity_arch
     COUNT
 };
 
-
 enum item_id
 {
     ITEM_Nil,
@@ -87,24 +104,6 @@ enum item_id
     ITEM_Branches,
     ITEM_Trunk,
     ITEM_IDCount
-};
-
-
-struct range_r32
-{
-    real32 Minimum;
-    real32 Maximum;
-};
-
-struct range_v2
-{
-    vec2 Min;
-    vec2 Max;
-};
-
-struct box2d : range_v2
-{
-    bool IsActive;
 };
 
 // NOTE(Sleepster): Probably don't need this
@@ -115,8 +114,13 @@ struct item
     sprite_type Sprite;
     item_id     ItemID;
     
-    vec2        Position;
-    vec2        Size;
+    int32       StackCount;
+    int32       CurrentStack;
+};
+
+struct entity_item_inventory
+{
+    item Items[ITEM_IDCount];
 };
 
 struct entity
@@ -133,8 +137,10 @@ struct entity
     real32      Speed;
     real32      Rotation;
     
-    box2d SelectionBox;
-    box2d BoxCollider;
+    box2d       SelectionBox;
+    box2d       BoxCollider;
+    
+    entity_item_inventory Inventory;
 };
 
 struct game_state
@@ -142,6 +148,9 @@ struct game_state
     KeyCodeID KeyCodeLookup[KEY_COUNT];
     Input GameInput;
     
+    
+    
+    // NOTE(Sleepster): World Data
     struct
     {
         entity Entities[MAX_ENTITIES];  
@@ -155,6 +164,7 @@ struct game_state
         }WorldFrame;
     }World;
     
+    // NOTE(Sleepster): Audio Stuffs
     struct
     {   
         ma_engine AudioEngine;
@@ -166,7 +176,7 @@ struct game_state
         uint32 LoadedTracks;
     }SFXData;
     
-    // GAME ASSETS
+    // NOTE(Sleepster): Visual Assets
     struct 
     { 
         static_sprite_data Sprites[20];
@@ -198,7 +208,7 @@ struct game_functions
     
     game_on_awake          *OnAwake;
     game_fixed_update      *FixedUpdate;
-    game_update_and_draw *UpdateAndDraw;
+    game_update_and_draw   *UpdateAndDraw;
     
     bool IsLoaded;
     bool IsValid;
