@@ -123,6 +123,14 @@ Win32ProcessInputMessages(MSG Message, HWND WindowHandle, game_state *State)
         State->GameInput.Keyboard.Keys[KeycodeIndex].HalfTransitionCount = 0;
     }
     
+    for(int32 KeycodeIndex = KEY_RIGHT_MOUSE;
+        KeycodeIndex <= KEY_COUNT;
+        ++KeycodeIndex)
+    {
+        State->GameInput.Keyboard.Keys[KeycodeIndex].HalfTransitionCount = 0;
+    }
+    
+    
     while(PeekMessageA(&Message, WindowHandle, 0, 0, PM_REMOVE))
     {
         // NOTE(Sleepster): ImGui Is a little goofy ahhhhh if you don't give it complete processing of inputs 
@@ -145,6 +153,7 @@ Win32ProcessInputMessages(MSG Message, HWND WindowHandle, game_state *State)
                     Key->JustPressed   = !Key->JustPressed && !Key->IsDown && IsDown;
                     Key->JustReleased  = !Key->JustReleased && Key->IsDown && !IsDown;
                     Key->IsDown        = IsDown;
+                    Key->HalfTransitionCount++;
                     
                     bool8 AltKeyIsDown = ((Message.lParam & (1 << 29)) != 0);
                     if(VKCode == VK_F4 && AltKeyIsDown)

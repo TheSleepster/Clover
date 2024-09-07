@@ -44,21 +44,28 @@ struct time
 
 enum sprite_type
 {
-    SPRITE_Nil    = 0,
-    SPRITE_Player = 1,
-    SPRITE_Rock   = 2,
-    SPRITE_Tree00 = 3,
+    SPRITE_Nil      = 0,
+    SPRITE_Player   = 1,
+    SPRITE_Rock     = 2,
+    SPRITE_Tree00   = 3,
+    SPRITE_Tree01   = 4,
+    SPRITE_Pebbles  = 5,
+    SPRITE_Branches = 6,
+    SPRITE_Trunk    = 7,
     SPRITE_Count,
 };
 
+
 enum entity_flags
 {
-    IS_VALID  = 1 << 0,
-    IS_SOLID  = 1 << 1,
-    IS_ACTOR  = 1 << 2,
-    IS_TILE   = 1 << 3,
-    IS_ACTIVE = 1 << 4,
-    ENTITY_FLAGS_COUNT
+    IS_VALID        = 1 << 0,
+    IS_SOLID        = 1 << 1,
+    IS_ACTOR        = 1 << 2,
+    IS_TILE         = 1 << 3,
+    IS_ACTIVE       = 1 << 4,
+    IS_ITEM         = 1 << 5,
+    IS_DESTRUCTABLE = 1 << 6,
+    ENTITY_FLAGS_COUNT,
 };
 
 enum entity_arch
@@ -66,9 +73,21 @@ enum entity_arch
     NIL    = 0,
     PLAYER = 1,
     ROCK   = 2,
-    TREE00 = 3,
+    TREE   = 3,
+    ITEM   = 5,
     COUNT
 };
+
+
+enum item_id
+{
+    ITEM_Nil,
+    ITEM_Pebbles,
+    ITEM_Branches,
+    ITEM_Trunk,
+    ITEM_IDCount
+};
+
 
 struct range_r32
 {
@@ -87,12 +106,25 @@ struct box2d : range_v2
     bool IsActive;
 };
 
+// NOTE(Sleepster): Probably don't need this
+struct item
+{
+    uint32      Archetype;
+    uint32      Flags;
+    sprite_type Sprite;
+    item_id     ItemID;
+    
+    vec2        Position;
+    vec2        Size;
+};
+
 struct entity
 {
     sprite_type Sprite;
+    item_id     ItemID;
+    
     uint32      Archetype;
     uint32      Flags;
-    
     uint32      Health;
     
     vec2        Position;
@@ -112,7 +144,10 @@ struct game_state
     struct
     {
         entity Entities[MAX_ENTITIES];  
+        item   Items[1000];
+        
         uint32 EntityCounter;
+        
         struct 
         {
             entity *SelectedEntity;
@@ -129,6 +164,12 @@ struct game_state
         uint32 ActiveInstances;
         uint32 LoadedTracks;
     }SFXData;
+    
+    // GAME ASSETS
+    struct 
+    { 
+        static_sprite_data Sprites[20];
+    }GameData;
 };
 
 #define GAME_ON_AWAKE(name) void name(game_memory *Memory, gl_render_data *RenderData, game_state *State)

@@ -118,9 +118,6 @@ struct Input
     KeyboardInput Keyboard;
 };
 
-
-// NOTE(Sleepster): Perhaps instead of return(InputKey.IsDown && InputKey.HalfTransitionCount >= 1); 
-//                                                               use InputKey.HalfTransitionCounter > 1 as well
 internal inline bool
 IsKeyPressed(KeyCodeID Keycode, Input *GameInput)
 {
@@ -141,26 +138,55 @@ IsKeyDown(KeyCodeID Keycode, Input *GameInput)
     return(GameInput->Keyboard.Keys[Keycode].IsDown);
 }
 
+internal inline void
+ConsumeKeyInput(KeyCodeID KeyCode, Input *GameInput)
+{
+    bool Result = IsKeyDown(KeyCode, GameInput);
+    GameInput->Keyboard.Keys[KeyCode].HalfTransitionCount = 0;
+}
+
 internal inline bool 
 IsGameKeyDown(KeyBindings InputType, Input *GameInput)
 {
-    Key InputKey = GameInput->Keyboard.Keys[GameInput->Keyboard.Bindings[InputType].MainKey];
-    return(InputKey.IsDown);
+    Key InputKey    = GameInput->Keyboard.Keys[GameInput->Keyboard.Bindings[InputType].MainKey];
+    Key AltInputKey = GameInput->Keyboard.Keys[GameInput->Keyboard.Bindings[InputType].AltKey];
+    return(InputKey.IsDown || AltInputKey.IsDown);
 }
 
 internal inline bool
 IsGameKeyPressed(KeyBindings InputType, Input *GameInput)
 {
-    Key InputKey = GameInput->Keyboard.Keys[GameInput->Keyboard.Bindings[InputType].MainKey];
-    return(InputKey.IsDown && InputKey.HalfTransitionCount >= 1);
+    Key InputKey    = GameInput->Keyboard.Keys[GameInput->Keyboard.Bindings[InputType].MainKey];
+    Key AltInputKey = GameInput->Keyboard.Keys[GameInput->Keyboard.Bindings[InputType].AltKey];
+    return(InputKey.IsDown && InputKey.HalfTransitionCount >= 1 || AltInputKey.IsDown && AltInputKey.HalfTransitionCount >= 1);
 }
+
 
 internal inline bool
 IsGameKeyReleased(KeyBindings InputType, Input *GameInput)
 {
-    Key InputKey = GameInput->Keyboard.Keys[GameInput->Keyboard.Bindings[InputType].MainKey];
-    return(!InputKey.IsDown && InputKey.HalfTransitionCount >= 1);
+    Key InputKey    = GameInput->Keyboard.Keys[GameInput->Keyboard.Bindings[InputType].MainKey];
+    Key AltInputKey = GameInput->Keyboard.Keys[GameInput->Keyboard.Bindings[InputType].AltKey];
+    return(!InputKey.IsDown && InputKey.HalfTransitionCount >= 1 || !AltInputKey.IsDown && AltInputKey.HalfTransitionCount >= 1);
 }
+
+internal inline void
+ConsumeGameKeyInput(KeyBindings InputType, Input *GameInput)
+{
+    Key InputKey    = GameInput->Keyboard.Keys[GameInput->Keyboard.Bindings[InputType].MainKey];
+    Key AltInputKey = GameInput->Keyboard.Keys[GameInput->Keyboard.Bindings[InputType].AltKey];
+    
+    InputKey.HalfTransitionCount = 0;
+    InputKey.IsDown = 1;
+    InputKey.JustPressed = 1;
+    InputKey.JustReleased = 0;
+    
+    AltInputKey.HalfTransitionCount = 0;
+    AltInputKey.IsDown = 1;
+    AltInputKey.JustPressed = 1;
+    AltInputKey.JustReleased = 0;
+}
+
 
 // NOTE(Sleepster): OLD INPUT
 #if 0

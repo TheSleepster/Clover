@@ -58,22 +58,30 @@ GetRandomReal32_Range(real32 Minimum, real32 Maximum)
 }
 
 internal inline void
-LoadSpriteData(gl_render_data *RenderData)
+LoadSpriteData(game_state *State)
 {
-    RenderData->GameData.Sprites[SPRITE_Nil]    = {.AtlasOffset = {0,  0}, .SpriteSize = {16, 16}};
-    RenderData->GameData.Sprites[SPRITE_Player] = {.AtlasOffset = {17, 0}, .SpriteSize = {12, 11}};
-    RenderData->GameData.Sprites[SPRITE_Rock]   = {.AtlasOffset = {32, 0}, .SpriteSize = {12, 8} };
-    RenderData->GameData.Sprites[SPRITE_Tree00] = {.AtlasOffset = {48, 0}, .SpriteSize = {12, 12}};
+    State->GameData.Sprites[SPRITE_Nil]      = {.AtlasOffset = {0,   0}, .SpriteSize = {16, 16}};
+    State->GameData.Sprites[SPRITE_Player]   = {.AtlasOffset = {17,  0}, .SpriteSize = {12, 11}};
+    State->GameData.Sprites[SPRITE_Rock]     = {.AtlasOffset = {32,  0}, .SpriteSize = {12,  8}};
+    State->GameData.Sprites[SPRITE_Pebbles]  = {.AtlasOffset = {32, 16}, .SpriteSize = { 6,  5}};
+    
+    State->GameData.Sprites[SPRITE_Tree00]   = {.AtlasOffset = {48,  0}, .SpriteSize = {11, 14}};
+    State->GameData.Sprites[SPRITE_Branches] = {.AtlasOffset = {48, 16}, .SpriteSize = { 7,  7}};
+    
+    State->GameData.Sprites[SPRITE_Tree01]   = {.AtlasOffset = {64,  0}, .SpriteSize = { 9, 12}};
+    State->GameData.Sprites[SPRITE_Trunk]    = {.AtlasOffset = {64, 16}, .SpriteSize = { 6,  6}};
+    
+    
 }
 
 internal inline static_sprite_data *
-GetSprite(gl_render_data *RenderData, sprite_type Sprite)
+GetSprite(game_state *State, sprite_type Sprite)
 {
-    return(&RenderData->GameData.Sprites[Sprite]);
+    return(&State->GameData.Sprites[Sprite]);
 }
 
 internal inline void
-DrawSprite(gl_render_data    *RenderData, 
+DrawSprite(gl_render_data    *RenderData,
            static_sprite_data SpriteData, 
            vec2               Position, 
            vec2               RenderSize, 
@@ -85,9 +93,9 @@ DrawSprite(gl_render_data    *RenderData,
 }
 
 internal void
-DrawEntity(gl_render_data *RenderData, entity *Entity, vec2 Position, vec4 Color)
+DrawEntity(gl_render_data *RenderData, game_state *State, entity *Entity, vec2 Position, vec4 Color)
 {
-    static_sprite_data SpriteData = RenderData->GameData.Sprites[Entity->Sprite];
+    static_sprite_data SpriteData = State->GameData.Sprites[Entity->Sprite];
     return(DrawSprite(RenderData, SpriteData, Entity->Position, v2Cast(SpriteData.SpriteSize), Color, Entity->Rotation, 0));
 }
 
@@ -152,43 +160,76 @@ HandleInput(game_state *State, entity *PlayerIn, time Time)
 internal void
 SetupPlayer(entity *Entity)
 {
-    Entity->Archetype = PLAYER;
-    Entity->Sprite    = SPRITE_Player; 
-    Entity->Flags    += IS_ACTIVE|IS_ACTOR;
-    Entity->Size       = {12, 11};
-    Entity->Position = {};
-    Entity->Rotation = 0;
-    Entity->Speed    = 100.0f;              // PIXELS PER SECOND
+    Entity->Archetype   = PLAYER;
+    Entity->Sprite      = SPRITE_Player; 
+    Entity->Flags      += IS_ACTIVE|IS_ACTOR;
+    Entity->Size        = {12, 11};
+    Entity->Health      = PlayerHealth;
+    Entity->Position    = {};
+    Entity->Rotation    = 0;
+    Entity->Speed       = 100.0f;              // PIXELS PER SECOND
     Entity->BoxCollider = {};
 }
 
 internal void
 SetupRock(entity *Entity)
 {
-    Entity->Archetype = ROCK;
-    Entity->Sprite    = SPRITE_Rock; 
-    Entity->Flags    += IS_ACTIVE|IS_SOLID;
-    Entity->Size      = {12, 11};
-    Entity->Health    = 2;
-    Entity->Position  = {};
-    Entity->Rotation = 0;
-    Entity->Speed     = 1.0f;
+    Entity->Archetype   = ROCK;
+    Entity->Sprite      = SPRITE_Rock; 
+    Entity->Flags      += IS_ACTIVE|IS_SOLID|IS_DESTRUCTABLE;
+    Entity->Size        = {12, 8};
+    Entity->Health      = RockHealth;
+    Entity->Position    = {};
+    Entity->Rotation    = 0;
+    Entity->Speed       = 1.0f;
     Entity->BoxCollider = {};
 }
 
 internal void
 SetupTree00(entity *Entity)
 {
-    Entity->Archetype = TREE00;
-    Entity->Sprite    = SPRITE_Tree00; 
-    Entity->Flags    += IS_ACTIVE|IS_SOLID;
-    Entity->Size      = {12, 12};
-    Entity->Health    = 2;
-    Entity->Position  = {};
-    Entity->Rotation  = 0;
-    Entity->Speed     = 1.0f;
+    Entity->Archetype   = TREE;
+    Entity->Sprite      = SPRITE_Tree00; 
+    Entity->Flags      += IS_ACTIVE|IS_SOLID|IS_DESTRUCTABLE;
+    Entity->Size        = {11, 14};
+    Entity->Health      = TreeHealth;
+    Entity->Position    = {};
+    Entity->Rotation    = 0;
+    Entity->Speed       = 1.0f;
     Entity->BoxCollider = {};
 }
+
+internal void
+SetupItemPebbles(entity *Entity)
+{
+    Entity->Archetype = ITEM;
+    Entity->Sprite    = SPRITE_Pebbles;
+    Entity->Flags    += IS_ACTIVE|IS_ITEM;
+    Entity->Size      = {6, 5};
+    Entity->ItemID    = ITEM_Pebbles;
+}
+
+
+internal void
+SetupItemBranches(entity *Entity)
+{
+    Entity->Archetype = ITEM;
+    Entity->Sprite    = SPRITE_Branches;
+    Entity->Flags    += IS_ACTIVE|IS_ITEM;
+    Entity->Size      = {7, 7};
+    Entity->ItemID    = ITEM_Branches;
+}
+
+internal void
+SetupItemTrunk(entity *Entity)
+{
+    Entity->Archetype = ITEM;
+    Entity->Sprite    = SPRITE_Trunk;
+    Entity->Flags    += IS_ACTIVE|IS_ITEM;
+    Entity->Size      = {6, 6};
+    Entity->ItemID    = ITEM_Trunk;
+}
+
 
 internal void
 ResetGame(gl_render_data *RenderData, game_state *State)
@@ -201,7 +242,7 @@ ResetGame(gl_render_data *RenderData, game_state *State)
     
     for(uint32 i = 0; i < SPRITE_Count; i++)
     {
-        RenderData->GameData.Sprites[i] = {};
+        State->GameData.Sprites[i] = {};
     }
 }
 
@@ -321,7 +362,7 @@ extern
 GAME_ON_AWAKE(GameOnAwake)
 {
     ResetGame(RenderData, State);
-    LoadSpriteData(RenderData);
+    LoadSpriteData(State);
     
     // TODO(Sleepster): Write a proper implementation of Mini Audio's low level API so that 
     //                  hotreloading the engine doesn't just crash the program
@@ -340,11 +381,13 @@ GAME_ON_AWAKE(GameOnAwake)
         SetupRock(En);
         En->Position = vec2{GetRandomReal32_Range(-WORLD_SIZE * 10, WORLD_SIZE * 10), GetRandomReal32_Range(-WORLD_SIZE * 20, WORLD_SIZE * 20)};
         En->Position = TileToWorldPos(WorldToTilePos(En->Position));
+        En->Position.Y += En->Size.Y * -0.15f;
         
         entity *En2 = CreateEntity(State);
         SetupTree00(En2);
         En2->Position = vec2{GetRandomReal32_Range(-WORLD_SIZE * 10, WORLD_SIZE * 10), GetRandomReal32_Range(-WORLD_SIZE * 20, WORLD_SIZE * 20)};
         En2->Position = TileToWorldPos(WorldToTilePos(En2->Position));
+        En2->Position.Y += En2->Size.Y * 0.15f;
     }
     
 }
@@ -383,7 +426,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
     {
         entity *Temp = &State->World.Entities[EntityIndex];
         
-        static_sprite_data *Sprite = GetSprite(RenderData, Temp->Sprite);
+        static_sprite_data *Sprite = GetSprite(State, Temp->Sprite);
         range_v2 Bounds = RangeMakeCentered(v2Cast(Sprite->SpriteSize));
         Bounds = RangeShift(Bounds, Temp->Position - (Temp->Size * 0.5f));
         Bounds.Min = Bounds.Min - vec2{20, 20};
@@ -399,9 +442,49 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                 MinimumDistance = Distance;
             }
             
-            if(IsGameKeyPressed(ATTACK, &State->GameInput) && Temp->Health > 0)
+            if(IsGameKeyPressed(ATTACK, &State->GameInput) && (Temp->Flags & IS_DESTRUCTABLE))
             {
+                entity *SelectedEntity = State->World.WorldFrame.SelectedEntity;
                 --Temp->Health;
+                if(Temp->Health <= 0)
+                {
+                    switch(SelectedEntity->Archetype)
+                    {
+                        case ROCK:
+                        {
+                            entity *Pebbles = CreateEntity(State);
+                            SetupItemPebbles(Pebbles);
+                            Pebbles->Position = SelectedEntity->Position;
+                        }break;
+                        
+                        case TREE:
+                        {
+                            switch(SelectedEntity->Sprite)
+                            {
+                                case SPRITE_Tree00:
+                                {
+                                    entity *Branches = CreateEntity(State);
+                                    SetupItemBranches(Branches);
+                                    Branches->Position = SelectedEntity->Position;
+                                }break;
+                                
+                                case SPRITE_Tree01:
+                                {
+                                    entity *Trunk = CreateEntity(State);
+                                    SetupItemBranches(Trunk);
+                                    Trunk->Position = SelectedEntity->Position;
+                                }break;
+                                
+                                default: { }break;
+                            }break;
+                            
+                            default: { }break;
+                        }break;
+                    }
+                    
+                    //PlaySound(&Memory->TemporaryStorage, State, STR("boop.wav"), 1);
+                    DeleteEntity(Temp);
+                }
             }
         }
     }
@@ -420,8 +503,9 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     HandleInput(State, Temp, Time);
                     RenderData->GameCamera.Target = Temp->Position;
                     v2Approach(&RenderData->GameCamera.Position, RenderData->GameCamera.Target, 5.0f, Time.Delta);
-                    DrawEntity(RenderData, Temp, Temp->Position, WHITE);
+                    DrawEntity(RenderData, State, Temp, Temp->Position, WHITE);
                 }break;
+                
                 default:
                 {
                     vec4 Color = WHITE;
@@ -431,21 +515,18 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     }
                     
                     ivec2 EntityPosInt = iv2Cast(Temp->Position);
-                    DrawGameText(RenderData, sprints(&Memory->TemporaryStorage, STR("%d, %d"), EntityPosInt.X, EntityPosInt.Y - 100), {Temp->Position.X - 5, Temp->Position.Y - 5}, 0.10f, UBUNTU_MONO, BLACK);
-                    DrawEntity(RenderData, Temp, Temp->Position, Color);
-                    
-                    if(Temp->Health <= 0)
-                    {
-                        DeleteEntity(Temp);
-                    }
+                    DrawGameText(RenderData, sprints(&Memory->TemporaryStorage, STR("%d, %d"), EntityPosInt.X, EntityPosInt.Y), {Temp->Position.X - 5, Temp->Position.Y - 10}, 0.10f, UBUNTU_MONO, BLACK);
+                    DrawEntity(RenderData, State, Temp, Temp->Position, Color);
                 }break;
             }
         }
     }
     
+    // NOTE(Sleepster): World Text and Quad at {0,0}
     DrawGameText(RenderData, sprints(&Memory->TemporaryStorage, STR("%f, %f"), MouseToWorld.X, MouseToWorld.Y), {-100, 0}, 0.25f, UBUNTU_MONO, BLACK);
     DrawQuad(RenderData, {0, 0}, {10, 10}, 0, vec4{1.0f, 0.0, 0.0, 1.0f});
     
+    // NOTE(Sleepster): Draw the Tiles
     ivec2 PlayerOffset = iv2Cast(WorldToTilePos(Player->Position));
     ivec2  TileRadius   = {15, 20};
     

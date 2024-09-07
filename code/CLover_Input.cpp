@@ -116,84 +116,6 @@ Win32LoadKeyData(game_state *State)
     State->KeyCodeLookup[VK_NUMPAD9] = KEY_NUMPAD_9;
 }
 
-#if 0
-internal void
-Win32LoadImGuiInputData()
-{
-    ImGuiIO& io = ImGui::GetIO();
-    
-    // Alphabet (A-Z)
-    io.KeyMap[ImGuiKey_A] = 'A';
-    io.KeyMap[ImGuiKey_B] = 'B';
-    io.KeyMap[ImGuiKey_C] = 'C';
-    io.KeyMap[ImGuiKey_D] = 'D';
-    io.KeyMap[ImGuiKey_E] = 'E';
-    io.KeyMap[ImGuiKey_F] = 'F';
-    io.KeyMap[ImGuiKey_G] = 'G';
-    io.KeyMap[ImGuiKey_H] = 'H';
-    io.KeyMap[ImGuiKey_I] = 'I';
-    io.KeyMap[ImGuiKey_J] = 'J';
-    io.KeyMap[ImGuiKey_K] = 'K';
-    io.KeyMap[ImGuiKey_L] = 'L';
-    io.KeyMap[ImGuiKey_M] = 'M';
-    io.KeyMap[ImGuiKey_N] = 'N';
-    io.KeyMap[ImGuiKey_O] = 'O';
-    io.KeyMap[ImGuiKey_P] = 'P';
-    io.KeyMap[ImGuiKey_Q] = 'Q';
-    io.KeyMap[ImGuiKey_R] = 'R';
-    io.KeyMap[ImGuiKey_S] = 'S';
-    io.KeyMap[ImGuiKey_T] = 'T';
-    io.KeyMap[ImGuiKey_U] = 'U';
-    io.KeyMap[ImGuiKey_V] = 'V';
-    io.KeyMap[ImGuiKey_W] = 'W';
-    io.KeyMap[ImGuiKey_X] = 'X';
-    io.KeyMap[ImGuiKey_Y] = 'Y';
-    io.KeyMap[ImGuiKey_Z] = 'Z';
-    
-    // Numbers (0-9)
-    io.KeyMap[ImGuiKey_0] = '0';
-    io.KeyMap[ImGuiKey_1] = '1';
-    io.KeyMap[ImGuiKey_2] = '2';
-    io.KeyMap[ImGuiKey_3] = '3';
-    io.KeyMap[ImGuiKey_4] = '4';
-    io.KeyMap[ImGuiKey_5] = '5';
-    io.KeyMap[ImGuiKey_6] = '6';
-    io.KeyMap[ImGuiKey_7] = '7';
-    io.KeyMap[ImGuiKey_8] = '8';
-    io.KeyMap[ImGuiKey_9] = '9';
-    
-    // Punctuation and Special Characters
-    io.KeyMap[ImGuiKey_Space] = VK_SPACE;
-    io.KeyMap[ImGuiKey_Enter] = VK_RETURN;
-    io.KeyMap[ImGuiKey_Escape] = VK_ESCAPE;
-    io.KeyMap[ImGuiKey_Backspace] = VK_BACK;
-    io.KeyMap[ImGuiKey_Tab] = VK_TAB;
-    io.KeyMap[ImGuiKey_Minus] = VK_OEM_MINUS;            
-    io.KeyMap[ImGuiKey_Equal] = VK_OEM_PLUS;             
-    io.KeyMap[ImGuiKey_LeftBracket] = VK_OEM_4;          
-    io.KeyMap[ImGuiKey_RightBracket] = VK_OEM_6;         
-    io.KeyMap[ImGuiKey_Backslash] = VK_OEM_5;            
-    io.KeyMap[ImGuiKey_Semicolon] = VK_OEM_1;            
-    io.KeyMap[ImGuiKey_Apostrophe] = VK_OEM_7;           
-    io.KeyMap[ImGuiKey_Comma] = VK_OEM_COMMA;            
-    io.KeyMap[ImGuiKey_Period] = VK_OEM_PERIOD;          
-    io.KeyMap[ImGuiKey_Slash] = VK_OEM_2;                
-    io.KeyMap[ImGuiKey_GraveAccent] = VK_OEM_3;          
-    
-    // Additional special characters that may be needed
-    io.KeyMap[ImGuiKey_Insert] = VK_INSERT;
-    io.KeyMap[ImGuiKey_Delete] = VK_DELETE;
-    io.KeyMap[ImGuiKey_Home] = VK_HOME;
-    io.KeyMap[ImGuiKey_End] = VK_END;
-    io.KeyMap[ImGuiKey_PageUp] = VK_PRIOR;               // Page Up
-    io.KeyMap[ImGuiKey_PageDown] = VK_NEXT;              // Page Down
-    io.KeyMap[ImGuiKey_LeftArrow] = VK_LEFT;
-    io.KeyMap[ImGuiKey_RightArrow] = VK_RIGHT;
-    io.KeyMap[ImGuiKey_UpArrow] = VK_UP;
-    io.KeyMap[ImGuiKey_DownArrow] = VK_DOWN;
-}
-#endif
-
 internal inline Keymapping
 AddKeyBinding(KeyCodeID MainKey, KeyCodeID AltKey)
 {
@@ -210,5 +132,5 @@ Win32LoadDefaultBindings(Input *GameInput)
     GameInput->Keyboard.Bindings[MOVE_DOWN] = AddKeyBinding(KEY_S, KEY_DOWN);
     GameInput->Keyboard.Bindings[MOVE_LEFT] = AddKeyBinding(KEY_A, KEY_LEFT);
     GameInput->Keyboard.Bindings[MOVE_RIGHT] = AddKeyBinding(KEY_D, KEY_RIGHT);
-    GameInput->Keyboard.Bindings[ATTACK] = AddKeyBinding(KEY_LEFT_MOUSE, KEY_LEFT_MOUSE);
+    GameInput->Keyboard.Bindings[ATTACK] = AddKeyBinding(KEY_LEFT_MOUSE, KEY_SPACE);
 }

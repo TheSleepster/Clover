@@ -180,12 +180,6 @@ struct gl_render_data
     // IMGUI SHIT
     ImGuiContext *CurrentImGuiContext;
     
-    // GAME ASSETS
-    struct 
-    { 
-        static_sprite_data Sprites[20];
-    }GameData;
-    
     // DRAW FRAME DATA
     struct
     {
