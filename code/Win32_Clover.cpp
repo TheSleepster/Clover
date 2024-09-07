@@ -70,6 +70,16 @@ GetLastTime()
     return(real64(DeltaCounter) / real64(PerfCountFrequency));
 }
 
+internal inline real64
+GetCurrentTimeInSeconds()
+{
+    LARGE_INTEGER Counter;
+    QueryPerformanceCounter(&Counter);
+    
+    return((real64)Counter.QuadPart / PerfCountFrequency);
+    
+}
+
 LRESULT CALLBACK
 Win32MainWindowCallback(HWND WindowHandle, UINT Message,
                         WPARAM wParam, LPARAM lParam)
@@ -486,11 +496,13 @@ WinMain(HINSTANCE hInstance,
                 CurrentTime = NewTime;
                 
                 Time.Delta = (real32)GetLastTime();
+                Time.Current = (real32)CurrentTime;
                 while(Accumulator >= SIMRATE)
                 {
                     Game.FixedUpdate(&Memory, &RenderData, &State, Time);
                     Accumulator -= Time.Delta;
                     T += Time.Delta;
+                    Time.CurrentTimeInSeconds = real32(GetCurrentTimeInSeconds());
                 }
                 
                 Accumulator += Time.Delta;

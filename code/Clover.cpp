@@ -358,6 +358,12 @@ IsRangeWithinBounds(range_v2 Bounds, vec2 Test)
             Test.Y >= Bounds.Min.Y && Test.Y <= Bounds.Max.Y);
 }
 
+internal inline real32
+SinBreathe(real32 Time, real32 Modifier)
+{
+    return(sinf((Modifier*2*PI32*((Time)-(1/(Modifier*4))))+1))/2;
+}
+
 extern
 GAME_ON_AWAKE(GameOnAwake)
 {
@@ -418,8 +424,8 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
     // TODO(Sleepster): Perhaps make it where we have solids, and actors. Solids will be placed without matrix transforms.
     //                  STATIC SOLIDS if you would. Actors will be Dynamic and will require matrix calculations.
     
+    // NOTE(Sleepster): SELECTED ENTITY
     real32 MinimumDistance = 0;
-    
     for(uint32 EntityIndex = 0;
         EntityIndex <= State->World.EntityCounter;
         ++EntityIndex)
@@ -474,11 +480,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                                     SetupItemBranches(Trunk);
                                     Trunk->Position = SelectedEntity->Position;
                                 }break;
-                                
-                                default: { }break;
                             }break;
-                            
-                            default: { }break;
                         }break;
                     }
                     
@@ -489,6 +491,8 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
         }
     }
     
+    
+    // NOTE(Sleepster): DRAW ENTITIES
     for(uint32 EntityIndex = 0;
         EntityIndex <= State->World.EntityCounter;
         ++EntityIndex)
@@ -503,6 +507,12 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     HandleInput(State, Temp, Time);
                     RenderData->GameCamera.Target = Temp->Position;
                     v2Approach(&RenderData->GameCamera.Position, RenderData->GameCamera.Target, 5.0f, Time.Delta);
+                    DrawEntity(RenderData, State, Temp, Temp->Position, WHITE);
+                }break;
+                
+                case ITEM:
+                {
+                    Temp->Position.Y += 0.1f * SinBreathe(Time.CurrentTimeInSeconds / 5.0f, 2.0f);
                     DrawEntity(RenderData, State, Temp, Temp->Position, WHITE);
                 }break;
                 

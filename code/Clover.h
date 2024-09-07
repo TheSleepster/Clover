@@ -40,6 +40,7 @@ struct time
     
     int32  FPSCounter;
     real32 MSPerFrame;
+    real32 CurrentTimeInSeconds;
 };
 
 enum sprite_type
