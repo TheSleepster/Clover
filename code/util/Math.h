@@ -1124,6 +1124,11 @@ static inline float v2Length(vec2 A)
     return SqrtF(v2LengthSquared(A));
 }
 
+static inline float v2Distance(vec2 A, vec2 B)
+{
+    return(v2Length(v2Subtract(A, B)));
+}
+
 static inline float v3Length(vec3 A)
 {
     return SqrtF(v3LengthSquared(A));

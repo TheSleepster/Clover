@@ -93,6 +93,8 @@ struct entity
     uint32      Archetype;
     uint32      Flags;
     
+    uint32      Health;
+    
     vec2        Position;
     vec2        Size;
     real32      Speed;
@@ -102,18 +104,20 @@ struct entity
     box2d BoxCollider;
 };
 
-struct world
-{
-    entity Entities[MAX_ENTITIES];  
-    uint32 EntityCounter;
-};
-
 struct game_state
 {
     KeyCodeID KeyCodeLookup[KEY_COUNT];
     Input GameInput;
     
-    world World;
+    struct
+    {
+        entity Entities[MAX_ENTITIES];  
+        uint32 EntityCounter;
+        struct 
+        {
+            entity *SelectedEntity;
+        }WorldFrame;
+    }World;
     
     struct
     {   

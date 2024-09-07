@@ -125,17 +125,17 @@ Win32ProcessInputMessages(MSG Message, HWND WindowHandle, game_state *State)
                 case WM_KEYUP:
                 {
                     uint32 VKCode = (uint32)Message.wParam;
-                    bool WasDown = ((Message.lParam & (1 << 30)) != 0);
-                    bool IsDown = ((Message.lParam & (1 << 31)) == 0);
+                    bool8 WasDown = ((Message.lParam & (1 << 30)) != 0);
+                    bool8 IsDown  = ((Message.lParam & (1 << 31)) == 0);
                     
-                    KeyCodeID KeyCode = State->KeyCodeLookup[Message.wParam];
+                    
+                    KeyCodeID KeyCode  = State->KeyCodeLookup[Message.wParam];
                     Key *Key = &State->GameInput.Keyboard.Keys[KeyCode];
-                    Key->JustPressed = !Key->JustPressed && !Key->IsDown && IsDown;
-                    Key->JustReleased = !Key->JustReleased && Key->IsDown && !IsDown;
-                    Key->IsDown = IsDown;
+                    Key->JustPressed   = !Key->JustPressed && !Key->IsDown && IsDown;
+                    Key->JustReleased  = !Key->JustReleased && Key->IsDown && !IsDown;
+                    Key->IsDown        = IsDown;
                     
-                    
-                    bool AltKeyIsDown = ((Message.lParam & (1 << 29)) != 0);
+                    bool8 AltKeyIsDown = ((Message.lParam & (1 << 29)) != 0);
                     if(VKCode == VK_F4 && AltKeyIsDown)
                     {
                         Running = false;
@@ -143,28 +143,44 @@ Win32ProcessInputMessages(MSG Message, HWND WindowHandle, game_state *State)
                 }break;
                 
                 
-                case WM_LBUTTONDOWN:
-                case WM_RBUTTONDOWN:
-                case WM_MBUTTONDOWN:
-                case WM_XBUTTONDOWN:
                 case WM_LBUTTONUP:
                 case WM_RBUTTONUP:
                 case WM_MBUTTONUP:
                 case WM_XBUTTONUP:
+                case WM_LBUTTONDOWN:
+                case WM_RBUTTONDOWN:
+                case WM_MBUTTONDOWN:
+                case WM_XBUTTONDOWN:
                 {
-                    uint32 VKCode = (uint32)Message.wParam;
-                    bool IsDown = (GetKeyState(VKCode) & (1 << 15));
+                    uint32 VKCode = 0;
+                    switch (Message.message)
+                    {
+                        case WM_LBUTTONDOWN:
+                        case WM_LBUTTONUP: VKCode = VK_LBUTTON; break;
+                        case WM_RBUTTONDOWN:
+                        case WM_RBUTTONUP: VKCode = VK_RBUTTON; break;
+                        case WM_MBUTTONDOWN:
+                        case WM_MBUTTONUP: VKCode = VK_MBUTTON; break;
+                        case WM_XBUTTONDOWN:
+                        case WM_XBUTTONUP:
+                        VKCode = (GET_XBUTTON_WPARAM(Message.wParam) == XBUTTON1) ? VK_XBUTTON1 : VK_XBUTTON2;
+                        break;
+                    }
                     
-                    KeyCodeID KeyCode = State->KeyCodeLookup[Message.wParam];
+                    bool IsDown = (Message.message == WM_LBUTTONDOWN || Message.message == WM_RBUTTONDOWN ||
+                                   Message.message == WM_MBUTTONDOWN || Message.message == WM_XBUTTONDOWN);
+                    
+                    KeyCodeID KeyCode = State->KeyCodeLookup[VKCode];
                     Key *Key = &State->GameInput.Keyboard.Keys[KeyCode];
-                    Key->JustPressed = !Key->JustPressed && !Key->IsDown && IsDown;
-                    Key->JustReleased = !Key->JustReleased && Key->IsDown && !IsDown;
+                    Key->JustPressed = IsDown && !Key->IsDown;
+                    Key->JustReleased = !IsDown && Key->IsDown;
                     Key->IsDown = IsDown;
+                    
                 }break;
+                
                 
                 case WM_MOUSEMOVE:
                 {
-                    
                     POINT MousePoint;
                     GetCursorPos(&MousePoint);
                     ScreenToClient(WindowHandle, &MousePoint);
@@ -172,8 +188,8 @@ Win32ProcessInputMessages(MSG Message, HWND WindowHandle, game_state *State)
                     State->GameInput.Keyboard.LastMouse    = State->GameInput.Keyboard.CurrentMouse;
                     State->GameInput.Keyboard.CurrentMouse = ivec2{MousePoint.x, MousePoint.y};
                     State->GameInput.Keyboard.DeltaMouse   = State->GameInput.Keyboard.CurrentMouse - State->GameInput.Keyboard.LastMouse;
-                    
                 }break;
+                
                 
                 default:
                 {

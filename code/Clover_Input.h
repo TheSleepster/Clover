@@ -91,9 +91,9 @@ enum KeyBindings
 
 struct Key 
 {
-    bool JustPressed;
-    bool JustReleased;
-    bool IsDown;
+    bool8 JustPressed;
+    bool8 JustReleased;
+    bool8 IsDown;
     uint8 HalfTransitionCount;
 };
 
@@ -122,9 +122,8 @@ internal inline bool
 IsKeyDown(KeyCodeID KeyCode, Input *GameInput) 
 {
     Key Key = GameInput->Keyboard.Keys[KeyCode];
-    if(Key.IsDown) 
-    {return(1);
-    }
+    if(Key.IsDown) return(1);
+    
     return(0);
 }
 
@@ -132,14 +131,19 @@ internal inline bool
 IsGameKeyDown(KeyBindings InputType, Input *GameInput) 
 {
     KeyCodeID Keycode = GameInput->Keyboard.Bindings[InputType].MainKey;
-    Key Key = GameInput->Keyboard.Keys[Keycode];
-    if(Key.IsDown) return(1); 
+    Key LoadedKey = GameInput->Keyboard.Keys[Keycode];
+    if(LoadedKey.IsDown) return(1);
+    else return(0);
+}
+
+internal inline bool
+IsGameKeyPressed(KeyBindings InputType, Input *GameInput)
+{
+    KeyCodeID Keycode = GameInput->Keyboard.Bindings[InputType].MainKey;
+    Key LoadedKey = GameInput->Keyboard.Keys[Keycode];
     
-    Keycode = GameInput->Keyboard.Bindings[InputType].AltKey;
-    Key = GameInput->Keyboard.Keys[Keycode];
-    if(Key.IsDown) return(1);
-    
-    return(0);
+    if(LoadedKey.JustPressed) return(1);
+    else return(0);
 }
 
 #endif // _CLOVER_INPUT_H

@@ -170,6 +170,7 @@ SetupRock(entity *Entity)
     Entity->Sprite    = SPRITE_Rock; 
     Entity->Flags    += IS_ACTIVE|IS_SOLID;
     Entity->Size      = {12, 11};
+    Entity->Health    = 2;
     Entity->Position  = {};
     Entity->Rotation = 0;
     Entity->Speed     = 1.0f;
@@ -183,6 +184,7 @@ SetupTree00(entity *Entity)
     Entity->Sprite    = SPRITE_Tree00; 
     Entity->Flags    += IS_ACTIVE|IS_SOLID;
     Entity->Size      = {12, 12};
+    Entity->Health    = 2;
     Entity->Position  = {};
     Entity->Rotation  = 0;
     Entity->Speed     = 1.0f;
@@ -353,6 +355,8 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
 {
     DrawImGui(RenderData, Time);
     
+    State->World.WorldFrame = {};
+    
     HandleLoadedSounds(State);
     HandleLoadedTracks(State);
     
@@ -369,9 +373,40 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
     RenderData->GameCamera.ProjectionViewMatrix = mat4Multiply(RenderData->GameCamera.ProjectionMatrix, RenderData->GameCamera.ViewMatrix);
     
     vec2 MouseToWorld = ConvertMouseToWorldPos(RenderData, State->GameInput.Keyboard.CurrentMouse, SizeData);
-    DrawGameText(RenderData, STR("Test"), MouseToWorld, 0.1f, UBUNTU_MONO, BLACK);
     // TODO(Sleepster): Perhaps make it where we have solids, and actors. Solids will be placed without matrix transforms.
     //                  STATIC SOLIDS if you would. Actors will be Dynamic and will require matrix calculations.
+    
+    real32 MinimumDistance = 0;
+    
+    for(uint32 EntityIndex = 0;
+        EntityIndex <= State->World.EntityCounter;
+        ++EntityIndex)
+    {
+        entity *Temp = &State->World.Entities[EntityIndex];
+        
+        static_sprite_data *Sprite = GetSprite(RenderData, Temp->Sprite);
+        range_v2 Bounds = RangeMakeCentered(v2Cast(Sprite->SpriteSize));
+        Bounds = RangeShift(Bounds, Temp->Position - (Temp->Size * 0.5f));
+        Bounds.Min = Bounds.Min - vec2{20, 20};
+        Bounds.Max = Bounds.Max + vec2{20, 20};
+        
+        real32 Distance = fabsf(v2Distance(Temp->Position, MouseToWorld));
+        
+        if(IsRangeWithinBounds(Bounds, MouseToWorld))
+        {
+            if(!State->World.WorldFrame.SelectedEntity || (Distance < MinimumDistance))
+            {
+                State->World.WorldFrame.SelectedEntity = Temp;
+                MinimumDistance = Distance;
+            }
+            
+            if(IsGameKeyPressed(ATTACK, &State->GameInput) && Temp->Health > 0)
+            {
+                --Temp->Health;
+            }
+        }
+    }
+    
     for(uint32 EntityIndex = 0;
         EntityIndex <= State->World.EntityCounter;
         ++EntityIndex)
@@ -390,21 +425,20 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                 }break;
                 default:
                 {
+                    vec4 Color = WHITE;
+                    if(State->World.WorldFrame.SelectedEntity == Temp)
+                    {
+                        Color = BLUE;
+                    }
+                    
                     ivec2 EntityPosInt = iv2Cast(Temp->Position);
                     DrawGameText(RenderData, sprints(&Memory->TemporaryStorage, STR("%d, %d"), EntityPosInt.X, EntityPosInt.Y - 100), {Temp->Position.X - 5, Temp->Position.Y - 5}, 0.10f, UBUNTU_MONO, BLACK);
-                    DrawEntity(RenderData, Temp, Temp->Position, WHITE);
+                    DrawEntity(RenderData, Temp, Temp->Position, Color);
                     
-                    static_sprite_data *Sprite = GetSprite(RenderData, Temp->Sprite);
-                    range_v2 Bounds = RangeMakeCentered(v2Cast(Sprite->SpriteSize));
-                    Bounds = RangeShift(Bounds, Temp->Position - (Temp->Size * 0.5f));
-                    vec4 Color = BLUE;
-                    Color.A = 0.1f;
-                    
-                    if(IsRangeWithinBounds(Bounds, MouseToWorld))
+                    if(Temp->Health <= 0)
                     {
-                        Color.A = 1.0f;
+                        DeleteEntity(Temp);
                     }
-                    DrawQuad(RenderData, Temp->Position, RangeSize(Bounds), 0, Color);
                 }break;
             }
         }
