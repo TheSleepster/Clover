@@ -333,6 +333,30 @@ CloverSetupRenderer(memory_arena *Memory, gl_render_data *RenderData)
         glEnableVertexAttribArray(3);
     }
     
+    // GAME UI BUFFER SETUP
+    {
+        glGenVertexArrays(1, &RenderData->GameUIVAOID);
+        glBindVertexArray(RenderData->GameUIVAOID);
+        
+        glGenBuffers(1, &RenderData->GameUIVBOID);
+        glBindBuffer(GL_ARRAY_BUFFER, RenderData->GameUIVBOID);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vertex) * MAX_VERTICES, 0, GL_DYNAMIC_DRAW);
+        
+        glGenBuffers(1, &RenderData->GameUIEBOID);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, RenderData->GameUIEBOID);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Indices), Indices, GL_STATIC_DRAW);
+        
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (void *)offsetof(vertex, Position));
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vertex), (void *)offsetof(vertex, TextureCoords));
+        glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(vertex), (void *)offsetof(vertex, DrawColor));
+        glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(vertex), (void *)offsetof(vertex, TextureIndex));
+        
+        glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(1);
+        glEnableVertexAttribArray(2);
+        glEnableVertexAttribArray(3);
+    }
+    
     // SHADER SETUP
     {
         RenderData->BasicShader = 
@@ -351,19 +375,15 @@ CloverSetupRenderer(memory_arena *Memory, gl_render_data *RenderData)
     // CAMERAS/MATRICES
     {
         RenderData->GameCamera.ViewMatrix  = mat4Identity(1.0f);
+        RenderData->GameUICamera.ViewMatrix    = mat4Identity(1.0f);
+        
         RenderData->ProjectionViewMatrixID = glGetUniformLocation(RenderData->BasicShader.Shader, "ProjectionViewMatrix");
-    }
-    
-    // LOGGING 
-    {
-        glGetString(GL_VENDOR);
     }
 }
 
 internal void
 CloverRender(memory_arena *Arena, gl_render_data *RenderData)
 {
-    
 #if CLOVER_SLOW    
     FILETIME NewTextureWriteTime        = Win32GetLastWriteTime(RenderData->GameAtlas.Filepath);    
     FILETIME NewVertexShaderWriteTime   = Win32GetLastWriteTime(RenderData->BasicShader.VertexShader.Filepath);
@@ -384,15 +404,33 @@ CloverRender(memory_arena *Arena, gl_render_data *RenderData)
     }
 #endif
     
-    if(RenderData->DrawFrame.QuadCount == 0) return;
-    
-    // TODO(Sleepster): Make an array of textures to bind too, perhaps make a seperate VBO for the fonts 
-    //glBindTexture(GL_TEXTURE_2D, RenderData->LoadedFonts[UBUNTU_MONO].FontAtlas.TextureID);
-    
     glClearColor(RenderData->ClearColor.R, RenderData->ClearColor.G, RenderData->ClearColor.B, RenderData->ClearColor.A);
     glClearDepth(0.0f);
     glViewport(0, 0, SizeData.Width, SizeData.Height);
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+    
+    
+    // UI RENDERING PASS
+    {
+        glUseProgram(RenderData->BasicShader.Shader);
+        glBindBuffer(GL_ARRAY_BUFFER, RenderData->GameUIVBOID);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, (RenderData->DrawFrame.UIElementCount* 4) * sizeof(vertex), RenderData->DrawFrame.UIVertices);
+        
+        glUniformMatrix4fv(RenderData->ProjectionViewMatrixID, 1, GL_FALSE, &RenderData->GameUICamera.ProjectionViewMatrix.Elements[0][0]);
+        
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, RenderData->GameAtlas.TextureID);
+        
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, RenderData->LoadedFonts[UBUNTU_MONO].FontAtlas.TextureID);
+        
+        glBindVertexArray(RenderData->GameUIVAOID);
+        glDrawElements(GL_TRIANGLES, 
+                       RenderData->DrawFrame.UIElementCount * 6, 
+                       GL_UNSIGNED_INT, 
+                       0); 
+    }
+    
     
     // OPAQUE OBJECT RENDERING PASS
     {

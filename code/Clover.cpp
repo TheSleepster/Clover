@@ -28,10 +28,7 @@
 #define MULTIPLIER 6364136223846793005ull
 #define INCREMENT 1442695040888963407ull 
 
-
 global_variable entity *Player = {};
-
-
 constexpr real32 ItemPickupDist = 30.0f;
 
 internal inline uint64 
@@ -62,16 +59,21 @@ GetRandomReal32_Range(real32 Minimum, real32 Maximum)
 internal inline void
 LoadSpriteData(game_state *State)
 {
-    State->GameData.Sprites[SPRITE_Nil]      = {.AtlasOffset = {0,   0}, .SpriteSize = {16, 16}};
-    State->GameData.Sprites[SPRITE_Player]   = {.AtlasOffset = {17,  0}, .SpriteSize = {12, 11}};
-    State->GameData.Sprites[SPRITE_Rock]     = {.AtlasOffset = {32,  0}, .SpriteSize = {12,  8}};
-    State->GameData.Sprites[SPRITE_Pebbles]  = {.AtlasOffset = {32, 16}, .SpriteSize = { 6,  5}};
-    
-    State->GameData.Sprites[SPRITE_Tree00]   = {.AtlasOffset = {48,  0}, .SpriteSize = {11, 14}};
-    State->GameData.Sprites[SPRITE_Branches] = {.AtlasOffset = {48, 16}, .SpriteSize = { 7,  7}};
-    
-    State->GameData.Sprites[SPRITE_Tree01]   = {.AtlasOffset = {64,  0}, .SpriteSize = { 9, 12}};
-    State->GameData.Sprites[SPRITE_Trunk]    = {.AtlasOffset = {64, 16}, .SpriteSize = { 6,  6}};
+    State->GameData.Sprites[SPRITE_Nil]             = {.AtlasOffset = {  0,  0}, .SpriteSize = {16, 16}};
+    State->GameData.Sprites[SPRITE_Player]          = {.AtlasOffset = { 17,  0}, .SpriteSize = {12, 11}};
+    State->GameData.Sprites[SPRITE_Rock]            = {.AtlasOffset = { 32,  0}, .SpriteSize = {12,  8}};
+    State->GameData.Sprites[SPRITE_Pebbles]         = {.AtlasOffset = { 32, 16}, .SpriteSize = { 6,  5}};
+    State->GameData.Sprites[SPRITE_Tree00]          = {.AtlasOffset = { 48,  0}, .SpriteSize = {11, 14}};
+    State->GameData.Sprites[SPRITE_Branches]        = {.AtlasOffset = { 48, 16}, .SpriteSize = { 7,  7}};
+    State->GameData.Sprites[SPRITE_Tree01]          = {.AtlasOffset = { 64,  0}, .SpriteSize = { 9, 12}};
+    State->GameData.Sprites[SPRITE_Trunk]           = {.AtlasOffset = { 64, 16}, .SpriteSize = { 6,  6}};
+    State->GameData.Sprites[SPRITE_RubyOre]         = {.AtlasOffset = { 80,  0}, .SpriteSize = {14, 11}};
+    State->GameData.Sprites[SPRITE_RubyChunk]       = {.AtlasOffset = { 80, 16}, .SpriteSize = { 8,  6}};
+    State->GameData.Sprites[SPRITE_SaphireOre]      = {.AtlasOffset = { 96,  0}, .SpriteSize = {11, 11}};
+    State->GameData.Sprites[SPRITE_SaphireChunk]    = {.AtlasOffset = { 96, 16}, .SpriteSize = { 8,  6}};
+    State->GameData.Sprites[SPRITE_UIItemBox]       = {.AtlasOffset = {112,  0}, .SpriteSize = {16, 16}};
+    State->GameData.Sprites[SPRITE_ToolPickaxe]     = {.AtlasOffset = {  0, 48}, .SpriteSize = {10, 11}};
+    State->GameData.Sprites[SPRITE_ToolWoodAxe]     = {.AtlasOffset = { 16, 48}, .SpriteSize = {10, 13}};
 }
 
 internal inline static_sprite_data *
@@ -97,6 +99,25 @@ DrawEntity(gl_render_data *RenderData, game_state *State, entity *Entity, vec2 P
 {
     static_sprite_data SpriteData = State->GameData.Sprites[Entity->Sprite];
     return(DrawSprite(RenderData, SpriteData, Entity->Position, v2Cast(SpriteData.SpriteSize), Color, Entity->Rotation, 0));
+}
+
+internal void
+DrawUISprite(gl_render_data     *RenderData,
+             static_sprite_data  SpriteData,
+             vec2                Position,
+             vec2                RenderSize,
+             vec4                Color,
+             real32              Rotation,
+             uint32              TextureIndex)
+{
+    return(DrawUIQuadTextured(RenderData, Position, RenderSize, SpriteData.AtlasOffset, SpriteData.SpriteSize, Rotation, Color, TextureIndex));
+}
+
+internal void
+DrawUIEntity(gl_render_data *RenderData, game_state *State, entity *Entity, vec2 Position, vec4 Color)
+{
+    static_sprite_data SpriteData = State->GameData.Sprites[Entity->Sprite];
+    return(DrawUISprite(RenderData, SpriteData, Entity->Position, v2Cast(SpriteData.SpriteSize), Color, Entity->Rotation, 0));
 }
 
 internal entity *
@@ -221,6 +242,37 @@ SetupTree01(entity *Entity)
     Entity->ItemID      = ITEM_Trunk;
 }
 
+internal void
+SetupRubyNode(entity *Entity)
+{
+    Entity->Archetype   = NODE;
+    Entity->Sprite      = SPRITE_RubyOre; 
+    Entity->Flags      += IS_ACTIVE|IS_SOLID|IS_DESTRUCTABLE;
+    Entity->Size        = {14, 11};
+    Entity->Health      = NodeHealth;
+    Entity->Position    = {};
+    Entity->Rotation    = 0;
+    Entity->Speed       = 1.0f;
+    Entity->BoxCollider = {};
+    
+    Entity->ItemID      = ITEM_RubyOreChunk;
+}
+
+internal void
+SetupSaphireNode(entity *Entity)
+{
+    Entity->Archetype   = NODE;
+    Entity->Sprite      = SPRITE_SaphireOre; 
+    Entity->Flags      += IS_ACTIVE|IS_SOLID|IS_DESTRUCTABLE;
+    Entity->Size        = {11, 11};
+    Entity->Health      = NodeHealth;
+    Entity->Position    = {};
+    Entity->Rotation    = 0;
+    Entity->Speed       = 1.0f;
+    Entity->BoxCollider = {};
+    
+    Entity->ItemID      = ITEM_SaphireOreChunk;
+}
 
 internal void
 SetupItemPebbles(entity *Entity)
@@ -231,7 +283,6 @@ SetupItemPebbles(entity *Entity)
     Entity->Size      = {6, 5};
     Entity->ItemID    = ITEM_Pebbles;
 }
-
 
 internal void
 SetupItemBranches(entity *Entity)
@@ -251,6 +302,35 @@ SetupItemTrunk(entity *Entity)
     Entity->Flags    += IS_ACTIVE|IS_ITEM;
     Entity->Size      = {6, 6};
     Entity->ItemID    = ITEM_Trunk;
+}
+
+internal void
+SetupItemRubyChunk(entity *Entity)
+{
+    Entity->Archetype = ITEM;
+    Entity->Sprite    = SPRITE_RubyChunk;
+    Entity->Flags    += IS_ACTIVE|IS_ITEM;
+    Entity->Size      = {6, 5};
+    Entity->ItemID    = ITEM_RubyOreChunk;
+}
+
+internal void
+SetupItemSaphireChunk(entity *Entity)
+{
+    Entity->Archetype = ITEM;
+    Entity->Sprite    = SPRITE_SaphireChunk;
+    Entity->Flags    += IS_ACTIVE|IS_ITEM;
+    Entity->Size      = {6, 5};
+    Entity->ItemID    = ITEM_SaphireOreChunk;
+}
+
+internal void
+SetupUIBoxElement(entity *Entity)
+{
+    Entity->Archetype   = UI;
+    Entity->Sprite      = SPRITE_UIItemBox; 
+    Entity->Flags      += IS_ACTIVE|IS_UI;
+    Entity->Size        = {15, 15};
 }
 
 internal void
@@ -401,21 +481,40 @@ GAME_ON_AWAKE(GameOnAwake)
     Player = CreateEntity(State);
     SetupPlayer(Player);
     
+    real32 SizeScaler = WORLD_SIZE * 10;
     for(uint32 EntityIndex = 0;
-        EntityIndex < 100;
+        EntityIndex < 50;
         ++EntityIndex)
     {
         entity *En = CreateEntity(State);
         SetupRock(En);
-        En->Position = vec2{GetRandomReal32_Range(-WORLD_SIZE * 10, WORLD_SIZE * 10), GetRandomReal32_Range(-WORLD_SIZE * 20, WORLD_SIZE * 20)};
+        En->Position = vec2{GetRandomReal32_Range(-SizeScaler, SizeScaler), GetRandomReal32_Range(-SizeScaler, SizeScaler)};
         En->Position = TileToWorldPos(WorldToTilePos(En->Position));
         En->Position.Y += En->Size.Y * -0.15f;
         
         entity *En2 = CreateEntity(State);
         SetupTree00(En2);
-        En2->Position = vec2{GetRandomReal32_Range(-WORLD_SIZE * 10, WORLD_SIZE * 10), GetRandomReal32_Range(-WORLD_SIZE * 20, WORLD_SIZE * 20)};
+        En2->Position = vec2{GetRandomReal32_Range(-SizeScaler, SizeScaler), GetRandomReal32_Range(-SizeScaler, SizeScaler)};
         En2->Position = TileToWorldPos(WorldToTilePos(En2->Position));
         En2->Position.Y += En2->Size.Y * 0.15f;
+        
+        
+        entity *En3 = CreateEntity(State);
+        SetupTree01(En3);
+        En3->Position = vec2{GetRandomReal32_Range(-SizeScaler, SizeScaler), GetRandomReal32_Range(-SizeScaler, SizeScaler)};
+        En3->Position = TileToWorldPos(WorldToTilePos(En3->Position));
+        
+        
+        entity *En4 = CreateEntity(State);
+        SetupRubyNode(En4);
+        En4->Position = vec2{GetRandomReal32_Range(-SizeScaler, SizeScaler), GetRandomReal32_Range(-SizeScaler, SizeScaler)};
+        En4->Position = TileToWorldPos(WorldToTilePos(En4->Position));
+        
+        
+        entity *En5 = CreateEntity(State);
+        SetupSaphireNode(En5);
+        En5->Position = vec2{GetRandomReal32_Range(-SizeScaler, SizeScaler), GetRandomReal32_Range(-SizeScaler, SizeScaler)};
+        En5->Position = TileToWorldPos(WorldToTilePos(En5->Position));
     }
     
 }
@@ -430,24 +529,28 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
     HandleLoadedSounds(State);
     HandleLoadedTracks(State);
     
-    RenderData->GameCamera.Zoom = 5.3f;
-    
-    RenderData->GameCamera.ViewMatrix           = mat4Identity(1.0f);
-    mat4 ScaleMatrix                            = mat4MakeScale(vec3{1.0f * RenderData->GameCamera.Zoom, 1.0f * RenderData->GameCamera.Zoom, 1.0f});
-    mat4 TranslationMatrix                      = mat4Translate(v2Expand(-RenderData->GameCamera.Position, 0.0f));
-    
-    RenderData->GameCamera.ViewMatrix           = mat4Multiply(TranslationMatrix, RenderData->GameCamera.ViewMatrix);
-    RenderData->GameCamera.ViewMatrix           = mat4Multiply(ScaleMatrix, RenderData->GameCamera.ViewMatrix);
-    
-    RenderData->GameCamera.ProjectionMatrix     = mat4RHGLOrtho((real32)SizeData.Width * -0.5f, (real32)SizeData.Width * 0.5f, (real32)SizeData.Height * -0.5f, (real32)SizeData.Height * 0.5f, -1.0f, 1.0f); 
-    RenderData->GameCamera.ProjectionViewMatrix = mat4Multiply(RenderData->GameCamera.ProjectionMatrix, RenderData->GameCamera.ViewMatrix);
+    // MATRICES
+    {
+        // NOTE(Sleepster): GAME 
+        RenderData->GameCamera.Zoom = 5.3f;
+        RenderData->GameCamera.ViewMatrix             = mat4Identity(1.0f);
+        mat4 ScaleMatrix                              = mat4MakeScale(vec3{1.0f * RenderData->GameCamera.Zoom, 1.0f * RenderData->GameCamera.Zoom, 1.0f});
+        mat4 TranslationMatrix                        = mat4Translate(v2Expand(-RenderData->GameCamera.Position, 0.0f));
+        RenderData->GameCamera.ViewMatrix             = mat4Multiply(TranslationMatrix, RenderData->GameCamera.ViewMatrix);
+        RenderData->GameCamera.ViewMatrix             = mat4Multiply(ScaleMatrix, RenderData->GameCamera.ViewMatrix);
+        RenderData->GameCamera.ProjectionMatrix       = mat4RHGLOrtho((real32)SizeData.Width * -0.5f, (real32)SizeData.Width * 0.5f, (real32)SizeData.Height * -0.5f, (real32)SizeData.Height * 0.5f, -1.0f, 1.0f); 
+        RenderData->GameCamera.ProjectionViewMatrix   = mat4Multiply(RenderData->GameCamera.ProjectionMatrix, RenderData->GameCamera.ViewMatrix);
+        
+        
+        // NOTE(Sleepster): UI
+        RenderData->GameUICamera.ProjectionMatrix     = mat4RHGLOrtho((real32)SizeData.Width * -0.5f, (real32)SizeData.Width * 0.5f, (real32)SizeData.Height * -0.5f, (real32)SizeData.Height * 0.5f, -1.0f, 1.0f); 
+        RenderData->GameUICamera.ViewMatrix           = mat4Multiply(mat4Identity(1.0f), ScaleMatrix);
+        RenderData->GameUICamera.ProjectionViewMatrix = mat4Multiply(RenderData->GameUICamera.ProjectionMatrix, RenderData->GameUICamera.ViewMatrix);
+    }
     
     vec2 MouseToWorld = ConvertMouseToWorldPos(RenderData, State->GameInput.Keyboard.CurrentMouse, SizeData);
-    // TODO(Sleepster): Perhaps make it where we have solids, and actors. Solids will be placed without matrix transforms.
-    //                  STATIC SOLIDS if you would. Actors will be Dynamic and will require matrix calculations.
     
     // NOTE(Sleepster): SELECTED ENTITY
-    // TODO(Sleepster): IsValid?
     real32 MinimumDistance = 0;
     for(uint32 EntityIndex = 0;
         EntityIndex <= State->World.EntityCounter;
@@ -471,10 +574,10 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     State->World.WorldFrame.SelectedEntity = Temp;
                     MinimumDistance = Distance;
                 }
-                
-                if(IsGameKeyPressed(ATTACK, &State->GameInput) && (Temp->Flags & IS_DESTRUCTABLE))
+                // TODO(Sleepster): On Pickup destroy the Item Entity since it's now in the players inventory?
+                entity *SelectedEntity = State->World.WorldFrame.SelectedEntity;
+                if(IsGameKeyPressed(ATTACK, &State->GameInput) && (Temp->Flags & IS_DESTRUCTABLE) && !(Temp->Flags & IS_UI))
                 {
-                    entity *SelectedEntity = State->World.WorldFrame.SelectedEntity;
                     --Temp->Health;
                     if(Temp->Health <= 0)
                     {
@@ -501,11 +604,31 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                                     case SPRITE_Tree01:
                                     {
                                         entity *Trunk = CreateEntity(State);
-                                        SetupItemBranches(Trunk);
+                                        SetupItemTrunk(Trunk);
                                         Trunk->Position = SelectedEntity->Position;
                                     }break;
                                 }break;
                             }break;
+                            
+                            case NODE:
+                            {
+                                switch(SelectedEntity->Sprite)
+                                {
+                                    case SPRITE_SaphireOre:
+                                    {
+                                        entity *SaphireChunk = CreateEntity(State);
+                                        SetupItemSaphireChunk(SaphireChunk);
+                                        SaphireChunk->Position = SelectedEntity->Position;
+                                    }break;
+                                    
+                                    case SPRITE_RubyOre:
+                                    {
+                                        entity *RubyChunk = CreateEntity(State);
+                                        SetupItemRubyChunk(RubyChunk);
+                                        RubyChunk->Position = SelectedEntity->Position;
+                                    }break;
+                                }
+                            }
                         }
                         //PlaySound(&Memory->TemporaryStorage, State, STR("boop.wav"), 1);
                         DeleteEntity(Temp);
@@ -535,10 +658,6 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     {
                         Player->Inventory.Items[Temp->ItemID].CurrentStack++;
                     }
-                    else
-                    {
-                        continue;
-                    }
                     
                     DeleteEntity(Temp);
                 }
@@ -546,6 +665,42 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
         }
     }
     
+    // TODO(Sleepster): Tear this out so we can use it for font rendering center alignment
+    int32 SlotIndex = 0;
+    for(uint32 ActiveSlot = 0; ActiveSlot < ITEM_IDCount; ++ActiveSlot)
+    {
+        item *Item = &Player->Inventory.Items[ActiveSlot];
+        if(Item->CurrentStack > 0)
+        {
+            ++SlotIndex;
+        }
+    }
+    
+    const real32 Width = SizeData.X * 0.25f;
+    const real32 Padding = 4.0f;
+    const real32 IconSize = 16.0f;
+    const real32 TotalWidth = (SlotIndex * IconSize) + ((SlotIndex - 1) * Padding);
+    const real32 StartingX = (Width / 2.0f) - (TotalWidth / 2.0f);
+    
+    SlotIndex = 0;
+    for(uint32 ActiveSlot = 0; ActiveSlot < ITEM_IDCount; ++ActiveSlot)
+    {
+        item *Item = &Player->Inventory.Items[ActiveSlot];
+        if(Item->CurrentStack > 0)
+        {
+            real32 SlotIndexOffset = SlotIndex * (IconSize + Padding);
+            
+            static_sprite_data *Sprite = GetSprite(State, SPRITE_UIItemBox);
+            DrawUISprite(RenderData, *Sprite, {(StartingX + SlotIndexOffset), -90}, v2Cast(Sprite->SpriteSize), WHITE, 0, 0);
+            
+            // TODO: Fix the font coloring here
+            Sprite = GetSprite(State, Item->Sprite);
+            DrawUIText(RenderData, sprints(&Memory->TemporaryStorage, STR("%d"), Item->CurrentStack), {(StartingX + SlotIndexOffset) - 4, -90}, 0.33f, UBUNTU_MONO, GREEN);
+            DrawUISprite(RenderData, *Sprite, {(StartingX + SlotIndexOffset) - 4, -90}, v2Cast(Sprite->SpriteSize), WHITE, 0, 0);
+            
+            ++SlotIndex;
+        }
+    }
     
     // NOTE(Sleepster): DRAW ENTITIES
     for(uint32 EntityIndex = 0;
@@ -567,8 +722,13 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                 
                 case ITEM:
                 {
-                    Temp->Position.Y += 0.1f * SinBreathe(Time.CurrentTimeInSeconds / 5.0f, 2.0f);
+                    Temp->Position.Y += (Time.Delta * 5) * SinBreathe(Time.CurrentTimeInSeconds / 5.0f, 2.0f);
                     DrawEntity(RenderData, State, Temp, Temp->Position, WHITE);
+                }break;
+                
+                case UI:
+                {
+                    DrawUIEntity(RenderData, State, Temp, Temp->Position, WHITE);
                 }break;
                 
                 default:
@@ -579,8 +739,6 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                         Color = BLUE;
                     }
                     
-                    ivec2 EntityPosInt = iv2Cast(Temp->Position);
-                    DrawGameText(RenderData, sprints(&Memory->TemporaryStorage, STR("%d, %d"), EntityPosInt.X, EntityPosInt.Y), {Temp->Position.X - 5, Temp->Position.Y - 10}, 0.10f, UBUNTU_MONO, BLACK);
                     DrawEntity(RenderData, State, Temp, Temp->Position, Color);
                 }break;
             }
@@ -589,7 +747,6 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
     
     // NOTE(Sleepster): World Text and Quad at {0,0}
     DrawGameText(RenderData, sprints(&Memory->TemporaryStorage, STR("%f, %f"), MouseToWorld.X, MouseToWorld.Y), {-100, 0}, 0.25f, UBUNTU_MONO, BLACK);
-    DrawQuad(RenderData, {0, 0}, {10, 10}, 0, vec4{1.0f, 0.0, 0.0, 1.0f});
     
     // NOTE(Sleepster): Draw the Tiles
     ivec2 PlayerOffset = iv2Cast(WorldToTilePos(Player->Position));
@@ -612,7 +769,6 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
         }
     }
 }
-
 extern
 GAME_FIXED_UPDATE(GameFixedUpdate)
 {

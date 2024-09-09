@@ -62,17 +62,36 @@ struct box2d : range_v2
 
 enum sprite_type
 {
-    SPRITE_Nil      = 0,
-    SPRITE_Player   = 1,
-    SPRITE_Rock     = 2,
-    SPRITE_Tree00   = 3,
-    SPRITE_Tree01   = 4,
-    SPRITE_Pebbles  = 5,
-    SPRITE_Branches = 6,
-    SPRITE_Trunk    = 7,
-    SPRITE_Count,
+    SPRITE_Nil          = 0,
+    SPRITE_Player       = 1,
+    SPRITE_Rock         = 2,
+    SPRITE_Tree00       = 3,
+    SPRITE_Tree01       = 4,
+    SPRITE_Pebbles      = 5,
+    SPRITE_Branches     = 6,
+    SPRITE_Trunk        = 7,
+    SPRITE_RubyOre      = 8,
+    SPRITE_SaphireOre   = 9,
+    SPRITE_RubyChunk    = 10,
+    SPRITE_SaphireChunk = 11,
+    SPRITE_UIItemBox    = 12,
+    SPRITE_ToolPickaxe  = 13,
+    SPRITE_ToolWoodAxe  = 14,
+    SPRITE_Count
 };
 
+enum item_id
+{
+    ITEM_Nil,
+    ITEM_Pebbles,
+    ITEM_Branches,
+    ITEM_Trunk,
+    ITEM_RubyOreChunk,
+    ITEM_SaphireOreChunk,
+    ITEM_ToolPickaxe,
+    ITEM_ToolWoodAxe,
+    ITEM_IDCount
+};
 
 enum entity_flags
 {
@@ -84,7 +103,8 @@ enum entity_flags
     IS_ITEM         = 1 << 5,
     IS_DESTRUCTABLE = 1 << 6,
     IS_IN_INVENTORY = 1 << 7,
-    ENTITY_FLAGS_COUNT,
+    IS_UI           = 1 << 8,
+    ENTITY_FLAGS_COUNT
 };
 
 enum entity_arch
@@ -93,17 +113,10 @@ enum entity_arch
     PLAYER = 1,
     ROCK   = 2,
     TREE   = 3,
+    NODE   = 4,
     ITEM   = 5,
+    UI     = 6,
     COUNT
-};
-
-enum item_id
-{
-    ITEM_Nil,
-    ITEM_Pebbles,
-    ITEM_Branches,
-    ITEM_Trunk,
-    ITEM_IDCount
 };
 
 // NOTE(Sleepster): Probably don't need this
@@ -140,6 +153,7 @@ struct entity
     box2d       SelectionBox;
     box2d       BoxCollider;
     
+    uint32      UsedInventorySlots;
     entity_item_inventory Inventory;
 };
 
@@ -179,7 +193,7 @@ struct game_state
     // NOTE(Sleepster): Visual Assets
     struct 
     { 
-        static_sprite_data Sprites[20];
+        static_sprite_data Sprites[SPRITE_Count];
     }GameData;
 };
 

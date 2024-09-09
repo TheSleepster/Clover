@@ -386,11 +386,14 @@ WinMain(HINSTANCE hInstance,
         {
             HDC WindowDC = GetDC(WindowHandle);
             
-            Memory.TemporaryStorage = ArenaCreate(Megabytes(200));
-            Memory.PermanentStorage = ArenaCreate(Megabytes(100));
+            Memory.TemporaryStorage = ArenaCreate(Megabytes(512));
+            Memory.PermanentStorage = ArenaCreate(Megabytes(512));
             
             RenderData.DrawFrame.Vertices = (vertex *)ArenaAlloc(&Memory.PermanentStorage, sizeof(vertex) * MAX_VERTICES);
             RenderData.DrawFrame.VertexBufferptr = &RenderData.DrawFrame.Vertices[0];
+            
+            RenderData.DrawFrame.UIVertices = (vertex *)ArenaAlloc(&Memory.PermanentStorage, sizeof(vertex) * MAX_VERTICES);
+            RenderData.DrawFrame.UIVertexBufferptr = &RenderData.DrawFrame.UIVertices[0];
             
             Win32LoadKeyData(&State);
             Win32LoadDefaultBindings(&State.GameInput);
@@ -523,6 +526,9 @@ WinMain(HINSTANCE hInstance,
                 ArenaReset(&Memory.TemporaryStorage);
                 RenderData.DrawFrame.VertexBufferptr = &RenderData.DrawFrame.Vertices[0];
                 RenderData.DrawFrame.QuadCount = 0;
+                
+                RenderData.DrawFrame.UIVertexBufferptr = &RenderData.DrawFrame.UIVertices[0];
+                RenderData.DrawFrame.UIElementCount = 0;
                 
                 // DELTA
                 LARGE_INTEGER EndCounter;

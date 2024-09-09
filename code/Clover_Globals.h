@@ -49,6 +49,7 @@ constexpr real32 TILE_SIZE    = 16;
 constexpr int32 PlayerHealth = 10;
 constexpr int32 RockHealth   = 2;
 constexpr int32 TreeHealth   = 2;
+constexpr int32 NodeHealth   = 4;
 
 
 #endif // _CLOVER_GLOBALS_H

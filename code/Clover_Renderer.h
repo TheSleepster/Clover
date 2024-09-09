@@ -160,6 +160,10 @@ struct gl_render_data
     GLuint GameVBOID;
     GLuint GameEBOID;
     
+    GLuint GameUIVAOID;
+    GLuint GameUIVBOID;
+    GLuint GameUIEBOID;
+    
     GLuint ProjectionViewMatrixID;
     
     // SHADERS
@@ -167,15 +171,16 @@ struct gl_render_data
     
     // CAMERAS
     orthocamera2d GameCamera;
+    orthocamera2d GameUICamera;
     
     // CLEAR COLOR
-    vec4      ClearColor;
+    vec4          ClearColor;
     
     // TEXTURES
-    texture2d GameAtlas;
-    font_data LoadedFonts[2];
-    uint32    TextureCount;
-    real32 AspectRatio;
+    texture2d     GameAtlas;
+    font_data     LoadedFonts[2];
+    uint32        TextureCount;
+    real32        AspectRatio;
     
     // IMGUI SHIT
     ImGuiContext *CurrentImGuiContext;
@@ -185,8 +190,11 @@ struct gl_render_data
     {
         vertex *Vertices;
         vertex *VertexBufferptr;
+        uint32  QuadCount;
         
-        uint32 QuadCount;
+        vertex *UIVertices;
+        vertex *UIVertexBufferptr;
+        uint32  UIElementCount;
     }DrawFrame;
 };
 
@@ -211,4 +219,3 @@ HexToRGBA(int64 hex)
     return(Result);
 }
 #endif // _CLOVER_RENDERER_H
-
