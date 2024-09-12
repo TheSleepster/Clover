@@ -46,11 +46,12 @@ constexpr uint32 MAX_ENTITIES = 10000;
 constexpr real32 WORLD_SIZE   = 100;
 constexpr real32 TILE_SIZE    = 16;
 
-constexpr int32 PlayerHealth = 10;
-constexpr int32 RockHealth   = 2;
-constexpr int32 TreeHealth   = 2;
-constexpr int32 NodeHealth   = 4;
+global_variable int32 PlayerHealth = 10;
+global_variable int32 RockHealth   = 2;
+global_variable int32 TreeHealth   = 2;
+global_variable int32 NodeHealth   = 4;
 
+global_variable uint32 PLAYER_HOTBAR_COUNT = 6;
 
 #endif // _CLOVER_GLOBALS_H
 

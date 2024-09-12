@@ -76,6 +76,28 @@ CreateDrawQuad(gl_render_data *RenderData,
     return(Quad);
 }
 
+internal quad
+CreateDrawRect(gl_render_data *RenderData, vec2 Size, real32 Rotation, vec4 Color)
+{
+    quad Quad = {};
+
+    Quad.TopLeft.Position     = {0, 0};
+    Quad.TopRight.Position    = {Size.X, 0};
+    Quad.BottomRight.Position = {Size.X, Size.Y};
+    Quad.BottomLeft.Position  = {0, Size.Y}; 
+    
+    Quad.TopLeft.DrawColor = Color;
+    Quad.TopRight.DrawColor = Color;
+    Quad.BottomRight.DrawColor = Color;
+    Quad.BottomLeft.DrawColor = Color;
+
+    Quad.DrawColor = Color;
+    Quad.Size = Size;
+    Quad.Rotation = Rotation;
+
+    return(Quad);
+}
+
 internal void
 DrawQuadXForm(gl_render_data *RenderData, quad *Quad, mat4 *Transform)
 {
@@ -216,6 +238,7 @@ DrawUIQuadTextured(gl_render_data *RenderData,
     quad Quad = CreateDrawQuad(RenderData, Position, Size, SpriteSize, AtlasOffset, Rotation, Color, (real32)TextureIndex);
     return(DrawUIQuadProjected(RenderData, &Quad));
 }
+
 // TODO(Sleepster): Perhaps make it where we have solids, and actors. Solids will be placed without matrix transforms.
 //                  STATIC SOLIDS if you would. Actors will be Dynamic and will require matrix calculations.
 internal void
@@ -223,6 +246,13 @@ DrawQuad(gl_render_data *RenderData, vec2 Position, vec2 Size, real32 Rotation, 
 {
     quad Quad = CreateDrawQuad(RenderData, Position, Size, ivec2{16, 16}, ivec2{0, 0}, Rotation, Color, 0);
     return(DrawQuadProjected(RenderData, &Quad));
+}
+
+internal void
+DrawUIQuad(gl_render_data *RenderData, vec2 Position, vec2 Size, real32 Rotation, vec4 Color)
+{
+    quad Quad = CreateDrawQuad(RenderData, Position, Size, ivec2{16, 16}, ivec2{0, 0}, Rotation, Color, 0);
+    return(DrawUIQuadProjected(RenderData, &Quad));
 }
 
 internal void
@@ -308,4 +338,117 @@ DrawImGui(gl_render_data *RenderData, time Time)
     ImGui::SameLine();
     ImGui::End();
     //RenderData->GameCamera.Position += vec2{0.001f, 0.0} * Time.Delta;
+}
+
+internal inline static_sprite_data
+GetSprite(game_state *State, sprite_type Sprite)
+{
+    return(State->GameData.Sprites[Sprite]);
+}
+
+internal inline void
+DrawSprite(gl_render_data    *RenderData,
+           static_sprite_data SpriteData, 
+           vec2               Position, 
+           vec2               RenderSize, 
+           vec4               Color, 
+           real32             Rotation,
+           uint32             TextureIndex)
+{    
+    return(DrawQuadTextured(RenderData, 
+                            Position, 
+                            RenderSize, 
+                            SpriteData.AtlasOffset, 
+                            SpriteData.SpriteSize, 
+                            Rotation, 
+                            Color, 
+                            TextureIndex));
+}
+
+internal void
+DrawEntity(gl_render_data *RenderData, game_state *State, entity *Entity, vec2 Position, vec4 Color)
+{
+    static_sprite_data SpriteData = State->GameData.Sprites[Entity->Sprite];
+    return(DrawSprite(RenderData, SpriteData, Entity->Position, v2Cast(SpriteData.SpriteSize), Color, Entity->Rotation, 0));
+}
+
+
+internal void
+DrawUISprite(gl_render_data     *RenderData,
+             static_sprite_data  SpriteData,
+             vec2                Position,
+             vec2                RenderSize,
+             vec4                Color,
+             real32              Rotation,
+             uint32              TextureIndex)
+{
+    return(DrawUIQuadTextured(RenderData, 
+                              Position, 
+                              RenderSize, 
+                              SpriteData.AtlasOffset, 
+                              SpriteData.SpriteSize, 
+                              Rotation, 
+                              Color, 
+                              TextureIndex));
+}
+
+internal void
+DrawUIEntity(gl_render_data *RenderData, 
+             game_state     *State, 
+             entity         *Entity, 
+             vec2            Position, 
+             vec4            Color)
+{
+    static_sprite_data SpriteData = State->GameData.Sprites[Entity->Sprite];
+    return(DrawUISprite(RenderData, SpriteData, Entity->Position, v2Cast(SpriteData.SpriteSize), Color, Entity->Rotation, 0));
+}
+
+internal void
+DrawRectXForm(gl_render_data *RenderData, mat4 XForm, vec2 Size, real32 Rotation, vec4 Color)
+{
+    quad Quad = CreateDrawRect(RenderData, Size, Rotation, Color);
+    DrawQuadXForm(RenderData, &Quad, &XForm);
+}
+
+internal void
+DrawUIRectXForm(gl_render_data *RenderData, mat4 XForm, vec2 Size, real32 Rotation, vec4 Color)
+{
+    quad Quad = CreateDrawRect(RenderData, Size, Rotation, Color);
+    DrawUIQuadXForm(RenderData, &Quad, &XForm);
+}
+
+internal void
+DrawUISpriteXForm(gl_render_data    *RenderData, 
+                  mat4               XForm, 
+                  static_sprite_data Sprite,
+                  real32             Rotation, 
+                  vec4               Color)
+{
+    quad Quad = CreateDrawQuad(RenderData, 
+                               {0, 0}, 
+                               v2Cast(Sprite.SpriteSize), 
+                               Sprite.SpriteSize, 
+                               Sprite.AtlasOffset, 
+                               Rotation, 
+                               Color, 
+                               0); 
+    DrawUIQuadXForm(RenderData, &Quad, &XForm);
+}
+
+internal void
+DrawSpriteXForm(gl_render_data    *RenderData, 
+                mat4               XForm, 
+                static_sprite_data Sprite,
+                real32             Rotation, 
+                vec4               Color)
+{
+    quad Quad = CreateDrawQuad(RenderData, 
+                               {0, 0}, 
+                               v2Cast(Sprite.SpriteSize), 
+                               Sprite.SpriteSize, 
+                               Sprite.AtlasOffset, 
+                               Rotation, 
+                               Color, 
+                               0); 
+    DrawQuadXForm(RenderData, &Quad, &XForm);
 }

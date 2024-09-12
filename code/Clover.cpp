@@ -18,8 +18,7 @@
 #include "../data/deps/ImGui/imgui_impl_win32.h"
 #include "../data/deps/ImGUI/imgui_impl_opengl3.h"
 
-#include "../data/deps/MiniAudio/miniaudio.h"
-
+// NOTE(Sleepster): If MiniAudio starts acting weird, I compiled it in a non debug mode.
 #include "Clover_Audio.cpp"
 #include "Clover_Draw.cpp"
 
@@ -59,65 +58,34 @@ GetRandomReal32_Range(real32 Minimum, real32 Maximum)
 internal inline void
 LoadSpriteData(game_state *State)
 {
-    State->GameData.Sprites[SPRITE_Nil]             = {.AtlasOffset = {  0,  0}, .SpriteSize = {16, 16}};
-    State->GameData.Sprites[SPRITE_Player]          = {.AtlasOffset = { 17,  0}, .SpriteSize = {12, 11}};
-    State->GameData.Sprites[SPRITE_Rock]            = {.AtlasOffset = { 32,  0}, .SpriteSize = {12,  8}};
-    State->GameData.Sprites[SPRITE_Pebbles]         = {.AtlasOffset = { 32, 16}, .SpriteSize = { 6,  5}};
-    State->GameData.Sprites[SPRITE_Tree00]          = {.AtlasOffset = { 48,  0}, .SpriteSize = {11, 14}};
-    State->GameData.Sprites[SPRITE_Branches]        = {.AtlasOffset = { 48, 16}, .SpriteSize = { 7,  7}};
-    State->GameData.Sprites[SPRITE_Tree01]          = {.AtlasOffset = { 64,  0}, .SpriteSize = { 9, 12}};
-    State->GameData.Sprites[SPRITE_Trunk]           = {.AtlasOffset = { 64, 16}, .SpriteSize = { 6,  6}};
-    State->GameData.Sprites[SPRITE_RubyOre]         = {.AtlasOffset = { 80,  0}, .SpriteSize = {14, 11}};
-    State->GameData.Sprites[SPRITE_RubyChunk]       = {.AtlasOffset = { 80, 16}, .SpriteSize = { 8,  6}};
-    State->GameData.Sprites[SPRITE_SaphireOre]      = {.AtlasOffset = { 96,  0}, .SpriteSize = {11, 11}};
-    State->GameData.Sprites[SPRITE_SaphireChunk]    = {.AtlasOffset = { 96, 16}, .SpriteSize = { 8,  6}};
-    State->GameData.Sprites[SPRITE_UIItemBox]       = {.AtlasOffset = {112,  0}, .SpriteSize = {16, 16}};
-    State->GameData.Sprites[SPRITE_ToolPickaxe]     = {.AtlasOffset = {  0, 48}, .SpriteSize = {10, 11}};
-    State->GameData.Sprites[SPRITE_ToolWoodAxe]     = {.AtlasOffset = { 16, 48}, .SpriteSize = {10, 13}};
-}
-
-internal inline static_sprite_data *
-GetSprite(game_state *State, sprite_type Sprite)
-{
-    return(&State->GameData.Sprites[Sprite]);
+    State->GameData.Sprites[SPRITE_Nil]           = {.AtlasOffset = {  0,  0}, .SpriteSize = {16, 16}};
+    State->GameData.Sprites[SPRITE_Player]        = {.AtlasOffset = { 17,  0}, .SpriteSize = {12, 11}};
+    State->GameData.Sprites[SPRITE_Rock]          = {.AtlasOffset = { 32,  0}, .SpriteSize = {12,  8}};
+    State->GameData.Sprites[SPRITE_Pebbles]       = {.AtlasOffset = { 32, 16}, .SpriteSize = { 6,  5}};
+    State->GameData.Sprites[SPRITE_Tree00]        = {.AtlasOffset = { 48,  0}, .SpriteSize = {11, 14}};
+    State->GameData.Sprites[SPRITE_Branches]      = {.AtlasOffset = { 48, 16}, .SpriteSize = { 7,  7}};
+    State->GameData.Sprites[SPRITE_Tree01]        = {.AtlasOffset = { 64,  0}, .SpriteSize = { 9, 12}};
+    State->GameData.Sprites[SPRITE_Trunk]         = {.AtlasOffset = { 64, 16}, .SpriteSize = { 6,  6}};
+    State->GameData.Sprites[SPRITE_RubyOre]       = {.AtlasOffset = { 80,  0}, .SpriteSize = {14, 11}};
+    State->GameData.Sprites[SPRITE_RubyChunk]     = {.AtlasOffset = { 80, 16}, .SpriteSize = { 8,  6}};
+    State->GameData.Sprites[SPRITE_SaphireOre]    = {.AtlasOffset = { 96,  0}, .SpriteSize = {11, 11}};
+    State->GameData.Sprites[SPRITE_SapphireChunk] = {.AtlasOffset = { 96, 16}, .SpriteSize = { 8,  6}};
+    State->GameData.Sprites[SPRITE_UIItemBox]     = {.AtlasOffset = {112,  0}, .SpriteSize = {16, 16}};
+    State->GameData.Sprites[SPRITE_ToolPickaxe]   = {.AtlasOffset = {  0, 48}, .SpriteSize = {11, 13}};
+    State->GameData.Sprites[SPRITE_ToolWoodAxe]   = {.AtlasOffset = { 16, 48}, .SpriteSize = {11, 13}};
 }
 
 internal inline void
-DrawSprite(gl_render_data    *RenderData,
-           static_sprite_data SpriteData, 
-           vec2               Position, 
-           vec2               RenderSize, 
-           vec4               Color, 
-           real32             Rotation,
-           uint32             TextureIndex)
-{    
-    return(DrawQuadTextured(RenderData, Position, RenderSize, SpriteData.AtlasOffset, SpriteData.SpriteSize, Rotation, Color, TextureIndex));
-}
-
-internal void
-DrawEntity(gl_render_data *RenderData, game_state *State, entity *Entity, vec2 Position, vec4 Color)
+LoadItemData(game_state *State)
 {
-    static_sprite_data SpriteData = State->GameData.Sprites[Entity->Sprite];
-    return(DrawSprite(RenderData, SpriteData, Entity->Position, v2Cast(SpriteData.SpriteSize), Color, Entity->Rotation, 0));
-}
-
-internal void
-DrawUISprite(gl_render_data     *RenderData,
-             static_sprite_data  SpriteData,
-             vec2                Position,
-             vec2                RenderSize,
-             vec4                Color,
-             real32              Rotation,
-             uint32              TextureIndex)
-{
-    return(DrawUIQuadTextured(RenderData, Position, RenderSize, SpriteData.AtlasOffset, SpriteData.SpriteSize, Rotation, Color, TextureIndex));
-}
-
-internal void
-DrawUIEntity(gl_render_data *RenderData, game_state *State, entity *Entity, vec2 Position, vec4 Color)
-{
-    static_sprite_data SpriteData = State->GameData.Sprites[Entity->Sprite];
-    return(DrawUISprite(RenderData, SpriteData, Entity->Position, v2Cast(SpriteData.SpriteSize), Color, Entity->Rotation, 0));
+    State->GameData.GameItems[ITEM_Nil]              = {};
+    State->GameData.GameItems[ITEM_Pebbles]          = {.Archetype = ITEM, .Flags = IS_VALID|IS_ITEM|IS_IN_INVENTORY, .Sprite = SPRITE_Pebbles,       .ItemID = ITEM_Pebbles,          .MaxStackCount = 64, .ItemName = STR("Pebbles"),         .ItemDesc = STR("These are some pebbles!")};
+    State->GameData.GameItems[ITEM_Branches]         = {.Archetype = ITEM, .Flags = IS_VALID|IS_ITEM|IS_IN_INVENTORY, .Sprite = SPRITE_Branches,      .ItemID = ITEM_Branches,         .MaxStackCount = 64, .ItemName = STR("Branches"),        .ItemDesc = STR("These are some branches!")};
+    State->GameData.GameItems[ITEM_Trunk]            = {.Archetype = ITEM, .Flags = IS_VALID|IS_ITEM|IS_IN_INVENTORY, .Sprite = SPRITE_Trunk,         .ItemID = ITEM_Trunk,            .MaxStackCount = 64, .ItemName = STR("Pine Logs"),       .ItemDesc = STR("This is a bundle of logs!")};
+    State->GameData.GameItems[ITEM_RubyOreChunk]     = {.Archetype = ITEM, .Flags = IS_VALID|IS_ITEM|IS_IN_INVENTORY, .Sprite = SPRITE_RubyChunk,     .ItemID = ITEM_RubyOreChunk,     .MaxStackCount = 64, .ItemName = STR("Ruby Chunks"),     .ItemDesc = STR("These are chunks of Ruby Rock!")};
+    State->GameData.GameItems[ITEM_SapphireOreChunk] = {.Archetype = ITEM, .Flags = IS_VALID|IS_ITEM|IS_IN_INVENTORY, .Sprite = SPRITE_SapphireChunk, .ItemID = ITEM_SapphireOreChunk, .MaxStackCount = 64, .ItemName = STR("Sapphire Chunks"), .ItemDesc = STR("These are soem chunks of Saphire Rock!")};
+    State->GameData.GameItems[ITEM_ToolPickaxe]      = {.Archetype = ITEM, .Flags = IS_VALID|IS_ITEM|IS_IN_INVENTORY, .Sprite = SPRITE_ToolPickaxe,   .ItemID = ITEM_ToolPickaxe,      .MaxStackCount = 1,  .ItemName = STR("Simple Pickaxe"),  .ItemDesc = STR("This a pickaxe, It can be used to mine ores!")};
+    State->GameData.GameItems[ITEM_ToolWoodAxe]      = {.Archetype = ITEM, .Flags = IS_VALID|IS_ITEM|IS_IN_INVENTORY, .Sprite = SPRITE_ToolWoodAxe,   .ItemID = ITEM_ToolWoodAxe,      .MaxStackCount = 1,  .ItemName = STR("Simple Wood Axe"), .ItemDesc = STR("This is a wood axe, It can be used to cut trees!")};
 }
 
 internal entity *
@@ -191,7 +159,7 @@ SetupPlayer(entity *Entity)
     Entity->Speed       = 100.0f;              // PIXELS PER SECOND
     Entity->BoxCollider = {};
     
-    Entity->ItemID      = ITEM_Nil;
+    Entity->ItemID      = ITEM_Nil;            // DROPS
 }
 
 internal void
@@ -271,7 +239,7 @@ SetupSaphireNode(entity *Entity)
     Entity->Speed       = 1.0f;
     Entity->BoxCollider = {};
     
-    Entity->ItemID      = ITEM_SaphireOreChunk;
+    Entity->ItemID      = ITEM_SapphireOreChunk;
 }
 
 internal void
@@ -318,10 +286,20 @@ internal void
 SetupItemSaphireChunk(entity *Entity)
 {
     Entity->Archetype = ITEM;
-    Entity->Sprite    = SPRITE_SaphireChunk;
+    Entity->Sprite    = SPRITE_SapphireChunk;
     Entity->Flags    += IS_ACTIVE|IS_ITEM;
     Entity->Size      = {6, 5};
-    Entity->ItemID    = ITEM_SaphireOreChunk;
+    Entity->ItemID    = ITEM_SapphireOreChunk;
+}
+
+internal void
+SetupItemToolPickaxe(entity *Entity)
+{
+    Entity->Archetype = ITEM;
+    Entity->Sprite    = SPRITE_ToolPickaxe;
+    Entity->Flags    += IS_ACTIVE|IS_ITEM;
+    Entity->Size      = {11, 13};
+    Entity->ItemID    = ITEM_ToolPickaxe;
 }
 
 internal void
@@ -471,6 +449,7 @@ GAME_ON_AWAKE(GameOnAwake)
 {
     ResetGame(RenderData, State);
     LoadSpriteData(State);
+    LoadItemData(State);
     
     // TODO(Sleepster): Write a proper implementation of Mini Audio's low level API so that 
     //                  hotreloading the engine doesn't just crash the program
@@ -516,7 +495,15 @@ GAME_ON_AWAKE(GameOnAwake)
         En5->Position = vec2{GetRandomReal32_Range(-SizeScaler, SizeScaler), GetRandomReal32_Range(-SizeScaler, SizeScaler)};
         En5->Position = TileToWorldPos(WorldToTilePos(En5->Position));
     }
-    
+
+    entity *Pickaxe = CreateEntity(State);
+    SetupItemToolPickaxe(Pickaxe);
+    Pickaxe->Position = {0, 100};
+
+
+    entity *Pickaxe2 = CreateEntity(State);
+    SetupItemToolPickaxe(Pickaxe2);
+    Pickaxe2->Position = {32, 100};
 }
 
 extern
@@ -549,8 +536,9 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
     }
     
     vec2 MouseToWorld = ConvertMouseToWorldPos(RenderData, State->GameInput.Keyboard.CurrentMouse, SizeData);
-    
+
     // NOTE(Sleepster): SELECTED ENTITY
+    real32 SelectionDistance = 32.0f;
     real32 MinimumDistance = 0;
     for(uint32 EntityIndex = 0;
         EntityIndex <= State->World.EntityCounter;
@@ -559,15 +547,9 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
         entity *Temp = &State->World.Entities[EntityIndex];
         if((Temp->Flags & IS_VALID))
         {
-            static_sprite_data *Sprite = GetSprite(State, Temp->Sprite);
-            range_v2 Bounds = RangeMakeCentered(v2Cast(Sprite->SpriteSize));
-            Bounds = RangeShift(Bounds, Temp->Position - (Temp->Size * 0.5f));
-            Bounds.Min = Bounds.Min - vec2{20, 20};
-            Bounds.Max = Bounds.Max + vec2{20, 20};
-            
             real32 Distance = fabsf(v2Distance(Temp->Position, MouseToWorld));
             
-            if(IsRangeWithinBounds(Bounds, MouseToWorld))
+            if(Distance <= SelectionDistance)
             {
                 if(!State->World.WorldFrame.SelectedEntity || (Distance < MinimumDistance))
                 {
@@ -631,6 +613,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                             }
                         }
                         //PlaySound(&Memory->TemporaryStorage, State, STR("boop.wav"), 1);
+                        State->World.WorldFrame.SelectedEntity = {};
                         DeleteEntity(Temp);
                     }
                 }
@@ -642,38 +625,40 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                 real32 ItemDistance = fabsf(v2Distance(Temp->Position, Player->Position));
                 if(ItemDistance <= ItemPickupDist)
                 {
-                    if(Player->Inventory.Items[Temp->ItemID].ItemID == 0)
+                    uint32 CurrentHotbarCount = Player->Inventory.CurrentItemCount;
+                    item NewItem = State->GameData.GameItems[Temp->ItemID];
+
+                    for(int32 InventoryIndex = 0;
+                        InventoryIndex < PLAYER_HOTBAR_COUNT;
+                        ++InventoryIndex)
                     {
-                        item NewItem = {};
-                        NewItem.Archetype  = Temp->Archetype;
-                        NewItem.Flags      = IS_VALID|IS_ITEM|IS_IN_INVENTORY;
-                        NewItem.Sprite     = Temp->Sprite;
-                        NewItem.ItemID     = Temp->ItemID;
-                        NewItem.StackCount = 128;
-                        
-                        Player->Inventory.Items[NewItem.ItemID] = NewItem;
+                        if(Player->Inventory.Items[InventoryIndex].ItemID == NewItem.ItemID && 
+                           Player->Inventory.Items[InventoryIndex].CurrentStack < 
+                           Player->Inventory.Items[InventoryIndex].MaxStackCount)
+                        {
+                            Player->Inventory.Items[InventoryIndex].CurrentStack++;
+                            // NOTE(Sleepster): If two matching IDs are found, skip to the deletion 
+                            goto Deletion;
+                        }
                     }
-                    
-                    if(Player->Inventory.Items[Temp->ItemID].CurrentStack < Player->Inventory.Items[Temp->ItemID].StackCount)
-                    {
-                        Player->Inventory.Items[Temp->ItemID].CurrentStack++;
-                    }
-                    
+                     
+                    NewItem.CurrentStack++;
+                    Player->Inventory.Items[Player->Inventory.CurrentItemCount] = NewItem;
+                    Player->Inventory.CurrentItemCount++;
+// TODO(Sleepster): Investigate a lambda, even though this is simple as shit, it's kinda grody to some people
+Deletion:
                     DeleteEntity(Temp);
                 }
             }
         }
     }
     
-    // TODO(Sleepster): Tear this out so we can use it for font rendering center alignment
+    // TODO(Sleepster): Tear this out so we can use it for font rendering center alignment 
+#if 0
     int32 SlotIndex = 0;
-    for(uint32 ActiveSlot = 0; ActiveSlot < ITEM_IDCount; ++ActiveSlot)
+    for(uint32 ActiveSlot = 0; ActiveSlot < PLAYER_HOTBAR_COUNT; ++ActiveSlot)
     {
-        item *Item = &Player->Inventory.Items[ActiveSlot];
-        if(Item->CurrentStack > 0)
-        {
-            ++SlotIndex;
-        }
+        ++SlotIndex;
     }
     
     const real32 Width = SizeData.X * 0.25f;
@@ -683,22 +668,57 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
     const real32 StartingX = (Width / 2.0f) - (TotalWidth / 2.0f);
     
     SlotIndex = 0;
-    for(uint32 ActiveSlot = 0; ActiveSlot < ITEM_IDCount; ++ActiveSlot)
+    for(uint32 ActiveSlot = 0; ActiveSlot < PLAYER_HOTBAR_COUNT; ++ActiveSlot)
     {
+        real32 SlotIndexOffset = SlotIndex * (IconSize + Padding);
+        
+        static_sprite_data Sprite = GetSprite(State, SPRITE_UIItemBox);
+        DrawUISprite(RenderData, Sprite, {(StartingX + SlotIndexOffset), -90}, v2Cast(Sprite.SpriteSize), WHITE, 0, 0);
+        
+        // TODO(Sleepster): Fix the font coloring here
         item *Item = &Player->Inventory.Items[ActiveSlot];
-        if(Item->CurrentStack > 0)
+        Sprite = GetSprite(State, Item->Sprite);
+        if(Sprite != State->GameData.Sprites[SPRITE_Nil])
         {
-            real32 SlotIndexOffset = SlotIndex * (IconSize + Padding);
+            if(Item->MaxStackCount > 1)
+            {
+                DrawUIText(RenderData, sprints(&Memory->TemporaryStorage, STR("%d"), Item->CurrentStack), {(StartingX + SlotIndexOffset) - 4, -90}, 0.33f, UBUNTU_MONO, GREEN);
+            }
+            DrawUISprite(RenderData, Sprite, {(StartingX + SlotIndexOffset) - 3, -90}, v2Cast(Sprite.SpriteSize), WHITE, 0, 0);
+        }
+        ++SlotIndex;
+    }
+#endif
+    // INVENTORY UI
+    {
+        const real32 Width = SizeData.X * 0.25f;
+        const real32 Padding = 4.0f;
+        const real32 IconSize = 16.0f;
+        const real32 TotalWidth = (PLAYER_HOTBAR_COUNT * IconSize) + ((PLAYER_HOTBAR_COUNT - 1) * Padding);
+        const real32 StartingX = (Width / 2.0f) - (TotalWidth / 2.0f);
+
+        for(int32 InventorySlot = 0;
+            InventorySlot < PLAYER_HOTBAR_COUNT;
+            ++InventorySlot)
+        {
+            real32 SlotOffset = (IconSize + Padding) * InventorySlot;
             
-            static_sprite_data *Sprite = GetSprite(State, SPRITE_UIItemBox);
-            DrawUISprite(RenderData, *Sprite, {(StartingX + SlotIndexOffset), -90}, v2Cast(Sprite->SpriteSize), WHITE, 0, 0);
+            mat4 XForm = mat4Identity(1.0f);
+                 XForm = mat4Multiply(XForm, mat4Translate(vec3{StartingX + SlotOffset, -90, 0.0}));
+                 XForm = mat4Multiply(XForm, mat4Translate(vec3{IconSize * -0.55f, 0.0f, 0.0f}));
+                 XForm = mat4Multiply(XForm, mat4MakeScale(vec3{IconSize, IconSize, 0.0}));
             
-            // TODO: Fix the font coloring here
+            static_sprite_data Sprite = GetSprite(State, SPRITE_UIItemBox);
+            quad Slot   = CreateDrawQuad(RenderData, {0, 0}, {IconSize, IconSize}, Sprite.SpriteSize, Sprite.AtlasOffset, 0, WHITE, 0);
+            DrawUIQuadXForm(RenderData, &Slot, &XForm);
+
+            item *Item = &Player->Inventory.Items[InventorySlot];
             Sprite = GetSprite(State, Item->Sprite);
-            DrawUIText(RenderData, sprints(&Memory->TemporaryStorage, STR("%d"), Item->CurrentStack), {(StartingX + SlotIndexOffset) - 4, -90}, 0.33f, UBUNTU_MONO, GREEN);
-            DrawUISprite(RenderData, *Sprite, {(StartingX + SlotIndexOffset) - 4, -90}, v2Cast(Sprite->SpriteSize), WHITE, 0, 0);
-            
-            ++SlotIndex;
+            if(Sprite != State->GameData.Sprites[SPRITE_Nil])
+            {
+                XForm = mat4Multiply(XForm, mat4MakeScale(vec3{0.65, 0.65, 0.0}));
+                DrawUISpriteXForm(RenderData, XForm, Sprite, 0, WHITE);
+            }
         }
     }
     
@@ -738,7 +758,6 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     {
                         Color = BLUE;
                     }
-                    
                     DrawEntity(RenderData, State, Temp, Temp->Position, Color);
                 }break;
             }
@@ -769,6 +788,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
         }
     }
 }
+
 extern
 GAME_FIXED_UPDATE(GameFixedUpdate)
 {

@@ -75,9 +75,8 @@ GetCurrentTimeInSeconds()
 {
     LARGE_INTEGER Counter;
     QueryPerformanceCounter(&Counter);
-    
+
     return((real64)Counter.QuadPart / PerfCountFrequency);
-    
 }
 
 LRESULT CALLBACK
@@ -303,13 +302,13 @@ Win32LoadGameCode(string SourceDLLName)
     {
         Result.OnAwake         = (game_on_awake *)          GetProcAddress(Result.GameCodeDLL, "GameOnAwake");
         Result.FixedUpdate     = (game_fixed_update *)      GetProcAddress(Result.GameCodeDLL, "GameFixedUpdate");
-        Result.UpdateAndDraw = (game_update_and_draw *) GetProcAddress(Result.GameCodeDLL, "GameUpdateAndDraw");
+        Result.UpdateAndDraw   = (game_update_and_draw *)   GetProcAddress(Result.GameCodeDLL, "GameUpdateAndDraw");
     }
     else
     {
         Result.OnAwake         = GameOnAwakeStub;
         Result.FixedUpdate     = GameFixedUpdateStub;
-        Result.UpdateAndDraw = GameUpdateAndDrawStub;
+        Result.UpdateAndDraw   = GameUpdateAndDrawStub;
     }
     Sleep(200);
     return(Result);
@@ -394,7 +393,7 @@ WinMain(HINSTANCE hInstance,
             
             RenderData.DrawFrame.UIVertices = (vertex *)ArenaAlloc(&Memory.PermanentStorage, sizeof(vertex) * MAX_VERTICES);
             RenderData.DrawFrame.UIVertexBufferptr = &RenderData.DrawFrame.UIVertices[0];
-            
+
             Win32LoadKeyData(&State);
             Win32LoadDefaultBindings(&State.GameInput);
             

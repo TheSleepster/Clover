@@ -16,7 +16,7 @@
 #include "Clover_Renderer.h"
 #include "Clover_Audio.h"
 
-#include "../data/deps/MiniAudio/miniaudio.h"
+#include "../data/deps/yyjson/include/yyjson.h"
 
 struct sound_instance
 {
@@ -55,28 +55,28 @@ struct range_v2
     vec2 Max;
 };
 
-struct box2d : range_v2
+struct box2D : range_v2
 {
     bool IsActive;
 };
 
 enum sprite_type
 {
-    SPRITE_Nil          = 0,
-    SPRITE_Player       = 1,
-    SPRITE_Rock         = 2,
-    SPRITE_Tree00       = 3,
-    SPRITE_Tree01       = 4,
-    SPRITE_Pebbles      = 5,
-    SPRITE_Branches     = 6,
-    SPRITE_Trunk        = 7,
-    SPRITE_RubyOre      = 8,
-    SPRITE_SaphireOre   = 9,
-    SPRITE_RubyChunk    = 10,
-    SPRITE_SaphireChunk = 11,
-    SPRITE_UIItemBox    = 12,
-    SPRITE_ToolPickaxe  = 13,
-    SPRITE_ToolWoodAxe  = 14,
+    SPRITE_Nil           = 0,
+    SPRITE_Player        = 1,
+    SPRITE_Rock          = 2,
+    SPRITE_Tree00        = 3,
+    SPRITE_Tree01        = 4,
+    SPRITE_Pebbles       = 5,
+    SPRITE_Branches      = 6,
+    SPRITE_Trunk         = 7,
+    SPRITE_RubyOre       = 8,
+    SPRITE_SaphireOre    = 9,
+    SPRITE_RubyChunk     = 10,
+    SPRITE_SapphireChunk = 11,
+    SPRITE_UIItemBox     = 12,
+    SPRITE_ToolPickaxe   = 13,
+    SPRITE_ToolWoodAxe   = 14,
     SPRITE_Count
 };
 
@@ -87,7 +87,7 @@ enum item_id
     ITEM_Branches,
     ITEM_Trunk,
     ITEM_RubyOreChunk,
-    ITEM_SaphireOreChunk,
+    ITEM_SapphireOreChunk,
     ITEM_ToolPickaxe,
     ITEM_ToolWoodAxe,
     ITEM_IDCount
@@ -119,7 +119,32 @@ enum entity_arch
     COUNT
 };
 
-// NOTE(Sleepster): Probably don't need this
+enum ui_type
+{
+    UIELEMENT_SelectionBox = 0,
+    UIELEMENT_Button       = 1,
+    UIELEMENT_Count,
+};
+
+enum ui_flags
+{
+    IS_CLICKED   = 1 << 0,
+    IS_OCCUPIED  = 1 << 1,
+    IS_DISPLAYED = 1 << 2,
+    UI_FLAG_COUNT
+};
+
+struct ui_interactable
+{
+    ui_type            Type;
+    ui_flags           Flags;
+    static_sprite_data Sprite;
+
+    vec2     Position;
+    vec2     Size;
+    range_v2 OccupiedRange;
+};
+
 struct item
 {
     uint32      Archetype;
@@ -127,13 +152,17 @@ struct item
     sprite_type Sprite;
     item_id     ItemID;
     
-    int32       StackCount;
+    int32       MaxStackCount;
     int32       CurrentStack;
+
+    string      ItemName;
+    string      ItemDesc;
 };
 
 struct entity_item_inventory
 {
-    item Items[ITEM_IDCount];
+    item  Items[ITEM_IDCount];
+    uint32 CurrentItemCount;
 };
 
 struct entity
@@ -150,8 +179,8 @@ struct entity
     real32      Speed;
     real32      Rotation;
     
-    box2d       SelectionBox;
-    box2d       BoxCollider;
+    box2D       SelectionBox;
+    box2D       BoxCollider;
     
     uint32      UsedInventorySlots;
     entity_item_inventory Inventory;
@@ -161,8 +190,6 @@ struct game_state
 {
     KeyCodeID KeyCodeLookup[KEY_COUNT];
     Input GameInput;
-    
-    
     
     // NOTE(Sleepster): World Data
     struct
@@ -193,7 +220,9 @@ struct game_state
     // NOTE(Sleepster): Visual Assets
     struct 
     { 
-        static_sprite_data Sprites[SPRITE_Count];
+        static_sprite_data          Sprites[SPRITE_Count];
+        item                        GameItems[ITEM_IDCount];
+        array<ui_interactable, 100> UIElements;
     }GameData;
 };
 
@@ -227,5 +256,14 @@ struct game_functions
     bool IsLoaded;
     bool IsValid;
 };
+
+bool
+operator!=(static_sprite_data A, static_sprite_data B)
+{
+    bool Result = {};
+    v2Cast(A.AtlasOffset) != v2Cast(B.AtlasOffset) ? Result = true : Result = false;
+
+    return(Result);
+}
 
 #endif // _CLOVER_H
