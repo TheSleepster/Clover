@@ -10,13 +10,9 @@
 #include "util/FileIO.h"
 #include "util/CustomStrings.h"
 
-#include "Clover.h"
 #include "Clover_Input.h"
-#include "Clover_Globals.h"
-#include "Clover_Renderer.h"
 #include "Clover_Audio.h"
-
-#include "../data/deps/yyjson/include/yyjson.h"
+#include "Clover_Renderer.h"
 
 struct sound_instance
 {
@@ -41,18 +37,6 @@ struct time
     int32  FPSCounter;
     real32 MSPerFrame;
     real32 CurrentTimeInSeconds;
-};
-
-struct range_r32
-{
-    real32 Minimum;
-    real32 Maximum;
-};
-
-struct range_v2
-{
-    vec2 Min;
-    vec2 Max;
 };
 
 struct box2D : range_v2
@@ -119,32 +103,6 @@ enum entity_arch
     COUNT
 };
 
-enum ui_type
-{
-    UIELEMENT_SelectionBox = 0,
-    UIELEMENT_Button       = 1,
-    UIELEMENT_Count,
-};
-
-enum ui_flags
-{
-    IS_CLICKED   = 1 << 0,
-    IS_OCCUPIED  = 1 << 1,
-    IS_DISPLAYED = 1 << 2,
-    UI_FLAG_COUNT
-};
-
-struct ui_interactable
-{
-    ui_type            Type;
-    ui_flags           Flags;
-    static_sprite_data Sprite;
-
-    vec2     Position;
-    vec2     Size;
-    range_v2 OccupiedRange;
-};
-
 struct item
 {
     uint32      Archetype;
@@ -186,6 +144,65 @@ struct entity
     entity_item_inventory Inventory;
 };
 
+
+
+enum ui_type
+{
+    UIELEMENT_Nil,
+    UIELEMENT_Button,
+    UIElementCount,
+};
+
+enum ui_layer : uint16
+{
+    UI_LAYER_0  = 1 << 0,
+    UI_LAYER_1  = 1 << 1,
+    UI_LAYER_2  = 1 << 2,
+    UI_LAYER_3  = 1 << 3,
+    UI_LAYER_4  = 1 << 4,
+    UI_LAYER_5  = 1 << 5,
+    UI_LAYER_6  = 1 << 6,
+    UI_LAYER_7  = 1 << 7,
+    UI_LAYER_8  = 1 << 8,
+    UI_LAYER_9  = 1 << 9,
+    UI_LAYER_10 = 1 << 10,
+    UI_LAYER_11 = 1 << 11,
+    UI_LAYER_12 = 1 << 12,
+    UI_LAYER_13 = 1 << 13,
+    UI_LAYER_14 = 1 << 14,
+    UI_LAYER_15 = 1 << 15,
+};
+
+struct ui_id
+{
+    int32    ID;
+    ui_layer LayerIdx = UI_LAYER_0;
+};
+
+struct ui_element
+{
+    ui_type Type;
+    ui_id UIID;  
+
+    static_sprite_data Sprite;
+    string ElementText;
+
+    vec2 Position;
+    vec2 Size;
+    vec4 DrawColor;
+
+    range_v2 OccupiedRange;
+
+    bool IsHot;
+    bool IsActive;
+    bool IsDisplayed;
+    bool Captured;
+    
+    mat4 XForm;
+};
+
+
+
 struct game_state
 {
     KeyCodeID KeyCodeLookup[KEY_COUNT];
@@ -220,9 +237,16 @@ struct game_state
     // NOTE(Sleepster): Visual Assets
     struct 
     { 
-        static_sprite_data          Sprites[SPRITE_Count];
-        item                        GameItems[ITEM_IDCount];
-        array<ui_interactable, 100> UIElements;
+        static_sprite_data     Sprites[SPRITE_Count];
+        item                   GameItems[ITEM_IDCount];
+
+        struct
+        {
+            ui_id      HotLastFrame;
+            ui_id      ActiveLastFrame;
+            uint32     ElementCount;
+            ui_element UIElements[MAX_UI_ELEMENTS];
+        }UIState;
     }GameData;
 };
 

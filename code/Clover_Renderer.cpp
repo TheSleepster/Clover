@@ -140,13 +140,12 @@ CloverLoadFont(memory_arena *Memory, gl_render_data *RenderData, string Filepath
             
             glGenTextures(1, &RenderData->LoadedFonts[FontIndex].FontAtlas.TextureID);
             glBindTexture(GL_TEXTURE_2D, RenderData->LoadedFonts[FontIndex].FontAtlas.TextureID);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, BITMAP_ATLAS_SIZE, BITMAP_ATLAS_SIZE, 0, GL_RED, GL_UNSIGNED_BYTE, TextureData);
             
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, BITMAP_ATLAS_SIZE, BITMAP_ATLAS_SIZE, 0, GL_RED, GL_UNSIGNED_BYTE, TextureData);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             glBindTexture(GL_TEXTURE_2D, 0);
         }
     }
@@ -285,14 +284,17 @@ CloverSetupRenderer(memory_arena *Memory, gl_render_data *RenderData)
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_GREATER);
         
-        glEnable(GL_BLEND);        // ImGui might use blending for its UI elements
+        glEnable(GL_BLEND);        
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendEquation(GL_FUNC_ADD);
         
         glEnable(GL_FRAMEBUFFER_SRGB);
         glDisable(0x809D); // Disabling multisampling
         
         RenderData->ClearColor = DARK_GRAY;
+        RenderData->TextureCount = 1;
     }
+
     
     uint32 Indices[MAX_INDICES] = {};
     uint32 Offset               = 0;
@@ -309,6 +311,7 @@ CloverSetupRenderer(memory_arena *Memory, gl_render_data *RenderData)
         Offset += 4;
     }
     
+
     // GAME ASSETS BUFFER SETUP
     {
         glGenVertexArrays(1, &RenderData->GameVAOID);
@@ -333,6 +336,7 @@ CloverSetupRenderer(memory_arena *Memory, gl_render_data *RenderData)
         glEnableVertexAttribArray(3);
     }
     
+
     // GAME UI BUFFER SETUP
     {
         glGenVertexArrays(1, &RenderData->GameUIVAOID);
@@ -357,10 +361,11 @@ CloverSetupRenderer(memory_arena *Memory, gl_render_data *RenderData)
         glEnableVertexAttribArray(3);
     }
     
+
     // SHADER SETUP
     {
         RenderData->BasicShader = 
-            CloverCreateShader(Memory, STR("../code/shader/Basic_vert.glsl"), STR("../code/shader/Basic_frag.glsl"));
+            CloverCreateShader(Memory, STR("../code/shader/Basic_vert.vs"), STR("../code/shader/Basic_frag.fs"));
     }
     
     
@@ -368,14 +373,14 @@ CloverSetupRenderer(memory_arena *Memory, gl_render_data *RenderData)
     {
         // NOTE(Sleepster): The order is important, whatever you gen first will end up in the GL_TEXTUREX slot 
         CloverLoadTexture(RenderData, &RenderData->GameAtlas, STR("../data/res/textures/TextureAtlas.png"));
-        CloverLoadFont(Memory, RenderData, STR("../data/res/fonts/UbuntuMono-B.ttf"), 100, UBUNTU_MONO);
+        CloverLoadFont(Memory, RenderData, STR("../data/res/fonts/UbuntuMono-B.ttf"), 250, UBUNTU_MONO);
     }
     
     
     // CAMERAS/MATRICES
     {
-        RenderData->GameCamera.ViewMatrix  = mat4Identity(1.0f);
-        RenderData->GameUICamera.ViewMatrix    = mat4Identity(1.0f);
+        RenderData->GameCamera.ViewMatrix   = mat4Identity(1.0f);
+        RenderData->GameUICamera.ViewMatrix = mat4Identity(1.0f);
         
         RenderData->ProjectionViewMatrixID = glGetUniformLocation(RenderData->BasicShader.Shader, "ProjectionViewMatrix");
     }
@@ -418,10 +423,10 @@ CloverRender(memory_arena *Arena, gl_render_data *RenderData)
         
         glUniformMatrix4fv(RenderData->ProjectionViewMatrixID, 1, GL_FALSE, &RenderData->GameUICamera.ProjectionViewMatrix.Elements[0][0]);
         
-        glActiveTexture(GL_TEXTURE0);
+        glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, RenderData->GameAtlas.TextureID);
         
-        glActiveTexture(GL_TEXTURE1);
+        glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, RenderData->LoadedFonts[UBUNTU_MONO].FontAtlas.TextureID);
         
         glBindVertexArray(RenderData->GameUIVAOID);
@@ -434,16 +439,20 @@ CloverRender(memory_arena *Arena, gl_render_data *RenderData)
     
     // OPAQUE OBJECT RENDERING PASS
     {
+        glEnable(GL_BLEND);        
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendEquation(GL_FUNC_ADD);
+        
         glUseProgram(RenderData->BasicShader.Shader);
         glBindBuffer(GL_ARRAY_BUFFER, RenderData->GameVBOID);
         glBufferSubData(GL_ARRAY_BUFFER, 0, (RenderData->DrawFrame.QuadCount * 4) * sizeof(vertex), RenderData->DrawFrame.Vertices);
         
         glUniformMatrix4fv(RenderData->ProjectionViewMatrixID, 1, GL_FALSE, &RenderData->GameCamera.ProjectionViewMatrix.Elements[0][0]);
         
-        glActiveTexture(GL_TEXTURE0);
+        glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, RenderData->GameAtlas.TextureID);
         
-        glActiveTexture(GL_TEXTURE1);
+        glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, RenderData->LoadedFonts[UBUNTU_MONO].FontAtlas.TextureID);
         
         glBindVertexArray(RenderData->GameVAOID);

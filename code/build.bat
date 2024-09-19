@@ -19,7 +19,3 @@ del *.rdi
 cl %opts% ../code/Win32_Clover.cpp %CommonIncludes% %CommonCompilerFlags% -MT -link %CommonLinkerFlags% -OUT:"CloverGame.exe" 
 cl %opts% ../code/Clover.cpp %CommonIncludes% %CommonCompilerFlags% -MT -LD -link-ignore:4099 "../data/deps/ImGUI/ImGuiDEBUG.lib" "../data/deps/MiniAudio/miniaudio.lib" "../data/deps/OpenGL/glad/src/Glad.lib" "../data/deps/Freetype/freetype.lib" "../data/deps/yyjson/lib/yyjson.lib" -PDB:CloverGame_%RANDOM%.pdb %Exports% -OUT:"CloverGame.dll" 
 popd
-
-@echo ====================
-@echo Compilation Complete
-@echo ====================

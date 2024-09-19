@@ -493,7 +493,7 @@ WidgetCreate(game_state *State, ui_type ElementType)
 {
     ui_element *Element = {};
 
-    for(uint32 ElementIndex = 1;
+    for(uint32 ElementIndex = 0;
         ElementIndex < MAX_UI_ELEMENTS;
         ++ElementIndex)
     {
@@ -569,50 +569,49 @@ internal bool
 WidgetIsHot(gl_render_data *RenderData, game_state *State, ui_element *Widget)
 {
     vec2 MousePos = ConvertMouseToUIPos(RenderData, State->GameInput.Keyboard.CurrentMouse, SizeData);
+    bool IsHot = IsRangeWithinBounds(Widget->OccupiedRange, MousePos);
+    State->GameData.UIState.HotLastFrame = Widget->UIID;
 
-    if(IsRangeWithinBounds(Widget->OccupiedRange, MousePos))
-    {
-        State->GameData.UIState.HotLastFrame = Widget->UIID;
-        Widget->IsHot = true;
-    }
-
-    return(Widget->IsHot);
+    return(IsHot);
 }
 
 internal bool
 WidgetDoButton(gl_render_data *RenderData, game_state *State, ui_element *Widget)
 {
-    Widget->OccupiedRange = CreateRange(vec2{Widget->Position.X - (Widget->Size.X * 0.5f), Widget->Position.Y - (Widget->Size.Y * 0.5f)}, 
-                                        vec2{Widget->Position.X + (Widget->Size.X * 0.5f), Widget->Position.Y + (Widget->Size.Y * 0.5f)});
-    if(WidgetIsHot(RenderData, State, Widget))
+    if(Widget->IsHot || State->GameData.UIState.HotLastFrame.ID == Widget->UIID.ID)
     {
+        State->GameData.UIState.HotLastFrame = Widget->UIID;
         if(IsGameKeyDown(ATTACK, &State->GameInput))
         {
             Widget->IsActive = true;
             return(true);
         }
     }
-    else
-    {
-        if(Widget->UIID.ID == State->GameData.UIState.HotLastFrame.ID)
-        {
-            State->GameData.UIState.HotLastFrame = State->GameData.UIState.UIElements[0].UIID;
-        }
-    }
-
     return(false);
 }
 
 internal void
 UIUpdateState(gl_render_data *RenderData, game_state *State)
 {
-    for(uint32 ElementIndex = 1;
-        ElementIndex <= State->GameData.UIState.ElementCount;
+    for(uint32 ElementIndex = 0;
+        ElementIndex < State->GameData.UIState.ElementCount;
         ElementIndex++)
     {
         ui_element *Widget = &State->GameData.UIState.UIElements[ElementIndex];
         if(Widget->IsDisplayed)
         {
+            Widget->OccupiedRange = CreateRange(vec2{Widget->Position.X - (Widget->Size.X * 0.5f), Widget->Position.Y - (Widget->Size.Y * 0.5f)}, 
+                                                vec2{Widget->Position.X + (Widget->Size.X * 0.5f), Widget->Position.Y + (Widget->Size.Y * 0.5f)});
+            switch(Widget->Type)
+            {
+                case UIELEMENT_Button:
+                {
+                    Widget->IsHot    = WidgetIsHot(RenderData, State, Widget);
+                    Widget->IsActive = WidgetDoButton(RenderData, State, Widget);
+                }break;
+
+                default: {InvalidCodePath;}
+            }
         }
     }
 }
@@ -621,7 +620,7 @@ internal void
 UIDrawElements(gl_render_data *RenderData, game_state *State)
 {
     for(uint32 ElementIndex = 0;
-        ElementIndex <= State->GameData.UIState.ElementCount;
+        ElementIndex < State->GameData.UIState.ElementCount;
         ElementIndex++)
     {
         ui_element *Widget = &State->GameData.UIState.UIElements[ElementIndex];
@@ -647,7 +646,7 @@ UIDrawElements(gl_render_data *RenderData, game_state *State)
                     Widget->Sprite.AtlasOffset, 
                     0, 
                     Widget->DrawColor, 
-                    1);
+                    0);
             DrawUIQuadXForm(RenderData, &Element, &Widget->XForm);
         }
     }
@@ -925,7 +924,7 @@ Deletion:
 
             
             static_sprite_data Sprite = GetSprite(State, SPRITE_UIItemBox);
-            quad Slot = CreateDrawQuad(RenderData, {0, 0}, {IconSize, IconSize}, Sprite.SpriteSize, Sprite.AtlasOffset, 0, WHITE, 1);
+            quad Slot = CreateDrawQuad(RenderData, {0, 0}, {IconSize, IconSize}, Sprite.SpriteSize, Sprite.AtlasOffset, 0, WHITE, 0);
             DrawUIQuadXForm(RenderData, &Slot, &XForm);
 
             item *Item = &Player->Inventory.Items[InventorySlot];
@@ -939,38 +938,27 @@ Deletion:
         }
     }
 
-
-    // UI SYSTEM TEST
+    ui_element *Widget = WidgetCreate(State, UIELEMENT_Button);
+    WidgetSetPosition(Widget, {0, 0});
+    WidgetSetScale(Widget, {16, 16});
+    WidgetAddSprite(Widget, GetSprite(State, SPRITE_Rock));
+    if(WidgetDoButton(RenderData, State, Widget))
     {
-        ui_element *Widget = WidgetCreate(State, UIELEMENT_Button);
-        WidgetSetPosition(Widget, {0, 0});
-        WidgetSetScale(Widget, {16, 16});
-        WidgetAddSprite(Widget, GetSprite(State, SPRITE_Rock));
-        if(WidgetDoButton(RenderData, State, Widget))
-        {
-            Widget->Size = {32, 32};
-        }
-
-        WidgetMakeXForm(Widget);
-
-
-
-        ui_element *Widget2 = WidgetCreate(State, UIELEMENT_Button);
-        WidgetSetPosition(Widget2, {50, 0});
-        WidgetSetScale(Widget2, {16, 16});
-        if(WidgetDoButton(RenderData, State, Widget2))
-        {
-            Widget2->Size = {32, 32};
-        }
-        WidgetMakeXForm(Widget2);
-
-        Widget->DrawColor = RED;
-        Widget2->DrawColor = BLUE;
-        UIUpdateState(RenderData, State);
-        UIDrawElements(RenderData, State);
-
-        UIResetState(State);
+        printm("Success!\n");
     }
+    WidgetMakeXForm(Widget);
+
+    ui_element *Widget2 = WidgetCreate(State, UIELEMENT_Button);
+    WidgetSetPosition(Widget2, {50, 0});
+    WidgetSetScale(Widget2, {16, 16});
+    WidgetMakeXForm(Widget2);
+
+    Widget->DrawColor = RED;
+    Widget2->DrawColor = BLUE;
+    UIUpdateState(RenderData, State);
+    UIDrawElements(RenderData, State);
+
+    UIResetState(State);
     
     // NOTE(Sleepster): DRAW ENTITIES
     for(uint32 EntityIndex = 0;
@@ -1015,17 +1003,9 @@ Deletion:
     }
     
     // NOTE(Sleepster): World Text and Quad at {0,0}
-    DrawGameText(RenderData, sprints(&Memory->TemporaryStorage, STR("%f, %f"), MouseToWorld.X, MouseToWorld.Y), {-100, 0}, 0.05f, UBUNTU_MONO, GREEN);
-    DrawGameText(RenderData, sprints(&Memory->TemporaryStorage, STR("%f, %f"), MouseToScreen.X, MouseToScreen.Y), {-100, 100}, 0.05f, UBUNTU_MONO, BLUE);
-
-    mat4 Identity  = mat4Identity(1.0f);
-    mat4 Translate = mat4Multiply(Identity, mat4Translate(vec3{10.0f, 10.0f, 0.0f}));
-    mat4 Scale     = mat4Multiply(Identity, mat4MakeScale(vec3{16.0f, 16.0f, 1.0f}));
-
-    mat4 Total = Translate * Scale;
-    DrawRectXForm(RenderData, Total, {16, 16}, 0, vec4{1.0f, 0.0f, 1.0f, 0.5f});
+    DrawGameText(RenderData, sprints(&Memory->TemporaryStorage, STR("%f, %f"), MouseToWorld.X, MouseToWorld.Y), {-100, 0}, 0.25f, UBUNTU_MONO, BLACK);
+    DrawGameText(RenderData, sprints(&Memory->TemporaryStorage, STR("%f, %f"), MouseToScreen.X, MouseToScreen.Y), {-100, 100}, 0.25f, UBUNTU_MONO, BLACK);
     
-
     // NOTE(Sleepster): Draw the Tiles
     ivec2  PlayerOffset = iv2Cast(WorldToTilePos(Player->Position));
     ivec2  TileRadius   = {15, 20};

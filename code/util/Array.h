@@ -11,6 +11,7 @@ template <typename Type, int32 Capacity>
 struct array
 {
     int32 Count = 0;
+    int32 Size  = Capacity; 
     Type  Data[Capacity];
 
     inline void
@@ -53,6 +54,13 @@ struct array
     Full()
     {
         return(Count >= Capacity);
+    }
+
+    inline int64 
+    SizeInBytes()
+    {
+        int64 Size = Capacity * sizeof(Type)
+        return(Size);
     }
 
     inline Type& 

@@ -59,19 +59,19 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 
 
 internal inline real32
-GetFPSTime()
+GetFPSTime(void)
 {
     return((1000 *(real32)DeltaCounter) / real32(PerfCountFrequency));
 }
 
 internal inline real64
-GetLastTime()
+GetLastTime(void)
 {
     return(real64(DeltaCounter) / real64(PerfCountFrequency));
 }
 
 internal inline real64
-GetCurrentTimeInSeconds()
+GetCurrentTimeInSeconds(void)
 {
     LARGE_INTEGER Counter;
     QueryPerformanceCounter(&Counter);
@@ -123,22 +123,11 @@ Win32ProcessInputMessages(MSG Message, HWND WindowHandle, game_state *State)
     
     // NOTE(Sleepster): Makes sure to clear the mouse inputs. Why? Windows is dumb
     for(int32 KeycodeIndex = 0;
-        KeycodeIndex <= KEY_RIGHT_MOUSE;
-        ++KeycodeIndex)
-    {
-        State->GameInput.Keyboard.Keys[KeycodeIndex].JustPressed         = 0;
-        State->GameInput.Keyboard.Keys[KeycodeIndex].JustReleased        = 0;
-        State->GameInput.Keyboard.Keys[KeycodeIndex].IsDown              = 0;
-        State->GameInput.Keyboard.Keys[KeycodeIndex].HalfTransitionCount = 0;
-    }
-    
-    for(int32 KeycodeIndex = KEY_RIGHT_MOUSE;
         KeycodeIndex <= KEY_COUNT;
         ++KeycodeIndex)
     {
         State->GameInput.Keyboard.Keys[KeycodeIndex].HalfTransitionCount = 0;
     }
-    
     
     while(PeekMessageA(&Message, WindowHandle, 0, 0, PM_REMOVE))
     {

@@ -8,6 +8,7 @@
 
 #define Check(Expression, Message) if(!(Expression)) {OutputDebugStringA(Message); DebugBreak();}
 #define Assert(Expression) if(!(Expression)) {DebugBreak();}
+#define InvalidCodePath DebugBreak()
 #define Trace(Message) {OutputDebugStringA(Message);}
 #define printm(Message, ...)  {char BUFFER[128] = {};  if(strlen(Message) > sizeof(BUFFER)) {Check(0, "stwing to warge >w<\n")}; sprintf(BUFFER, Message, __VA_ARGS__); OutputDebugStringA(BUFFER);}
 #define printlm(Message, ...) {char BUFFER[1024] = {}; if(strlen(Message) > sizeof(BUFFER)) {Check(0, "stwing to warge >w<\n")}; sprintf(BUFFER, Message, __VA_ARGS__); OutputDebugStringA(BUFFER);}
@@ -20,6 +21,7 @@
 #define Trace(Message)
 #define printm(Message, ...)
 #define printlm(Message, ...)
+#define InvalidCodePath
 
 #endif
 

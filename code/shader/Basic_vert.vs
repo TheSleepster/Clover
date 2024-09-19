@@ -2,7 +2,7 @@
 layout(location = 0) in vec3   VertexPos;
 layout(location = 1) in vec2   TextureCoords;
 layout(location = 2) in vec4   MatColor;
-layout(location = 3) in float TextureIndex;
+layout(location = 3) in float  TextureIndex;
 
 uniform mat4 ProjectionViewMatrix;
 

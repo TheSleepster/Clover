@@ -68,7 +68,7 @@ struct texture2d
 
 // FONT RENDERING
 #define MAX_FONT_SIZE 512
-#define BITMAP_ATLAS_SIZE 512
+#define BITMAP_ATLAS_SIZE 1024
 
 struct freetype_font_data
 {

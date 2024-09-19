@@ -369,6 +369,17 @@ iv2Cast(vec2 A)
     return(Result);
 }
 
+struct range_r32
+{
+    real32 Minimum;
+    real32 Maximum;
+};
+
+struct range_v2
+{
+    vec2 Min;
+    vec2 Max;
+};
 
 typedef union vec3
 {

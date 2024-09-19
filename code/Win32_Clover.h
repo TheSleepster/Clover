@@ -12,9 +12,9 @@
 
 struct wgl_function_pointers
 {
-    PFNWGLCHOOSEPIXELFORMATARBPROC wglChoosePixelFormatARB;
+    PFNWGLCHOOSEPIXELFORMATARBPROC    wglChoosePixelFormatARB;
     PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB;
-    PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT;
+    PFNWGLSWAPINTERVALEXTPROC         wglSwapIntervalEXT;
 };
 
 internal inline FILETIME
