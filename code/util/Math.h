@@ -1520,6 +1520,7 @@ static inline mat3 mat3InvDeterminate(mat3 Matrix)
  * 4x4 Matrices
  */
 
+#define NULLMATRIX (mat4Create())
 static inline mat4 mat4Create(void)
 {
     mat4 Result = {0};
@@ -3324,6 +3325,18 @@ static inline vec4 operator-(vec4 In)
 #endif
     
     return Result;
+}
+
+static inline bool operator==(mat4 A, mat4 B)
+{
+    return((A.Columns[0] == B.Columns[0]) && (A.Columns[1] == B.Columns[1]) &&
+           (A.Columns[2] == B.Columns[2]) && (A.Columns[3] == B.Columns[3]));
+}
+
+static inline bool operator!=(mat4 A, mat4 B)
+{
+    return((A.Columns[0] != B.Columns[0]) && (A.Columns[1] != B.Columns[1]) &&
+           (A.Columns[2] != B.Columns[2]) && (A.Columns[3] != B.Columns[3]));
 }
 
 #endif /* __cplusplus*/

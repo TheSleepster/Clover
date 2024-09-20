@@ -452,9 +452,9 @@ WinMain(HINSTANCE hInstance,
             
             
             // NOTE(Sleepster): Audio Engine setup, MiniAudio makes this REALLLLLLYYYYYYYY easy 
-            State.SFXData.AudioEngine = {};
-            Assert(ma_engine_init(0, &State.SFXData.AudioEngine) == MA_SUCCESS);
-            Assert(ma_engine_set_volume(&State.SFXData.AudioEngine, 0.1f) == MA_SUCCESS);
+            /* State.SFXData.AudioEngine = {}; */
+            /* Assert(ma_engine_init(0, &State.SFXData.AudioEngine) == MA_SUCCESS); */
+            /* Assert(ma_engine_set_volume(&State.SFXData.AudioEngine, 0.1f) == MA_SUCCESS); */
             
             Game.OnAwake(&Memory, &RenderData, &State);
             

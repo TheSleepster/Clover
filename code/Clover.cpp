@@ -536,6 +536,12 @@ WidgetSetXForm(ui_element *Widget, mat4 XForm)
 }
 
 internal inline void
+WidgetSetColor(ui_element *Widget, vec4 Color)
+{
+    Widget->DrawColor = Color;
+}
+
+internal inline void
 WidgetSetPosition(ui_element *Widget, vec2 Position)
 {
     Widget->Position = Position;
@@ -543,20 +549,27 @@ WidgetSetPosition(ui_element *Widget, vec2 Position)
 }
 
 internal inline void
-WidgetSetScale(ui_element *Widget, vec2 Size)
+WidgetSetSize(ui_element *Widget, vec2 Size)
 {
     Widget->Size = Size;
     Widget->XForm = mat4Multiply(Widget->XForm, mat4MakeScale(v2Expand(Size, 1.0f)));
 }
 
 internal inline void
-WidgetMakeXForm(ui_element *Widget)
+WidgetApplyXForm(ui_element *Widget)
 {
     mat4 Identity    = mat4Identity(1.0f);
     mat4 Translation = mat4Multiply(Identity, mat4Translate(v2Expand(Widget->Position, 0.0f)));
     mat4 Scale       = mat4Multiply(Identity, mat4MakeScale(v2Expand(Widget->Size,     0.0f)));
 
     Widget->XForm = Translation * Scale;
+}
+
+internal inline void
+WidgetCalculateRange(ui_element *Widget)
+{
+    Widget->OccupiedRange = CreateRange(vec2{Widget->Position.X - (Widget->Size.X * 0.5f), Widget->Position.Y - (Widget->Size.Y * 0.5f)}, 
+                                        vec2{Widget->Position.X + (Widget->Size.X * 0.5f), Widget->Position.Y + (Widget->Size.Y * 0.5f)});
 }
 
 internal inline void
@@ -604,15 +617,53 @@ WidgetDoButton(gl_render_data *RenderData, game_state *State, ui_element *Widget
 }
 
 internal void
+WidgetSetupButton(game_state *State, 
+                  ui_element *Widget,
+                  vec2        Position,
+                  vec2        Size, 
+                  sprite_type Sprite,
+                  vec4        Color)
+{
+        WidgetSetPosition(Widget, Position);
+        WidgetSetSize(Widget, Size);
+        WidgetAddSprite(Widget, GetSprite(State, Sprite));
+        WidgetCalculateRange(Widget);
+        WidgetSetColor(Widget, Color);
+}
+
+internal void
+WidgetSetupDescBox(game_state *State, 
+                   ui_element *Widget,
+                   vec2        Position,
+                   vec2        Size,
+                   sprite_type Sprite,
+                   string      FormattedText,
+                   vec4        Color)
+{
+        WidgetSetPosition(Widget, Position);
+        WidgetSetSize(Widget, Size);
+        WidgetAddSprite(Widget, GetSprite(State, Sprite));
+        WidgetAddText(Widget, FormattedText);
+        WidgetCalculateRange(Widget);
+        WidgetSetColor(Widget, Color);
+}
+
+internal void
 UIUpdateState(gl_render_data *RenderData, game_state *State)
 {
-    for(uint32 ElementIndex = 1;
-        ElementIndex <= State->GameData.UIState.ElementCount;
-        ElementIndex++)
+    for(uint32 WidgetIndex = 0;
+        WidgetIndex < State->GameData.UIState.ElementCount;
+        WidgetIndex++)
     {
-        ui_element *Widget = &State->GameData.UIState.UIElements[ElementIndex];
-        if(Widget->IsDisplayed)
+        ui_element *Widget = &State->GameData.UIState.UIElements[WidgetIndex];
+        if(Widget->Captured)
         {
+            if(Widget->XForm == NULLMATRIX)
+            {
+                WidgetApplyXForm(Widget);
+            }
+            Widget->OccupiedRange = CreateRange(vec2{Widget->Position.X - (Widget->Size.X * 0.5f), Widget->Position.Y - (Widget->Size.Y * 0.5f)}, 
+                    vec2{Widget->Position.X + (Widget->Size.X * 0.5f), Widget->Position.Y + (Widget->Size.Y * 0.5f)});
         }
     }
 }
@@ -627,19 +678,6 @@ UIDrawElements(gl_render_data *RenderData, game_state *State)
         ui_element *Widget = &State->GameData.UIState.UIElements[ElementIndex];
         if(Widget->IsDisplayed)
         {
-            switch(Widget->Type)
-            {
-                case UIELEMENT_Button:
-                {
-                    if(Widget->IsHot)
-                    {
-                        Widget->DrawColor = GREEN;
-                    }
-                }break;
-
-                default: {InvalidCodePath;}
-            }
-            
             quad Element = CreateDrawQuad(RenderData, 
                     Widget->Position, 
                     Widget->Size, 
@@ -654,6 +692,10 @@ UIDrawElements(gl_render_data *RenderData, game_state *State)
 }
 
 
+
+
+
+
 inline int
 CompareEntityYAxis(const void *A, const void *B)
 {
@@ -663,45 +705,6 @@ CompareEntityYAxis(const void *A, const void *B)
     return((EntityA->Position.Y > EntityB->Position.Y) ? -1 :
            (EntityA->Position.Y < EntityB->Position.Y) ?  1 : 0);
 }
-
-
-/* internal void */
-/* WidgetButton(gl_render_data *RenderData, Input *Input, ui_element *Widget) */
-/* { */
-/*     if(Widget->IsActive) */
-/*     { */
-/*         vec2 MousePos = ConvertMouseToUIPos(RenderData, Input->Keyboard.CurrentMouse, SizeData); */
-/*         Widget->OccupiedRange = CreateRange(vec2{Widget->Position.X - (Widget->Size.X * 0.5f), Widget->Position.Y}, */ 
-/*                                             vec2{Widget->Position.X + (Widget->Size.X *0.5f), Widget->Position.Y + Widget->Size.Y}); */
-
-/*         // DRAWING */
-/*         mat4 XForm = mat4Identity(1.0f); */
-/*         XForm = mat4Multiply(XForm, mat4Translate(v2Expand(Widget->Position, 0.0f))); */
-/*         XForm = mat4Multiply(XForm, mat4Translate(vec3{0.0f, Widget->Size.Y * 0.5f})); */
-/*         XForm = mat4Multiply(XForm, mat4MakeScale(v2Expand(Widget->Size, 1.0f))); */
-
-/*         Widget->IsHot = IsRangeWithinBounds(Widget->OccupiedRange, MousePos); */ 
-/*         if(Widget->IsHot) */
-/*         { */
-/*             Widget->DrawColor = GREEN; */
-/*             if(IsGameKeyPressed(ATTACK, Input)) */
-/*             { */
-/*                 XForm = mat4Multiply(XForm, mat4MakeScale(v2Expand(Widget->Size * 4, 1.0f))); */
-/*             } */
-/*         } */
-
-/*         quad Element = CreateDrawQuad(RenderData, */ 
-/*                 Widget->Position, */ 
-/*                 Widget->Size, */ 
-/*                 Widget->Sprite.SpriteSize, */ 
-/*                 Widget->Sprite.AtlasOffset, */ 
-/*                 0, */ 
-/*                 Widget->DrawColor, */ 
-/*                 0); */
-/*         quad *Quad = DrawUIQuadXForm(RenderData, &Element, &XForm); */
-/*         Widget->OccupiedRange = RangeFromQuad(Quad); */
-/*     } */
-/* } */
 
 extern
 GAME_ON_AWAKE(GameOnAwake)
@@ -802,6 +805,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
         EntityIndex <= State->World.EntityCounter;
         ++EntityIndex)
     {
+        // TODO(Sleepster): Fix this, Sorting breaky :( 
         entity *Temp = &State->World.Entities[EntityIndex];
         if((Temp->Flags & IS_VALID))
         {
@@ -814,7 +818,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     State->World.WorldFrame.SelectedEntity = Temp;
                     MinimumDistance = Distance;
                 }
-                // TODO(Sleepster): On Pickup destroy the Item Entity since it's now in the players inventory?
+
                 entity *SelectedEntity = State->World.WorldFrame.SelectedEntity;
                 if(IsGameKeyPressed(ATTACK, &State->GameInput) && (Temp->Flags & IS_DESTRUCTABLE) && !(Temp->Flags & IS_UI))
                 {
@@ -910,7 +914,7 @@ Deletion:
             }
         }
     }
-    
+
     // TODO(Sleepster): Tear this out so we can use it for font rendering center alignment 
     // INVENTORY UI
     {
@@ -951,32 +955,21 @@ Deletion:
     // UI SYSTEM TEST
     {
         ui_element *Widget = WidgetCreate(State, UIELEMENT_Button);
-        WidgetSetPosition(Widget, {0, 0});
-        WidgetSetScale(Widget, {16, 16});
-        WidgetAddSprite(Widget, GetSprite(State, SPRITE_Rock));
+        WidgetSetupButton(State, Widget, {0, -70}, {16, 16}, SPRITE_Rock, RED);
+
+        if(WidgetIsHot(RenderData, State, Widget))
+        {
+           ui_element *DescBox = WidgetCreate(State, UIELEMENT_DescBox);
+           WidgetSetupDescBox(State, DescBox, {0, -35}, {190, 50}, SPRITE_Nil, STR("Test Text"), {0.3, 0.3, 0.3, 0.5});
+        }
+
         if(WidgetDoButton(RenderData, State, Widget))
         {
-            Widget->Size = {32, 32};
+            WidgetSetColor(Widget, GREEN);
         }
 
-        WidgetMakeXForm(Widget);
-
-
-
-        ui_element *Widget2 = WidgetCreate(State, UIELEMENT_Button);
-        WidgetSetPosition(Widget2, {50, 0});
-        WidgetSetScale(Widget2, {16, 16});
-        if(WidgetDoButton(RenderData, State, Widget2))
-        {
-            Widget2->Size = {32, 32};
-        }
-        WidgetMakeXForm(Widget2);
-
-        Widget->DrawColor = RED;
-        Widget2->DrawColor = BLUE;
         UIUpdateState(RenderData, State);
         UIDrawElements(RenderData, State);
-
         UIResetState(State);
     }
 
@@ -1010,8 +1003,10 @@ Deletion:
 
     // NOTE(Sleepster): YSORT ENTITIES 
     {
+        // TODO(Sleepster): Replace with our own qsort perhaps 
         qsort(State->World.Entities, State->World.EntityCounter, sizeof(struct entity), CompareEntityYAxis); 
     }
+    
 
     // NOTE(Sleepster): DRAW ENTITIES
     for(uint32 EntityIndex = 0;
@@ -1037,17 +1032,13 @@ Deletion:
                     Temp->Position.Y += (Time.Delta * 5) * SinBreathe(Time.CurrentTimeInSeconds / 5.0f, 2.0f);
                     DrawEntity(RenderData, State, Temp, Temp->Position, WHITE);
                 }break;
-
-                case UI:
-                {
-                    DrawUIEntity(RenderData, State, Temp, Temp->Position, WHITE);
-                }break;
                 
                 default:
                 {
                     vec4 Color = WHITE;
                     if(State->World.WorldFrame.SelectedEntity == Temp)
                     {
+                        State->World.WorldFrame.SelectedEntity = Temp;
                         Color = BLUE;
                     }
                     DrawEntity(RenderData, State, Temp, Temp->Position, Color);

@@ -150,6 +150,8 @@ enum ui_type
 {
     UIELEMENT_Nil,
     UIELEMENT_Button,
+    UIELEMENT_DescBox,
+    UIELEMENT_ElementBox,
     UIElementCount,
 };
 

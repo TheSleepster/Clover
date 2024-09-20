@@ -288,6 +288,16 @@ CloverResetRendererState(gl_render_data *RenderData)
     RenderData->DrawFrame.TotalUIElementCount = 0;
 }
 
+internal int32
+CompareVertexYAxis(const void *A, const void *B)
+{
+    const vertex *VertexA = (vertex *)A;
+    const vertex *VertexB = (vertex *)B;
+
+    return((VertexA->Position.Y > VertexB->Position.Y) ? -1 :
+           (VertexA->Position.Y < VertexB->Position.Y) ?  1 : 0);
+}
+
 internal void
 CloverSetupRenderer(memory_arena *Memory, gl_render_data *RenderData)
 {
@@ -467,14 +477,10 @@ CloverRender(memory_arena *Arena, gl_render_data *RenderData)
         glBlendEquation(GL_FUNC_ADD);
         glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_LINES, GL_ONE_MINUS_SRC_ALPHA);
         
-        glUseProgram(RenderData->BasicShader.Shader);
-        glBindBuffer(GL_ARRAY_BUFFER, RenderData->GameVBOID);
         glBufferSubData(GL_ARRAY_BUFFER, 
                         BufferOffset, 
                         (RenderData->DrawFrame.TransparentQuadCount * 4) * sizeof(vertex), 
                         &RenderData->DrawFrame.Vertices[int32(MAX_VERTICES * 0.5f)]);
-        
-        glUniformMatrix4fv(RenderData->ProjectionViewMatrixID, 1, GL_FALSE, &RenderData->GameCamera.ProjectionViewMatrix.Elements[0][0]);
         
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, RenderData->GameAtlas.TextureID);
@@ -494,7 +500,6 @@ CloverRender(memory_arena *Arena, gl_render_data *RenderData)
         glEnable(GL_DEPTH_TEST);
         glDisable(GL_BLEND);
 
-        glUseProgram(RenderData->BasicShader.Shader);
         glBindBuffer(GL_ARRAY_BUFFER, RenderData->GameUIVBOID);
         glBufferSubData(GL_ARRAY_BUFFER, 
                         0, 
@@ -526,14 +531,10 @@ CloverRender(memory_arena *Arena, gl_render_data *RenderData)
         glBlendEquation(GL_FUNC_ADD);
         glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_LINES, GL_ONE_MINUS_SRC_ALPHA);
 
-        glUseProgram(RenderData->BasicShader.Shader);
-        glBindBuffer(GL_ARRAY_BUFFER, RenderData->GameUIVBOID);
         glBufferSubData(GL_ARRAY_BUFFER, 
                         UIBufferOffset, 
                         (RenderData->DrawFrame.TransparentUIElementCount * 4) * sizeof(vertex), 
                         &RenderData->DrawFrame.UIVertices[int32(MAX_VERTICES * 0.5f)]);
-        
-        glUniformMatrix4fv(RenderData->ProjectionViewMatrixID, 1, GL_FALSE, &RenderData->GameUICamera.ProjectionViewMatrix.Elements[0][0]);
         
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, RenderData->GameAtlas.TextureID);

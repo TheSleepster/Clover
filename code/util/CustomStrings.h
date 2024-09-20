@@ -14,6 +14,7 @@ struct string
 };
 
 #define STR(s)  (string{GetStringLength((const char *)s), (uint8 *)s})
+#define NULLSTR (NULL_STRING)
 
 const string NULL_STRING = {};
 
