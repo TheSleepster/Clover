@@ -273,6 +273,22 @@ CloverReloadTexture(gl_render_data *RenderData, texture2d *TextureInfo, uint32 T
 }
 
 internal void
+CloverResetRendererState(gl_render_data *RenderData)
+{
+    RenderData->DrawFrame.VertexBufferptr            = &RenderData->DrawFrame.Vertices[0];
+    RenderData->DrawFrame.TransparentVertexBufferptr = &RenderData->DrawFrame.Vertices[int32(MAX_VERTICES * 0.5f)];
+    RenderData->DrawFrame.OpaqueQuadCount = 0;
+    RenderData->DrawFrame.TransparentQuadCount = 0;
+    RenderData->DrawFrame.TotalQuadCount = 0;
+    
+    RenderData->DrawFrame.UIVertexBufferptr            = &RenderData->DrawFrame.UIVertices[0];
+    RenderData->DrawFrame.TransparentUIVertexBufferptr = &RenderData->DrawFrame.UIVertices[int32(MAX_VERTICES * 0.5f)];
+    RenderData->DrawFrame.OpaqueUIElementCount = 0;
+    RenderData->DrawFrame.TransparentUIElementCount = 0;
+    RenderData->DrawFrame.TotalUIElementCount = 0;
+}
+
+internal void
 CloverSetupRenderer(memory_arena *Memory, gl_render_data *RenderData)
 {
     // STATE INITIALIZATION
@@ -413,39 +429,18 @@ CloverRender(memory_arena *Arena, gl_render_data *RenderData)
     glClearDepth(0.0f);
     glViewport(0, 0, SizeData.Width, SizeData.Height);
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-    
-    
-    // UI RENDERING PASS
+
+    // NOTE(Sleepster): Figure out this offset  
+    // OPAQUE GAME OBJECT RENDERING PASS
     {
-        glUseProgram(RenderData->BasicShader.Shader);
-        glBindBuffer(GL_ARRAY_BUFFER, RenderData->GameUIVBOID);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, (RenderData->DrawFrame.UIElementCount* 4) * sizeof(vertex), RenderData->DrawFrame.UIVertices);
-        
-        glUniformMatrix4fv(RenderData->ProjectionViewMatrixID, 1, GL_FALSE, &RenderData->GameUICamera.ProjectionViewMatrix.Elements[0][0]);
-        
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, RenderData->GameAtlas.TextureID);
-        
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, RenderData->LoadedFonts[UBUNTU_MONO].FontAtlas.TextureID);
-        
-        glBindVertexArray(RenderData->GameUIVAOID);
-        glDrawElements(GL_TRIANGLES, 
-                       RenderData->DrawFrame.UIElementCount * 6, 
-                       GL_UNSIGNED_INT, 
-                       0); 
-    }
-    
-    
-    // OPAQUE OBJECT RENDERING PASS
-    {
-        glEnable(GL_BLEND);        
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glBlendEquation(GL_FUNC_ADD);
-        
+        glDisable(GL_BLEND);
+
         glUseProgram(RenderData->BasicShader.Shader);
         glBindBuffer(GL_ARRAY_BUFFER, RenderData->GameVBOID);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, (RenderData->DrawFrame.QuadCount * 4) * sizeof(vertex), RenderData->DrawFrame.Vertices);
+        glBufferSubData(GL_ARRAY_BUFFER, 
+                        0, 
+                        (RenderData->DrawFrame.OpaqueQuadCount * 4) * sizeof(vertex), 
+                        RenderData->DrawFrame.Vertices);
         
         glUniformMatrix4fv(RenderData->ProjectionViewMatrixID, 1, GL_FALSE, &RenderData->GameCamera.ProjectionViewMatrix.Elements[0][0]);
         
@@ -457,8 +452,99 @@ CloverRender(memory_arena *Arena, gl_render_data *RenderData)
         
         glBindVertexArray(RenderData->GameVAOID);
         glDrawElements(GL_TRIANGLES, 
-                       RenderData->DrawFrame.QuadCount * 6, 
+                       RenderData->DrawFrame.OpaqueQuadCount * 6, 
                        GL_UNSIGNED_INT, 
                        0); 
+    }
+
+    GLintptr BufferOffset   =  (RenderData->DrawFrame.OpaqueQuadCount * 4) * sizeof(vertex);
+    GLintptr ElementOffset  =  (RenderData->DrawFrame.OpaqueQuadCount * 6) * sizeof(uint32); 
+    // TRANSPARENT GAME OBJECT RENDERERING PASS
+    {
+        glDisable(GL_DEPTH_TEST);
+        glEnable(GL_BLEND);        
+
+        glBlendEquation(GL_FUNC_ADD);
+        glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_LINES, GL_ONE_MINUS_SRC_ALPHA);
+        
+        glUseProgram(RenderData->BasicShader.Shader);
+        glBindBuffer(GL_ARRAY_BUFFER, RenderData->GameVBOID);
+        glBufferSubData(GL_ARRAY_BUFFER, 
+                        BufferOffset, 
+                        (RenderData->DrawFrame.TransparentQuadCount * 4) * sizeof(vertex), 
+                        &RenderData->DrawFrame.Vertices[int32(MAX_VERTICES * 0.5f)]);
+        
+        glUniformMatrix4fv(RenderData->ProjectionViewMatrixID, 1, GL_FALSE, &RenderData->GameCamera.ProjectionViewMatrix.Elements[0][0]);
+        
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, RenderData->GameAtlas.TextureID);
+        
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, RenderData->LoadedFonts[UBUNTU_MONO].FontAtlas.TextureID);
+        
+        glBindVertexArray(RenderData->GameVAOID);
+        glDrawElements(GL_TRIANGLES, 
+                       RenderData->DrawFrame.TransparentQuadCount * 6, 
+                       GL_UNSIGNED_INT, 
+                       (void*)ElementOffset);
+    }
+
+    // OPAQUE UI RENDERING PASS
+    {
+        glEnable(GL_DEPTH_TEST);
+        glDisable(GL_BLEND);
+
+        glUseProgram(RenderData->BasicShader.Shader);
+        glBindBuffer(GL_ARRAY_BUFFER, RenderData->GameUIVBOID);
+        glBufferSubData(GL_ARRAY_BUFFER, 
+                        0, 
+                        (RenderData->DrawFrame.OpaqueUIElementCount * 4) * sizeof(vertex), 
+                        RenderData->DrawFrame.UIVertices);
+
+        glUniformMatrix4fv(RenderData->ProjectionViewMatrixID, 1, GL_FALSE, &RenderData->GameUICamera.ProjectionViewMatrix.Elements[0][0]);
+        
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, RenderData->GameAtlas.TextureID);
+        
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, RenderData->LoadedFonts[UBUNTU_MONO].FontAtlas.TextureID);
+        
+        glBindVertexArray(RenderData->GameUIVAOID);
+        glDrawElements(GL_TRIANGLES, 
+                       RenderData->DrawFrame.OpaqueUIElementCount * 6, 
+                       GL_UNSIGNED_INT, 
+                       0); 
+    }
+    
+    GLintptr UIBufferOffset   = int32((RenderData->DrawFrame.OpaqueUIElementCount * 4) * sizeof(vertex));
+    GLintptr UIElementOffset  = (RenderData->DrawFrame.OpaqueUIElementCount * 6) * sizeof(uint32); 
+    // TRANSPARENT UI RENDERING PASS
+    {
+        glDisable(GL_DEPTH_TEST);
+
+        glEnable(GL_BLEND);        
+        glBlendEquation(GL_FUNC_ADD);
+        glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_LINES, GL_ONE_MINUS_SRC_ALPHA);
+
+        glUseProgram(RenderData->BasicShader.Shader);
+        glBindBuffer(GL_ARRAY_BUFFER, RenderData->GameUIVBOID);
+        glBufferSubData(GL_ARRAY_BUFFER, 
+                        UIBufferOffset, 
+                        (RenderData->DrawFrame.TransparentUIElementCount * 4) * sizeof(vertex), 
+                        &RenderData->DrawFrame.UIVertices[int32(MAX_VERTICES * 0.5f)]);
+        
+        glUniformMatrix4fv(RenderData->ProjectionViewMatrixID, 1, GL_FALSE, &RenderData->GameUICamera.ProjectionViewMatrix.Elements[0][0]);
+        
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, RenderData->GameAtlas.TextureID);
+        
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, RenderData->LoadedFonts[UBUNTU_MONO].FontAtlas.TextureID);
+        
+        glBindVertexArray(RenderData->GameUIVAOID);
+        glDrawElements(GL_TRIANGLES, 
+                       RenderData->DrawFrame.TransparentUIElementCount * 6, 
+                       GL_UNSIGNED_INT, 
+                       (void *)UIElementOffset); 
     }
 }

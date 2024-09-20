@@ -190,11 +190,20 @@ struct gl_render_data
     {
         vertex *Vertices;
         vertex *VertexBufferptr;
-        uint32  QuadCount;
+        vertex *TransparentVertexBufferptr;
+
+        uint32  OpaqueQuadCount;
+        uint32  TransparentQuadCount;
         
         vertex *UIVertices;
         vertex *UIVertexBufferptr;
-        uint32  UIElementCount;
+        vertex *TransparentUIVertexBufferptr;
+
+        uint32  OpaqueUIElementCount;
+        uint32  TransparentUIElementCount;
+
+        uint32  TotalQuadCount;
+        uint32  TotalUIElementCount;
     }DrawFrame;
 };
 

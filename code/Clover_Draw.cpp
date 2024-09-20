@@ -122,7 +122,7 @@ CreateDrawRect(gl_render_data *RenderData, vec2 Size, real32 Rotation, vec4 Colo
 internal quad *
 DrawQuadXForm(gl_render_data *RenderData, quad *Quad, mat4 *Transform)
 {
-    if(RenderData->DrawFrame.QuadCount >= MAX_QUADS)
+    if(RenderData->DrawFrame.TotalQuadCount >= MAX_QUADS / 0.5f)
     {
         Check(0, "Max Quads Reached");
     }
@@ -137,35 +137,51 @@ DrawQuadXForm(gl_render_data *RenderData, quad *Quad, mat4 *Transform)
     Quad->Elements[2].Position = mat4Transform(*Transform, Quad->Elements[2].Position);
     Quad->Elements[3].Position = mat4Transform(*Transform, Quad->Elements[3].Position);
     
+    vertex **VertexBufferptr;
+    uint32  *ElementCounter;
+
+    bool IsOpaque = (Quad->DrawColor.A == 1.0f);
+    if(IsOpaque)
+    {
+        VertexBufferptr = &RenderData->DrawFrame.VertexBufferptr;
+        ElementCounter  = &RenderData->DrawFrame.OpaqueQuadCount;
+    }
+    else
+    {
+        VertexBufferptr = &RenderData->DrawFrame.TransparentVertexBufferptr;
+        ElementCounter  = &RenderData->DrawFrame.TransparentQuadCount;
+    }
+    
     // TOP LEFT
-    RenderData->DrawFrame.VertexBufferptr->Position      = Quad->Elements[0].Position; 
-    RenderData->DrawFrame.VertexBufferptr->TextureCoords = Quad->TopLeft.TextureCoords;
-    RenderData->DrawFrame.VertexBufferptr->DrawColor     = Quad->DrawColor;
-    RenderData->DrawFrame.VertexBufferptr->TextureIndex  = Quad->TextureIndex;
-    RenderData->DrawFrame.VertexBufferptr++;
+    (*VertexBufferptr)->Position      = Quad->Elements[0].Position;
+    (*VertexBufferptr)->TextureCoords = Quad->TopLeft.TextureCoords;
+    (*VertexBufferptr)->DrawColor     = Quad->DrawColor;
+    (*VertexBufferptr)->TextureIndex  = Quad->TextureIndex;
+    (*VertexBufferptr)++;
     
-    // BOTTOM LEFT
-    RenderData->DrawFrame.VertexBufferptr->Position      = Quad->Elements[1].Position;   
-    RenderData->DrawFrame.VertexBufferptr->TextureCoords = Quad->TopRight.TextureCoords;
-    RenderData->DrawFrame.VertexBufferptr->DrawColor     = Quad->DrawColor;
-    RenderData->DrawFrame.VertexBufferptr->TextureIndex  = Quad->TextureIndex;
-    RenderData->DrawFrame.VertexBufferptr++;
     
-    // BOTTOM RIGHT
-    RenderData->DrawFrame.VertexBufferptr->Position      = Quad->Elements[2].Position;
-    RenderData->DrawFrame.VertexBufferptr->TextureCoords = Quad->BottomRight.TextureCoords;
-    RenderData->DrawFrame.VertexBufferptr->DrawColor     = Quad->DrawColor;
-    RenderData->DrawFrame.VertexBufferptr->TextureIndex  = Quad->TextureIndex;
-    RenderData->DrawFrame.VertexBufferptr++;
+    (*VertexBufferptr)->Position      = Quad->Elements[1].Position;
+    (*VertexBufferptr)->TextureCoords = Quad->TopRight.TextureCoords;
+    (*VertexBufferptr)->DrawColor     = Quad->DrawColor;
+    (*VertexBufferptr)->TextureIndex  = Quad->TextureIndex;
+    (*VertexBufferptr)++;
     
-    // BOTTOM LEFT
-    RenderData->DrawFrame.VertexBufferptr->Position      = Quad->Elements[3].Position;
-    RenderData->DrawFrame.VertexBufferptr->TextureCoords = Quad->BottomLeft.TextureCoords;
-    RenderData->DrawFrame.VertexBufferptr->DrawColor     = Quad->DrawColor;
-    RenderData->DrawFrame.VertexBufferptr->TextureIndex  = Quad->TextureIndex;
-    RenderData->DrawFrame.VertexBufferptr++;
     
-    RenderData->DrawFrame.QuadCount++;
+    (*VertexBufferptr)->Position      = Quad->Elements[2].Position;
+    (*VertexBufferptr)->TextureCoords = Quad->BottomRight.TextureCoords;
+    (*VertexBufferptr)->DrawColor     = Quad->DrawColor;
+    (*VertexBufferptr)->TextureIndex  = Quad->TextureIndex;
+    (*VertexBufferptr)++;
+    
+    
+    (*VertexBufferptr)->Position      = Quad->Elements[3].Position;
+    (*VertexBufferptr)->TextureCoords = Quad->BottomLeft.TextureCoords;
+    (*VertexBufferptr)->DrawColor     = Quad->DrawColor;
+    (*VertexBufferptr)->TextureIndex  = Quad->TextureIndex;
+    (*VertexBufferptr)++;
+    
+    (*ElementCounter)++;
+    RenderData->DrawFrame.TotalQuadCount++;
     return(Quad);
 }
 
@@ -173,7 +189,7 @@ DrawQuadXForm(gl_render_data *RenderData, quad *Quad, mat4 *Transform)
 internal quad *
 DrawUIQuadXForm(gl_render_data *RenderData, quad *Quad, mat4 *Transform)
 {
-    if(RenderData->DrawFrame.QuadCount >= MAX_QUADS)
+    if(RenderData->DrawFrame.TotalUIElementCount >= MAX_QUADS)
     {
         Check(0, "Max Quads Reached");
     }
@@ -188,35 +204,51 @@ DrawUIQuadXForm(gl_render_data *RenderData, quad *Quad, mat4 *Transform)
     Quad->Elements[2].Position = mat4Transform(*Transform, Quad->Elements[2].Position);
     Quad->Elements[3].Position = mat4Transform(*Transform, Quad->Elements[3].Position);
     
+    vertex **UIVertexBufferptr;
+    uint32  *ElementCounter;
+
+    bool IsOpaque = (Quad->DrawColor.A == 1.0f);
+    if(IsOpaque)
+    {
+        UIVertexBufferptr = &RenderData->DrawFrame.UIVertexBufferptr;
+        ElementCounter    = &RenderData->DrawFrame.OpaqueUIElementCount;
+    }
+    else
+    {
+        UIVertexBufferptr = &RenderData->DrawFrame.TransparentUIVertexBufferptr;
+        ElementCounter    = &RenderData->DrawFrame.TransparentUIElementCount;
+    }
+    
     // TOP LEFT
-    RenderData->DrawFrame.UIVertexBufferptr->Position      = Quad->Elements[0].Position;
-    RenderData->DrawFrame.UIVertexBufferptr->TextureCoords = Quad->TopLeft.TextureCoords;
-    RenderData->DrawFrame.UIVertexBufferptr->DrawColor     = Quad->DrawColor;
-    RenderData->DrawFrame.UIVertexBufferptr->TextureIndex  = Quad->TextureIndex;
-    RenderData->DrawFrame.UIVertexBufferptr++;
+    (*UIVertexBufferptr)->Position      = Quad->Elements[0].Position;
+    (*UIVertexBufferptr)->TextureCoords = Quad->TopLeft.TextureCoords;
+    (*UIVertexBufferptr)->DrawColor     = Quad->DrawColor;
+    (*UIVertexBufferptr)->TextureIndex  = Quad->TextureIndex;
+    (*UIVertexBufferptr)++;
     
-    // BOTTOM LEFT
-    RenderData->DrawFrame.UIVertexBufferptr->Position      = Quad->Elements[1].Position;
-    RenderData->DrawFrame.UIVertexBufferptr->TextureCoords = Quad->TopRight.TextureCoords;
-    RenderData->DrawFrame.UIVertexBufferptr->DrawColor     = Quad->DrawColor;
-    RenderData->DrawFrame.UIVertexBufferptr->TextureIndex  = Quad->TextureIndex;
-    RenderData->DrawFrame.UIVertexBufferptr++;
     
-    // BOTTOM RIGHT
-    RenderData->DrawFrame.UIVertexBufferptr->Position      = Quad->Elements[2].Position;
-    RenderData->DrawFrame.UIVertexBufferptr->TextureCoords = Quad->BottomRight.TextureCoords;
-    RenderData->DrawFrame.UIVertexBufferptr->DrawColor     = Quad->DrawColor;
-    RenderData->DrawFrame.UIVertexBufferptr->TextureIndex  = Quad->TextureIndex;
-    RenderData->DrawFrame.UIVertexBufferptr++;
+    (*UIVertexBufferptr)->Position      = Quad->Elements[1].Position;
+    (*UIVertexBufferptr)->TextureCoords = Quad->TopRight.TextureCoords;
+    (*UIVertexBufferptr)->DrawColor     = Quad->DrawColor;
+    (*UIVertexBufferptr)->TextureIndex  = Quad->TextureIndex;
+    (*UIVertexBufferptr)++;
     
-    // BOTTOM LEFT
-    RenderData->DrawFrame.UIVertexBufferptr->Position      = Quad->Elements[3].Position;
-    RenderData->DrawFrame.UIVertexBufferptr->TextureCoords = Quad->BottomLeft.TextureCoords;
-    RenderData->DrawFrame.UIVertexBufferptr->DrawColor     = Quad->DrawColor;
-    RenderData->DrawFrame.UIVertexBufferptr->TextureIndex  = Quad->TextureIndex;
-    RenderData->DrawFrame.UIVertexBufferptr++;
     
-    RenderData->DrawFrame.UIElementCount++;
+    (*UIVertexBufferptr)->Position      = Quad->Elements[2].Position;
+    (*UIVertexBufferptr)->TextureCoords = Quad->BottomRight.TextureCoords;
+    (*UIVertexBufferptr)->DrawColor     = Quad->DrawColor;
+    (*UIVertexBufferptr)->TextureIndex  = Quad->TextureIndex;
+    (*UIVertexBufferptr)++;
+    
+    
+    (*UIVertexBufferptr)->Position      = Quad->Elements[3].Position;
+    (*UIVertexBufferptr)->TextureCoords = Quad->BottomLeft.TextureCoords;
+    (*UIVertexBufferptr)->DrawColor     = Quad->DrawColor;
+    (*UIVertexBufferptr)->TextureIndex  = Quad->TextureIndex;
+    (*UIVertexBufferptr)++;
+    
+    (*ElementCounter)++;
+    RenderData->DrawFrame.TotalUIElementCount++;
     return(Quad);
 }
 
