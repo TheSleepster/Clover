@@ -654,7 +654,15 @@ UIDrawElements(gl_render_data *RenderData, game_state *State)
 }
 
 
+inline int
+CompareEntityYAxis(const void *A, const void *B)
+{
+    const entity *EntityA = (const entity*)A;
+    const entity *EntityB = (const entity*)B;
 
+    return((EntityA->Position.Y > EntityB->Position.Y) ? -1 :
+           (EntityA->Position.Y < EntityB->Position.Y) ?  1 : 0);
+}
 
 
 /* internal void */
@@ -972,6 +980,39 @@ Deletion:
         UIResetState(State);
     }
 
+    mat4 Identity  = mat4Identity(1.0f);
+    mat4 Translate = mat4Multiply(Identity, mat4Translate(vec3{10.0f, 10.0f, 0.0f}));
+    mat4 Scale     = mat4Multiply(Identity, mat4MakeScale(vec3{100.0f, 100.0f, 1.0f}));
+
+    mat4 Total = Translate * Scale;
+    DrawRectXForm(RenderData, Total, {16, 16}, 0, vec4{1.0f, 0.0f, 1.0f, 0.3f});
+
+    // NOTE(Sleepster): Draw the Tiles
+    ivec2  PlayerOffset = iv2Cast(WorldToTilePos(Player->Position));
+    ivec2  TileRadius   = {14, 14};
+    
+    for(int32 TileX = PlayerOffset.X - TileRadius.X;
+        TileX < PlayerOffset.X + TileRadius.Y;
+        ++TileX)
+    {
+        for(int32 TileY = PlayerOffset.Y - TileRadius.Y;
+            TileY < PlayerOffset.Y + TileRadius.Y;
+            ++TileY)
+        {
+            if((TileX + (TileY % 2 == 0)) % 2 == 0)
+            {
+                real32 X = TileX * TILE_SIZE;
+                real32 Y = TileY * TILE_SIZE;
+                DrawQuad(RenderData, {X, Y - (TILE_SIZE)}, {TILE_SIZE, TILE_SIZE}, 0, DARK_GRAY);
+            }
+        }
+    }
+
+    // NOTE(Sleepster): YSORT ENTITIES 
+    {
+        qsort(State->World.Entities, State->World.EntityCounter, sizeof(struct entity), CompareEntityYAxis); 
+    }
+
     // NOTE(Sleepster): DRAW ENTITIES
     for(uint32 EntityIndex = 0;
         EntityIndex <= State->World.EntityCounter;
@@ -984,6 +1025,7 @@ Deletion:
             {
                 case PLAYER:
                 {
+                    Player = Temp;
                     HandleInput(State, Temp, Time);
                     RenderData->GameCamera.Target = Temp->Position;
                     v2Approach(&RenderData->GameCamera.Position, RenderData->GameCamera.Target, 5.0f, Time.Delta);
@@ -1017,34 +1059,6 @@ Deletion:
     // NOTE(Sleepster): World Text and Quad at {0,0}
     DrawGameText(RenderData, sprints(&Memory->TemporaryStorage, STR("%f, %f"), MouseToWorld.X, MouseToWorld.Y), {-100, 0}, 0.05f, UBUNTU_MONO, GREEN);
     DrawGameText(RenderData, sprints(&Memory->TemporaryStorage, STR("%f, %f"), MouseToScreen.X, MouseToScreen.Y), {-100, 100}, 0.05f, UBUNTU_MONO, BLUE);
-
-    mat4 Identity  = mat4Identity(1.0f);
-    mat4 Translate = mat4Multiply(Identity, mat4Translate(vec3{10.0f, 10.0f, 0.0f}));
-    mat4 Scale     = mat4Multiply(Identity, mat4MakeScale(vec3{100.0f, 100.0f, 1.0f}));
-
-    mat4 Total = Translate * Scale;
-    DrawRectXForm(RenderData, Total, {16, 16}, 0, vec4{1.0f, 0.0f, 1.0f, 0.3f});
-
-    // NOTE(Sleepster): Draw the Tiles
-    ivec2  PlayerOffset = iv2Cast(WorldToTilePos(Player->Position));
-    ivec2  TileRadius   = {15, 20};
-    
-    /* for(int32 TileX = PlayerOffset.X - TileRadius.X; */
-    /*     TileX < PlayerOffset.X + TileRadius.Y; */
-    /*     ++TileX) */
-    /* { */
-    /*     for(int32 TileY = PlayerOffset.Y - TileRadius.Y; */
-    /*         TileY < PlayerOffset.Y + TileRadius.Y; */
-    /*         ++TileY) */
-    /*     { */
-    /*         if((TileX + (TileY % 2 == 0)) % 2 == 0) */
-    /*         { */
-    /*             real32 X = TileX * TILE_SIZE; */
-    /*             real32 Y = TileY * TILE_SIZE; */
-    /*             DrawQuad(RenderData, {X, Y - (TILE_SIZE)}, {TILE_SIZE, TILE_SIZE}, 0, DARK_GRAY); */
-    /*         } */
-    /*     } */
-    /* } */
 }
 
 extern
