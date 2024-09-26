@@ -144,67 +144,6 @@ struct entity
     entity_item_inventory Inventory;
 };
 
-
-
-enum ui_type
-{
-    UIELEMENT_Nil,
-    UIELEMENT_Button,
-    UIELEMENT_DescBox,
-    UIELEMENT_ElementBox,
-    UIElementCount,
-};
-
-enum ui_layer : uint16
-{
-    UI_LAYER_0  = 1 << 0,
-    UI_LAYER_1  = 1 << 1,
-    UI_LAYER_2  = 1 << 2,
-    UI_LAYER_3  = 1 << 3,
-    UI_LAYER_4  = 1 << 4,
-    UI_LAYER_5  = 1 << 5,
-    UI_LAYER_6  = 1 << 6,
-    UI_LAYER_7  = 1 << 7,
-    UI_LAYER_8  = 1 << 8,
-    UI_LAYER_9  = 1 << 9,
-    UI_LAYER_10 = 1 << 10,
-    UI_LAYER_11 = 1 << 11,
-    UI_LAYER_12 = 1 << 12,
-    UI_LAYER_13 = 1 << 13,
-    UI_LAYER_14 = 1 << 14,
-    UI_LAYER_15 = 1 << 15,
-};
-
-struct ui_id
-{
-    int32    ID;
-    ui_layer LayerIdx = UI_LAYER_0;
-};
-
-struct ui_element
-{
-    ui_type Type;
-    ui_id UIID;  
-
-    static_sprite_data Sprite;
-    string ElementText;
-
-    vec2 Position;
-    vec2 Size;
-    vec4 DrawColor;
-
-    range_v2 OccupiedRange;
-
-    bool IsHot;
-    bool IsActive;
-    bool IsDisplayed;
-    bool Captured;
-    
-    mat4 XForm;
-};
-
-
-
 struct game_state
 {
     KeyCodeID KeyCodeLookup[KEY_COUNT];
@@ -241,14 +180,6 @@ struct game_state
     { 
         static_sprite_data     Sprites[SPRITE_Count];
         item                   GameItems[ITEM_IDCount];
-
-        struct
-        {
-            ui_id      HotLastFrame;
-            ui_id      ActiveLastFrame;
-            uint32     ElementCount;
-            ui_element UIElements[MAX_UI_ELEMENTS];
-        }UIState;
     }GameData;
 };
 

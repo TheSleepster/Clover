@@ -34,19 +34,22 @@
 internal void
 DrawImGui(gl_render_data *RenderData, time Time)
 {
-    ImGui::SetCurrentContext(RenderData->CurrentImGuiContext);
-    
-    ImGui::Begin("Render Quad Color Picker");
-    ImGui::Text("Famerate: %i", Time.FPSCounter);
-    ImGui::Text("FrameTime: %.02f", Time.MSPerFrame);
-    ImGui::Separator();
-    
-    ImGui::Text("Clear Color:");
-    ImGui::ColorPicker4("ClearColor", &RenderData->ClearColor.R, ImGuiColorEditFlags_PickerHueWheel);
-    ImGui::SameLine();
-    ImGui::End();
+    if(RenderData->DrawDebug)
+    {
+        ImGui::SetCurrentContext(RenderData->CurrentImGuiContext);
+        ImGui::Begin("Render Quad Color Picker");
+        ImGui::Text("Famerate: %i", Time.FPSCounter);
+        ImGui::Text("FrameTime: %.02f", Time.MSPerFrame);
+        ImGui::Separator();
+
+        ImGui::Text("Clear Color:");
+        ImGui::ColorPicker4("ClearColor", &RenderData->ClearColor.R, ImGuiColorEditFlags_PickerHueWheel);
+        ImGui::SameLine();
+        ImGui::End();
+    }
 }
 
+// TODO(Sleepster): Perhaps add TextureIndex into the static_sprite_data Struct?
 internal quad
 CreateDrawQuad(gl_render_data *RenderData, 
                vec2            Position, 
@@ -120,7 +123,7 @@ CreateDrawRect(gl_render_data *RenderData, vec2 Size, real32 Rotation, vec4 Colo
 }
 
 internal quad *
-DrawQuadXForm(gl_render_data *RenderData, quad *Quad, mat4 *Transform)
+DrawQuadXForm(gl_render_data *RenderData, quad *Quad, mat4 *Transform, bool IsFont)
 {
     if(RenderData->DrawFrame.TotalQuadCount >= MAX_QUADS / 0.5f)
     {
@@ -140,7 +143,7 @@ DrawQuadXForm(gl_render_data *RenderData, quad *Quad, mat4 *Transform)
     vertex **VertexBufferptr;
     uint32  *ElementCounter;
 
-    bool IsOpaque = (Quad->DrawColor.A == 1.0f);
+    bool IsOpaque = (Quad->DrawColor.A == 1.0f && !IsFont);
     if(IsOpaque)
     {
         VertexBufferptr = &RenderData->DrawFrame.VertexBufferptr;
@@ -187,7 +190,7 @@ DrawQuadXForm(gl_render_data *RenderData, quad *Quad, mat4 *Transform)
 
 
 internal quad *
-DrawUIQuadXForm(gl_render_data *RenderData, quad *Quad, mat4 *Transform)
+DrawUIQuadXForm(gl_render_data *RenderData, quad *Quad, mat4 *Transform, bool IsFont)
 {
     if(RenderData->DrawFrame.TotalUIElementCount >= MAX_QUADS)
     {
@@ -207,7 +210,7 @@ DrawUIQuadXForm(gl_render_data *RenderData, quad *Quad, mat4 *Transform)
     vertex **UIVertexBufferptr;
     uint32  *ElementCounter;
 
-    bool IsOpaque = (Quad->DrawColor.A == 1.0f);
+    bool IsOpaque = (Quad->DrawColor.A == 1.0f && !IsFont);
     if(IsOpaque)
     {
         UIVertexBufferptr = &RenderData->DrawFrame.UIVertexBufferptr;
@@ -253,7 +256,7 @@ DrawUIQuadXForm(gl_render_data *RenderData, quad *Quad, mat4 *Transform)
 }
 
 internal quad *
-DrawQuadProjected(gl_render_data *RenderData, quad *Quad)
+DrawQuadProjected(gl_render_data *RenderData, quad *Quad, bool IsFont)
 {
     mat4 Translation = mat4Multiply(mat4Identity(1.0f), mat4Translate(v2Expand(vec2{Quad->Position.X, Quad->Position.Y + (Quad->Size.Y * 0.5f)}, 0.0f)));
     mat4 Rotation    = mat4Multiply(mat4Identity(1.0f), mat4RHRotate(AngleRad(Quad->Rotation), vec3{0.0f, 0.0f, 1.0f}));
@@ -261,11 +264,11 @@ DrawQuadProjected(gl_render_data *RenderData, quad *Quad)
     
     mat4 Transform = Translation * Rotation * Scale;
     
-    return(DrawQuadXForm(RenderData, Quad, &Transform));
+    return(DrawQuadXForm(RenderData, Quad, &Transform, IsFont));
 }
 
 internal quad *
-DrawUIQuadProjected(gl_render_data *RenderData, quad *Quad)
+DrawUIQuadProjected(gl_render_data *RenderData, quad *Quad, bool IsFont)
 {
     mat4 Translation = mat4Multiply(mat4Identity(1.0f), mat4Translate(v2Expand(vec2{Quad->Position.X - (Quad->Size.X * 0.5f), Quad->Position.Y + (Quad->Size.Y * 0.5f)}, 0.0f)));
     mat4 Rotation    = mat4Multiply(mat4Identity(1.0f), mat4RHRotate(AngleRad(Quad->Rotation), vec3{0.0f, 0.0f, 1.0f}));
@@ -273,7 +276,7 @@ DrawUIQuadProjected(gl_render_data *RenderData, quad *Quad)
     
     mat4 Transform = Translation * Rotation * Scale;
     
-    return(DrawUIQuadXForm(RenderData, Quad, &Transform));
+    return(DrawUIQuadXForm(RenderData, Quad, &Transform, IsFont));
 }
 
 internal quad*
@@ -284,10 +287,11 @@ DrawQuadTextured(gl_render_data *RenderData,
                  ivec2           SpriteSize, 
                  real32          Rotation,
                  vec4            Color, 
-                 uint32          TextureIndex)
+                 uint32          TextureIndex,
+                 bool            IsFont)
 {
     quad Quad = CreateDrawQuad(RenderData, Position, Size, SpriteSize, AtlasOffset, Rotation, Color, (real32)TextureIndex);
-    return(DrawQuadProjected(RenderData, &Quad));
+    return(DrawQuadProjected(RenderData, &Quad, IsFont));
 }
 
 internal quad*
@@ -298,26 +302,27 @@ DrawUIQuadTextured(gl_render_data *RenderData,
                    ivec2           SpriteSize, 
                    real32          Rotation,
                    vec4            Color, 
-                   uint32          TextureIndex)
+                   uint32          TextureIndex,
+                   bool            IsFont)
 {
     quad Quad = CreateDrawQuad(RenderData, Position, Size, SpriteSize, AtlasOffset, Rotation, Color, (real32)TextureIndex);
-    return(DrawUIQuadProjected(RenderData, &Quad));
+    return(DrawUIQuadProjected(RenderData, &Quad, IsFont));
 }
 
 // TODO(Sleepster): Perhaps make it where we have solids, and actors. Solids will be placed without matrix transforms.
 //                  STATIC SOLIDS if you would. Actors will be Dynamic and will require matrix calculations.
 internal quad*
-DrawQuad(gl_render_data *RenderData, vec2 Position, vec2 Size, real32 Rotation, vec4 Color)
+DrawQuad(gl_render_data *RenderData, vec2 Position, vec2 Size, real32 Rotation, vec4 Color, bool IsFont)
 {
     quad Quad = CreateDrawQuad(RenderData, Position, Size, ivec2{16, 16}, ivec2{0, 0}, Rotation, Color, 1);
-    return(DrawQuadProjected(RenderData, &Quad));
+    return(DrawQuadProjected(RenderData, &Quad, IsFont));
 }
 
 internal quad*
-DrawUIQuad(gl_render_data *RenderData, vec2 Position, vec2 Size, real32 Rotation, vec4 Color)
+DrawUIQuad(gl_render_data *RenderData, vec2 Position, vec2 Size, real32 Rotation, vec4 Color, bool IsFont)
 {
     quad Quad = CreateDrawQuad(RenderData, Position, Size, ivec2{16, 16}, ivec2{0, 0}, Rotation, Color, 1);
-    return(DrawUIQuadProjected(RenderData, &Quad));
+    return(DrawUIQuadProjected(RenderData, &Quad, IsFont));
 }
 
 internal inline static_sprite_data
@@ -342,7 +347,8 @@ DrawSprite(gl_render_data    *RenderData,
                             SpriteData.SpriteSize, 
                             Rotation, 
                             Color, 
-                            TextureIndex));
+                            TextureIndex,
+                            0));
 }
 
 internal quad *
@@ -369,7 +375,8 @@ DrawUISprite(gl_render_data     *RenderData,
                               SpriteData.SpriteSize, 
                               Rotation, 
                               Color, 
-                              TextureIndex));
+                              TextureIndex,
+                              0));
 }
 
 internal quad *
@@ -387,14 +394,14 @@ internal void
 DrawRectXForm(gl_render_data *RenderData, mat4 XForm, vec2 Size, real32 Rotation, vec4 Color)
 {
     quad Quad = CreateDrawRect(RenderData, Size, Rotation, Color);
-    DrawQuadXForm(RenderData, &Quad, &XForm);
+    DrawQuadXForm(RenderData, &Quad, &XForm, 0);
 }
 
 internal void
 DrawUIRectXForm(gl_render_data *RenderData, mat4 XForm, vec2 Size, real32 Rotation, vec4 Color)
 {
     quad Quad = CreateDrawRect(RenderData, Size, Rotation, Color);
-    DrawUIQuadXForm(RenderData, &Quad, &XForm);
+    DrawUIQuadXForm(RenderData, &Quad, &XForm, 0);
 }
 
 internal quad*
@@ -412,7 +419,7 @@ DrawUISpriteXForm(gl_render_data    *RenderData,
                                Rotation, 
                                Color, 
                                1); 
-    return(DrawUIQuadXForm(RenderData, &Quad, &XForm));
+    return(DrawUIQuadXForm(RenderData, &Quad, &XForm, 0));
 }
 
 internal quad* 
@@ -430,7 +437,7 @@ DrawSpriteXForm(gl_render_data    *RenderData,
                                Rotation, 
                                Color, 
                                1); 
-    return(DrawQuadXForm(RenderData, &Quad, &XForm));
+    return(DrawQuadXForm(RenderData, &Quad, &XForm, 0));
 }
 
 internal void
@@ -442,6 +449,7 @@ DrawGameText(gl_render_data *RenderData,
              vec4            Color) 
 {
     vec2 TextOrigin = Position;
+    real32 TrueScale = FontScale / 100.0f;
     
     for(uint32 StringIndex = 0;
         StringIndex < Text.Length;
@@ -449,7 +457,7 @@ DrawGameText(gl_render_data *RenderData,
     {
         if(Text.Data[StringIndex] == '\n')    
         {
-            Position.Y += RenderData->LoadedFonts[Font].FontHeight * FontScale;
+            Position.Y += RenderData->LoadedFonts[Font].FontHeight * TrueScale;
             Position.X = TextOrigin.X;
             continue;
         }
@@ -457,13 +465,13 @@ DrawGameText(gl_render_data *RenderData,
         char C = (Text.Data[StringIndex]);
         font_glyph Glyph = RenderData->LoadedFonts[Font].Glyphs[C];
         
-        vec2 WorldPosition = {(Position.X + Glyph.GlyphOffset.X) * FontScale, (Position.Y - Glyph.GlyphOffset.Y) * FontScale};
-        vec2 RenderScale   = {Glyph.GlyphSize.X * FontScale, (real32)Glyph.GlyphSize.Y * (FontScale * 2)};
+        vec2 WorldPosition = {(Position.X + Glyph.GlyphOffset.X) * TrueScale, (Position.Y - Glyph.GlyphOffset.Y) * TrueScale};
+        vec2 RenderScale   = {Glyph.GlyphSize.X * TrueScale, (real32)Glyph.GlyphSize.Y * (TrueScale * 2)};
         ivec2 AtlasOffset   = Glyph.GlyphUVs;
         ivec2 GlyphSize     = Glyph.GlyphSize;
         
-        DrawQuadTextured(RenderData, Position, RenderScale, AtlasOffset, GlyphSize, 0.0f, Color, 2);
-        Position.X += Glyph.GlyphAdvance.X * FontScale;
+        DrawQuadTextured(RenderData, Position, RenderScale, AtlasOffset, GlyphSize, 0.0f, Color, 2, 1);
+        Position.X += Glyph.GlyphAdvance.X * TrueScale;
     }
 }
 
@@ -476,6 +484,7 @@ DrawUIText(gl_render_data *RenderData,
            vec4            Color) 
 {
     vec2 TextOrigin = Position;
+    real32 TrueScale = FontScale / 100.0f;
     
     for(uint32 StringIndex = 0;
         StringIndex < Text.Length;
@@ -483,7 +492,7 @@ DrawUIText(gl_render_data *RenderData,
     {
         if(Text.Data[StringIndex] == '\n')    
         {
-            Position.Y += RenderData->LoadedFonts[Font].FontHeight * FontScale;
+            Position.Y += RenderData->LoadedFonts[Font].FontHeight * TrueScale;
             Position.X = TextOrigin.X;
             continue;
         }
@@ -491,12 +500,12 @@ DrawUIText(gl_render_data *RenderData,
         char C = (Text.Data[StringIndex]);
         font_glyph Glyph = RenderData->LoadedFonts[Font].Glyphs[C];
         
-        vec2 WorldPosition = {(Position.X + Glyph.GlyphOffset.X) * FontScale, (Position.Y - Glyph.GlyphOffset.Y) * FontScale};
-        vec2 RenderScale   = {Glyph.GlyphSize.X * FontScale, (real32)Glyph.GlyphSize.Y * (FontScale * 2)};
+        vec2 WorldPosition = {(Position.X + Glyph.GlyphOffset.X) * TrueScale, (Position.Y - Glyph.GlyphOffset.Y) * TrueScale};
+        vec2 RenderScale   = {Glyph.GlyphSize.X * TrueScale, (real32)Glyph.GlyphSize.Y * (TrueScale * 2)};
         ivec2 AtlasOffset   = Glyph.GlyphUVs;
         ivec2 GlyphSize     = Glyph.GlyphSize;
         
-        DrawUIQuadTextured(RenderData, Position, RenderScale, AtlasOffset, GlyphSize, 0.0f, Color, 2);
-        Position.X += Glyph.GlyphAdvance.X * FontScale;
+        DrawUIQuadTextured(RenderData, Position, RenderScale, AtlasOffset, GlyphSize, 0.0f, Color, 2, 1);
+        Position.X += Glyph.GlyphAdvance.X * TrueScale;
     }
 }

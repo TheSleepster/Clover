@@ -212,8 +212,7 @@ Win32ProcessInputMessages(MSG Message, HWND WindowHandle, game_state *State)
             }
         }
         
-        if(ImGui_ImplWin32_WndProcHandler(WindowHandle, Message.message, Message.wParam, Message.lParam) != 0)
-            return;
+        if(ImGui_ImplWin32_WndProcHandler(WindowHandle, Message.message, Message.wParam, Message.lParam) != 0) return;
         
         TranslateMessage(&Message);
         DispatchMessage(&Message);

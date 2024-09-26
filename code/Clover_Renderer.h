@@ -68,7 +68,7 @@ struct texture2d
 
 // FONT RENDERING
 #define MAX_FONT_SIZE 512
-#define BITMAP_ATLAS_SIZE 1024
+#define BITMAP_ATLAS_SIZE 512
 
 struct freetype_font_data
 {
@@ -164,7 +164,8 @@ struct gl_render_data
     GLuint GameUIVBOID;
     GLuint GameUIEBOID;
     
-    GLuint ProjectionViewMatrixID;
+    GLuint ProjectionViewMatrixUID;
+    GLuint BackgroundColorUID;
     
     // SHADERS
     shader    BasicShader;
@@ -182,8 +183,9 @@ struct gl_render_data
     uint32        TextureCount;
     real32        AspectRatio;
     
-    // IMGUI SHIT
+    // IMGUI STUFF
     ImGuiContext *CurrentImGuiContext;
+    bool DrawDebug;
     
     // DRAW FRAME DATA
     struct

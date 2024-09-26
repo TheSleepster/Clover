@@ -37,11 +37,13 @@ void main()
     // FONT RENDERERING
     if(int(vTextureIndex) == 2)
     {
-        vec4 FontColor = texelFetch(FontAtlas, ivec2(vTextureUVs), 0);
-        if(FontColor.r == 0)
-        {
-            discard;
-        }
-        FragColor = FontColor.r * vMatColor;
+        float NormalizedTextureUVX = vTextureUVs.x / 512;
+        float NormalizedTextureUVY = vTextureUVs.y / 512;
+
+        float Distance = texture(FontAtlas, vec2(NormalizedTextureUVX, NormalizedTextureUVY)).r;
+        float SmoothEdge = 0.05;
+        float Alpha = smoothstep(0.5 - SmoothEdge, 0.5 + SmoothEdge, Distance);
+        
+        FragColor = vec4(vMatColor.rgb, vMatColor.a * Alpha);
     }
 }

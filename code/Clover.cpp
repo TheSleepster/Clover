@@ -1,5 +1,6 @@
 #include "Intrinsics.h"
 
+
 // UTILS
 #include "util/Math.h"
 #include "util/Array.h"
@@ -21,6 +22,7 @@
 // NOTE(Sleepster): If MiniAudio starts acting weird, I compiled it in a non debug mode.
 #include "Clover_Audio.cpp"
 #include "Clover_Draw.cpp"
+
 
 // NOTE(Sleepster): Random Number Generation stuff
 #define RAND_MAX_64 0xFFFFFFFFFFFFFFFFull
@@ -161,7 +163,6 @@ SetupPlayer(entity *Entity)
     Entity->Rotation    = 0;
     Entity->Speed       = 100.0f;              // PIXELS PER SECOND
     Entity->BoxCollider = {};
-    
     Entity->ItemID      = ITEM_Nil;            // DROPS
 }
 
@@ -331,15 +332,15 @@ ResetGame(gl_render_data *RenderData, game_state *State)
 
 // NOTE(Sleepster): WindowSizeData must be passed despite SizeData being a global
 internal vec2
-ConvertMouseToWorldPos(gl_render_data *RenderData, ivec2 MousePos, ivec4 WindowSizeData)
+TransformMouseCoords(mat4 ViewMatrix, mat4 ProjectionMatrix, ivec2 MousePos, ivec4 WindowSizeData)
 {
     vec2 TransformedMousePos  = {};
     
-    vec2 NDC = {(MousePos.X / (WindowSizeData.Width * 0.5f)) - 1.0f, 1.0f - (MousePos.Y / (WindowSizeData.Height * 0.5f))};
-    vec4 NDCPosition = v2Expand(NDC, 0.0f, 1.0f);
+    vec2 Ndc = {(MousePos.X / (WindowSizeData.Width * 0.5f)) - 1.0f, 1.0f - (MousePos.Y / (WindowSizeData.Height * 0.5f))};
+    vec4 NDCPosition = v2Expand(Ndc, 0.0f, 1.0f);
     
-    mat4 InverseProjection = mat4Inverse(RenderData->GameCamera.ProjectionMatrix);
-    mat4 InverseViewMatrix = mat4Inverse(RenderData->GameCamera.ViewMatrix);
+    mat4 InverseProjection = mat4Inverse(ProjectionMatrix);
+    mat4 InverseViewMatrix = mat4Inverse(ViewMatrix);
     
     NDCPosition = mat4Transform(InverseProjection, NDCPosition);
     NDCPosition = mat4Transform(InverseViewMatrix, NDCPosition);
@@ -348,28 +349,29 @@ ConvertMouseToWorldPos(gl_render_data *RenderData, ivec2 MousePos, ivec4 WindowS
     return(TransformedMousePos);
 }
 
-internal vec2
-ConvertMouseToUIPos(gl_render_data *RenderData, ivec2 MousePos, ivec4 WindowSizeData)
-{
-    vec2 TransformedMousePos  = {};
-    
-    vec2 NDC = {(MousePos.X / (WindowSizeData.Width * 0.5f)) - 1.0f, 1.0f - (MousePos.Y / (WindowSizeData.Height * 0.5f))};
-    vec4 NDCPosition = v2Expand(NDC, 0.0f, 1.0f);
-    
-    mat4 InverseProjection = mat4Inverse(RenderData->GameUICamera.ProjectionMatrix);
-    mat4 InverseViewMatrix = mat4Inverse(RenderData->GameUICamera.ViewMatrix);
-    
-    NDCPosition = mat4Transform(InverseProjection, NDCPosition);
-    NDCPosition = mat4Transform(InverseViewMatrix, NDCPosition);
-    
-    TransformedMousePos = {NDCPosition.X, NDCPosition.Y};
-    return(TransformedMousePos);
-}
+/* internal vec2 */
+/* ConvertMouseToUIPos(mat4 ViewMAtrix, ivec2 MousePos, ivec4 WindowSizeData) */
+/* { */
+/*     vec2 TransformedMousePos  = {}; */
+
+/*     vec2 Ndc = {(MousePos.X / (WindowSizeData.Width * 0.5f)) - 1.0f, 1.0f - (MousePos.Y / (WindowSizeData.Height * 0.5f))}; */
+/*     vec4 NDCPosition = v2Expand(Ndc, 0.0f, 1.0f); */
+
+/*     mat4 InverseProjection = mat4Inverse(RenderData->GameUICamera.ProjectionMatrix); */
+/*     mat4 InverseViewMatrix = mat4Inverse(RenderData->GameUICamera.ViewMatrix); */
+
+/*     NDCPosition = mat4Transform(InverseProjection, NDCPosition); */
+/*     NDCPosition = mat4Transform(InverseViewMatrix, NDCPosition); */
+
+/*     TransformedMousePos = {NDCPosition.X, NDCPosition.Y}; */
+/*     return(TransformedMousePos); */
+/* } */
 
 internal real32
 TileToWorldInt32(real32 Tile)
 {
     return(Tile * (real32)TILE_SIZE);
+
 }
 
 internal vec2
@@ -453,7 +455,7 @@ RangeSize(range_v2 Range)
 }
 
 internal inline bool
-IsRangeWithinBounds(range_v2 Bounds, vec2 Test)
+IsRangeWithinBounds(vec2 Test, range_v2 Bounds)
 {
     return (Test.X >= Bounds.Min.X && Test.X <= Bounds.Max.X && 
             Test.Y >= Bounds.Min.Y && Test.Y <= Bounds.Max.Y);
@@ -463,10 +465,10 @@ internal inline range_v2
 RangeFromQuad(quad *Quad)
 {
     range_v2 Result = {};
-
+    
     Result.Min = Quad->TopLeft.Position.XY;
     Result.Max = Quad->TopRight.Position.XY;
-
+    
     return(Result);
 }
 
@@ -476,232 +478,12 @@ SinBreathe(real32 Time, real32 Modifier)
     return(sinf((Modifier*2*PI32*((Time)-(1/(Modifier*4))))+1))/2;
 }
 
-
-
-
-
-
-internal void
-UIResetState(game_state *State)
-{
-    State->GameData.UIState.ElementCount = 0;
-    memset(State->GameData.UIState.UIElements, 0, (sizeof(struct ui_element) * MAX_UI_ELEMENTS));
-}
-
-internal ui_element*
-WidgetCreate(game_state *State, ui_type ElementType)
-{
-    ui_element *Element = {};
-
-    for(uint32 ElementIndex = 1;
-        ElementIndex < MAX_UI_ELEMENTS;
-        ++ElementIndex)
-    {
-        ui_element *Found = &State->GameData.UIState.UIElements[ElementIndex];
-        if(!Found->Captured)
-        {
-            Element = Found;
-
-            Element->Captured      = true;
-            Element->IsDisplayed   = true;
-            Element->Type          = ElementType;
-            Element->UIID.ID       = ElementIndex;
-            Element->UIID.LayerIdx = UI_LAYER_0;
-            Element->XForm         = mat4Identity(1.0f);
-            break;
-        }
-    }
-    Assert(Element);
-
-    State->GameData.UIState.ElementCount++;
-    return(Element);
-}
-
-internal inline void
-WidgetAddSprite(ui_element *Widget, static_sprite_data Sprite)
-{
-    Widget->Sprite = Sprite;
-}
-
-internal inline void
-WidgetAddText(ui_element *Widget, string FormattedText)
-{
-    Widget->ElementText = FormattedText;
-}
-
-internal inline void
-WidgetSetXForm(ui_element *Widget, mat4 XForm)
-{
-    Widget->XForm = XForm;
-}
-
-internal inline void
-WidgetSetColor(ui_element *Widget, vec4 Color)
-{
-    Widget->DrawColor = Color;
-}
-
-internal inline void
-WidgetSetPosition(ui_element *Widget, vec2 Position)
-{
-    Widget->Position = Position;
-    Widget->XForm = mat4Multiply(Widget->XForm, mat4Translate(v2Expand(Position, 0.0f)));
-}
-
-internal inline void
-WidgetSetSize(ui_element *Widget, vec2 Size)
-{
-    Widget->Size = Size;
-    Widget->XForm = mat4Multiply(Widget->XForm, mat4MakeScale(v2Expand(Size, 1.0f)));
-}
-
-internal inline void
-WidgetApplyXForm(ui_element *Widget)
-{
-    mat4 Identity    = mat4Identity(1.0f);
-    mat4 Translation = mat4Multiply(Identity, mat4Translate(v2Expand(Widget->Position, 0.0f)));
-    mat4 Scale       = mat4Multiply(Identity, mat4MakeScale(v2Expand(Widget->Size,     0.0f)));
-
-    Widget->XForm = Translation * Scale;
-}
-
-internal inline void
-WidgetCalculateRange(ui_element *Widget)
-{
-    Widget->OccupiedRange = CreateRange(vec2{Widget->Position.X - (Widget->Size.X * 0.5f), Widget->Position.Y - (Widget->Size.Y * 0.5f)}, 
-                                        vec2{Widget->Position.X + (Widget->Size.X * 0.5f), Widget->Position.Y + (Widget->Size.Y * 0.5f)});
-}
-
-internal inline void
-WidgetPushLayer(ui_element *Widget, int32 Layer)
-{
-    Widget->UIID.LayerIdx = (ui_layer)(1 << Layer);
-}
-
-internal bool
-WidgetIsHot(gl_render_data *RenderData, game_state *State, ui_element *Widget)
-{
-    vec2 MousePos = ConvertMouseToUIPos(RenderData, State->GameInput.Keyboard.CurrentMouse, SizeData);
-
-    if(IsRangeWithinBounds(Widget->OccupiedRange, MousePos))
-    {
-        State->GameData.UIState.HotLastFrame = Widget->UIID;
-        Widget->IsHot = true;
-    }
-
-    return(Widget->IsHot);
-}
-
-internal bool
-WidgetDoButton(gl_render_data *RenderData, game_state *State, ui_element *Widget)
-{
-    Widget->OccupiedRange = CreateRange(vec2{Widget->Position.X - (Widget->Size.X * 0.5f), Widget->Position.Y - (Widget->Size.Y * 0.5f)}, 
-                                        vec2{Widget->Position.X + (Widget->Size.X * 0.5f), Widget->Position.Y + (Widget->Size.Y * 0.5f)});
-    if(WidgetIsHot(RenderData, State, Widget))
-    {
-        if(IsGameKeyDown(ATTACK, &State->GameInput))
-        {
-            Widget->IsActive = true;
-            return(true);
-        }
-    }
-    else
-    {
-        if(Widget->UIID.ID == State->GameData.UIState.HotLastFrame.ID)
-        {
-            State->GameData.UIState.HotLastFrame = State->GameData.UIState.UIElements[0].UIID;
-        }
-    }
-
-    return(false);
-}
-
-internal void
-WidgetSetupButton(game_state *State, 
-                  ui_element *Widget,
-                  vec2        Position,
-                  vec2        Size, 
-                  sprite_type Sprite,
-                  vec4        Color)
-{
-        WidgetSetPosition(Widget, Position);
-        WidgetSetSize(Widget, Size);
-        WidgetAddSprite(Widget, GetSprite(State, Sprite));
-        WidgetCalculateRange(Widget);
-        WidgetSetColor(Widget, Color);
-}
-
-internal void
-WidgetSetupDescBox(game_state *State, 
-                   ui_element *Widget,
-                   vec2        Position,
-                   vec2        Size,
-                   sprite_type Sprite,
-                   string      FormattedText,
-                   vec4        Color)
-{
-        WidgetSetPosition(Widget, Position);
-        WidgetSetSize(Widget, Size);
-        WidgetAddSprite(Widget, GetSprite(State, Sprite));
-        WidgetAddText(Widget, FormattedText);
-        WidgetCalculateRange(Widget);
-        WidgetSetColor(Widget, Color);
-}
-
-internal void
-UIUpdateState(gl_render_data *RenderData, game_state *State)
-{
-    for(uint32 WidgetIndex = 0;
-        WidgetIndex < State->GameData.UIState.ElementCount;
-        WidgetIndex++)
-    {
-        ui_element *Widget = &State->GameData.UIState.UIElements[WidgetIndex];
-        if(Widget->Captured)
-        {
-            if(Widget->XForm == NULLMATRIX)
-            {
-                WidgetApplyXForm(Widget);
-            }
-            Widget->OccupiedRange = CreateRange(vec2{Widget->Position.X - (Widget->Size.X * 0.5f), Widget->Position.Y - (Widget->Size.Y * 0.5f)}, 
-                    vec2{Widget->Position.X + (Widget->Size.X * 0.5f), Widget->Position.Y + (Widget->Size.Y * 0.5f)});
-        }
-    }
-}
-
-internal void
-UIDrawElements(gl_render_data *RenderData, game_state *State)
-{
-    for(uint32 ElementIndex = 0;
-        ElementIndex <= State->GameData.UIState.ElementCount;
-        ElementIndex++)
-    {
-        ui_element *Widget = &State->GameData.UIState.UIElements[ElementIndex];
-        if(Widget->IsDisplayed)
-        {
-            quad Element = CreateDrawQuad(RenderData, 
-                    Widget->Position, 
-                    Widget->Size, 
-                    Widget->Sprite.SpriteSize, 
-                    Widget->Sprite.AtlasOffset, 
-                    0, 
-                    Widget->DrawColor, 
-                    1);
-            DrawUIQuadXForm(RenderData, &Element, &Widget->XForm);
-        }
-    }
-}
-
-
-
-
-
-
 inline int
 CompareEntityYAxis(const void *A, const void *B)
 {
     const entity *EntityA = (const entity*)A;
     const entity *EntityB = (const entity*)B;
-
+    
     return((EntityA->Position.Y > EntityB->Position.Y) ? -1 :
            (EntityA->Position.Y < EntityB->Position.Y) ?  1 : 0);
 }
@@ -731,7 +513,7 @@ GAME_ON_AWAKE(GameOnAwake)
         SetupRock(En);
         En->Position = vec2{GetRandomReal32_Range(-SizeScaler, SizeScaler), GetRandomReal32_Range(-SizeScaler, SizeScaler)};
         En->Position = TileToWorldPos(WorldToTilePos(En->Position));
-
+        
         
         entity *En2 = CreateEntity(State);
         SetupTree00(En2);
@@ -756,20 +538,26 @@ GAME_ON_AWAKE(GameOnAwake)
         En5->Position = vec2{GetRandomReal32_Range(-SizeScaler, SizeScaler), GetRandomReal32_Range(-SizeScaler, SizeScaler)};
         En5->Position = TileToWorldPos(WorldToTilePos(En5->Position));
     }
-
+    
     entity *Pickaxe = CreateEntity(State);
     SetupItemToolPickaxe(Pickaxe);
     Pickaxe->Position = {0, 100};
-
-
+    
+    
     entity *Pickaxe2 = CreateEntity(State);
     SetupItemToolPickaxe(Pickaxe2);
     Pickaxe2->Position = {32, 100};
 }
 
+#include "Clover_UI.cpp"
+
 extern
 GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
 {
+    if(IsKeyPressed(KEY_CONTROL, &State->GameInput))
+    {
+        RenderData->DrawDebug = !RenderData->DrawDebug;
+    }
     DrawImGui(RenderData, Time);
     
     State->World.WorldFrame = {};
@@ -795,9 +583,16 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
         RenderData->GameUICamera.ProjectionViewMatrix = mat4Multiply(RenderData->GameUICamera.ProjectionMatrix, RenderData->GameUICamera.ViewMatrix);
     }
     
-    vec2 MouseToWorld  = ConvertMouseToWorldPos(RenderData, State->GameInput.Keyboard.CurrentMouse, SizeData);
-    vec2 MouseToScreen = ConvertMouseToUIPos(RenderData, State->GameInput.Keyboard.CurrentMouse, SizeData); 
-
+    vec2 MouseToWorld  = TransformMouseCoords(RenderData->GameCamera.ViewMatrix, 
+                                              RenderData->GameCamera.ProjectionMatrix, 
+                                              State->GameInput.Keyboard.CurrentMouse, 
+                                              SizeData);
+    
+    vec2 MouseToScreen = TransformMouseCoords(RenderData->GameUICamera.ViewMatrix,
+                                              RenderData->GameUICamera.ProjectionMatrix, 
+                                              State->GameInput.Keyboard.CurrentMouse, 
+                                              SizeData);
+    
     // NOTE(Sleepster): SELECTED ENTITY
     real32 SelectionDistance = 32.0f;
     real32 MinimumDistance = 0;
@@ -818,7 +613,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     State->World.WorldFrame.SelectedEntity = Temp;
                     MinimumDistance = Distance;
                 }
-
+                
                 entity *SelectedEntity = State->World.WorldFrame.SelectedEntity;
                 if(IsGameKeyPressed(ATTACK, &State->GameInput) && (Temp->Flags & IS_DESTRUCTABLE) && !(Temp->Flags & IS_UI))
                 {
@@ -889,7 +684,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                 {
                     uint32 CurrentHotbarCount = Player->Inventory.CurrentItemCount;
                     item NewItem = State->GameData.GameItems[Temp->ItemID];
-
+                    
                     for(int32 InventoryIndex = 0;
                         InventoryIndex < PLAYER_HOTBAR_COUNT;
                         ++InventoryIndex)
@@ -903,18 +698,18 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                             goto Deletion;
                         }
                     }
-                     
+                    
                     NewItem.CurrentStack++;
                     Player->Inventory.Items[Player->Inventory.CurrentItemCount] = NewItem;
                     Player->Inventory.CurrentItemCount++;
-// TODO(Sleepster): Investigate a lambda, even though this is simple as shit, it's kinda grody to some people
-Deletion:
+                    // TODO(Sleepster): Investigate a lambda, even though this is simple as shit, it's kinda grody to some people
+                    Deletion:
                     DeleteEntity(Temp);
                 }
             }
         }
     }
-
+    
     // TODO(Sleepster): Tear this out so we can use it for font rendering center alignment 
     // INVENTORY UI
     {
@@ -923,7 +718,7 @@ Deletion:
         const real32 IconSize = 16.0f;
         const real32 TotalWidth = (PLAYER_HOTBAR_COUNT * IconSize) + ((PLAYER_HOTBAR_COUNT - 1) * Padding);
         const real32 StartingX = (Width / 2.0f) - (TotalWidth / 2.0f);
-
+        
         for(int32 InventorySlot = 0;
             InventorySlot < PLAYER_HOTBAR_COUNT;
             ++InventorySlot)
@@ -934,12 +729,11 @@ Deletion:
                  XForm = mat4Multiply(XForm, mat4Translate(vec3{StartingX + SlotOffset, -90, 0.0}));
                  XForm = mat4Multiply(XForm, mat4Translate(vec3{IconSize * -0.55f, 0.0f, 0.0f}));
                  XForm = mat4Multiply(XForm, mat4MakeScale(vec3{IconSize, IconSize, 1.0}));
-
             
             static_sprite_data Sprite = GetSprite(State, SPRITE_UIItemBox);
             quad Slot = CreateDrawQuad(RenderData, {0, 0}, {IconSize, IconSize}, Sprite.SpriteSize, Sprite.AtlasOffset, 0, WHITE, 1);
-            DrawUIQuadXForm(RenderData, &Slot, &XForm);
-
+            DrawUIQuadXForm(RenderData, &Slot, &XForm, 0);
+            
             item *Item = &Player->Inventory.Items[InventorySlot];
             Sprite = GetSprite(State, Item->Sprite);
             if(Sprite != State->GameData.Sprites[SPRITE_Nil])
@@ -950,36 +744,56 @@ Deletion:
             }
         }
     }
-
-
-    // UI SYSTEM TEST
+    
+    // NOTE(Sleepster): Test UI 
     {
-        ui_element *Widget = WidgetCreate(State, UIELEMENT_Button);
-        WidgetSetupButton(State, Widget, {0, -70}, {16, 16}, SPRITE_Rock, RED);
+        clover_ui_context UIContext = {};
+        UIContext.UICameraViewMatrix       = RenderData->GameUICamera.ViewMatrix;
+        UIContext.UICameraProjectionMatrix = RenderData->GameUICamera.ProjectionMatrix;
+        UIContext.GameInput                = &State->GameInput;
+        UIContext.ActiveFont               = &RenderData->LoadedFonts[UBUNTU_MONO];
+        UIContext.ActiveFontIndex          = UBUNTU_MONO;
 
-        if(WidgetIsHot(RenderData, State, Widget))
+        ui_element_state TestButton = CloverUIButton(&UIContext, STR("Test Button"), {0, 0}, {16, 16}, GetSprite(State, SPRITE_Rock), RED);
+        if(TestButton.IsHot)
         {
-           ui_element *DescBox = WidgetCreate(State, UIELEMENT_DescBox);
-           WidgetSetupDescBox(State, DescBox, {0, -35}, {190, 50}, SPRITE_Nil, STR("Test Text"), {0.3, 0.3, 0.3, 0.5});
+            UIContext.UIElements[TestButton.UIID.ID].DrawColor = BLUE;
+            CloverUIPushLayer(&UIContext, 1);
+            CloverUITextBox(&UIContext, 
+                             STR("Test Text Node"), 
+                             STR("Test Text Input Node This is really long text"), 
+                             {0, 20}, 
+                             {40, 40},
+                             {0, 20},
+                             10, 
+                             GetSprite(State, SPRITE_Nil),
+                             vec4{0.2f, 0.2f, 0.2f, 0.6f}, 
+                             GREEN,
+                             TEXT_ALIGNMENT_Center);
+            CloverUIPushLayer(&UIContext, 0);
         }
 
-        if(WidgetDoButton(RenderData, State, Widget))
+        if(TestButton.IsPressed)
         {
-            WidgetSetColor(Widget, GREEN);
+            UIContext.UIElements[TestButton.UIID.ID].DrawColor = GREEN;
+            entity *Rock = CreateEntity(State);
+            SetupRock(Rock);
+            Rock->Position = {80, 10};
         }
-
-        UIUpdateState(RenderData, State);
-        UIDrawElements(RenderData, State);
-        UIResetState(State);
+        CloverUIDrawWidgets(RenderData, &UIContext);
     }
-
-    mat4 Identity  = mat4Identity(1.0f);
-    mat4 Translate = mat4Multiply(Identity, mat4Translate(vec3{10.0f, 10.0f, 0.0f}));
-    mat4 Scale     = mat4Multiply(Identity, mat4MakeScale(vec3{100.0f, 100.0f, 1.0f}));
-
-    mat4 Total = Translate * Scale;
-    DrawRectXForm(RenderData, Total, {16, 16}, 0, vec4{1.0f, 0.0f, 1.0f, 0.3f});
-
+    
+    
+    // TRANSPARENCY TEST
+    {
+        mat4 Identity  = mat4Identity(1.0f);
+        mat4 Translate = mat4Multiply(Identity, mat4Translate(vec3{10.0f, 10.0f, 0.0f}));
+        mat4 Scale     = mat4Multiply(Identity, mat4MakeScale(vec3{100.0f, 100.0f, 1.0f}));
+        
+        mat4 Total = Translate * Scale;
+        DrawRectXForm(RenderData, Total, {16, 16}, 0, vec4{1.0f, 0.0f, 1.0f, 0.3f});
+    }
+    
     // NOTE(Sleepster): Draw the Tiles
     ivec2  PlayerOffset = iv2Cast(WorldToTilePos(Player->Position));
     ivec2  TileRadius   = {14, 14};
@@ -996,17 +810,15 @@ Deletion:
             {
                 real32 X = TileX * TILE_SIZE;
                 real32 Y = TileY * TILE_SIZE;
-                DrawQuad(RenderData, {X, Y - (TILE_SIZE)}, {TILE_SIZE, TILE_SIZE}, 0, DARK_GRAY);
+                DrawQuad(RenderData, {X, Y - (TILE_SIZE)}, {TILE_SIZE, TILE_SIZE}, 0, DARK_GRAY, 0);
             }
         }
     }
-
-    // NOTE(Sleepster): YSORT ENTITIES 
+    
+    // NOTE(Sleepster): Sorting, off for now. Breaks too much 
     {
-        // TODO(Sleepster): Replace with our own qsort perhaps 
         qsort(State->World.Entities, State->World.EntityCounter, sizeof(struct entity), CompareEntityYAxis); 
     }
-    
 
     // NOTE(Sleepster): DRAW ENTITIES
     for(uint32 EntityIndex = 0;
@@ -1048,8 +860,8 @@ Deletion:
     }
     
     // NOTE(Sleepster): World Text and Quad at {0,0}
-    DrawGameText(RenderData, sprints(&Memory->TemporaryStorage, STR("%f, %f"), MouseToWorld.X, MouseToWorld.Y), {-100, 0}, 0.05f, UBUNTU_MONO, GREEN);
-    DrawGameText(RenderData, sprints(&Memory->TemporaryStorage, STR("%f, %f"), MouseToScreen.X, MouseToScreen.Y), {-100, 100}, 0.05f, UBUNTU_MONO, BLUE);
+    DrawGameText(RenderData, sprints(&Memory->TemporaryStorage, STR("%f, %f"), MouseToWorld.X, MouseToWorld.Y), {-100, 0}, 15.0f, UBUNTU_MONO, GREEN);
+    DrawGameText(RenderData, sprints(&Memory->TemporaryStorage, STR("%f, %f"), MouseToScreen.X, MouseToScreen.Y), {-100, 100}, 15.0f, UBUNTU_MONO, BLUE);
 }
 
 extern
