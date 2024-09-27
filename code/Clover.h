@@ -13,6 +13,7 @@
 #include "Clover_Input.h"
 #include "Clover_Audio.h"
 #include "Clover_Renderer.h"
+#include "Clover_UI.h"
 
 struct sound_instance
 {
@@ -148,6 +149,8 @@ struct game_state
 {
     KeyCodeID KeyCodeLookup[KEY_COUNT];
     Input GameInput;
+
+    clover_ui_context UIContext;
     
     // NOTE(Sleepster): World Data
     struct
@@ -182,6 +185,100 @@ struct game_state
         item                   GameItems[ITEM_IDCount];
     }GameData;
 };
+
+// NOTE(Sleepster): Utilities
+internal vec2
+TransformMouseCoords(mat4 ViewMatrix, mat4 ProjectionMatrix, ivec2 MousePos, ivec4 WindowSizeData)
+{
+    vec2 TransformedMousePos  = {};
+    
+    vec2 Ndc = {(MousePos.X / (WindowSizeData.Width * 0.5f)) - 1.0f, 1.0f - (MousePos.Y / (WindowSizeData.Height * 0.5f))};
+    vec4 NDCPosition = v2Expand(Ndc, 0.0f, 1.0f);
+    
+    mat4 InverseProjection = mat4Inverse(ProjectionMatrix);
+    mat4 InverseViewMatrix = mat4Inverse(ViewMatrix);
+    
+    NDCPosition = mat4Transform(InverseProjection, NDCPosition);
+    NDCPosition = mat4Transform(InverseViewMatrix, NDCPosition);
+    
+    TransformedMousePos = {NDCPosition.X, NDCPosition.Y};
+    return(TransformedMousePos);
+}
+
+// NOTE(Sleepster): AABB Stuff
+internal inline range_v2
+CreateRange(vec2 Min, vec2 Max)
+{
+    range_v2 Result = {};
+    Result.Min = Min;
+    Result.Max = Max;
+    
+    return(Result);
+}
+
+internal inline range_v2
+RangeShift(range_v2 Range, vec2 Shift)
+{
+    range_v2 NewRange = {};
+    NewRange.Min = Range.Min + Shift;
+    NewRange.Max = Range.Max + Shift;
+    
+    return(NewRange);
+}
+
+internal inline vec2 
+MakeCentered(vec2 Position, vec2 Size)
+{
+    vec2 Centered = {};
+    
+    Centered.X = Position.X + (Size.X * 0.5f);
+    Centered.Y = Position.Y + (Size.Y * 0.5f);
+    
+    return(Centered);
+}
+
+internal inline range_v2
+RangeMakeCentered(vec2 Size)
+{
+    range_v2 CenteredRange = {};
+    
+    CenteredRange.Max = Size;
+    CenteredRange = RangeShift(CenteredRange, vec2{Size.X * -0.5f, 0.0f});
+    
+    return(CenteredRange);
+}
+
+internal inline vec2
+RangeSize(range_v2 Range)
+{
+    vec2 Size = {};
+    
+    Size = Range.Min - Range.Max;
+    Size.X = fabsf(Size.X);
+    Size.Y = fabsf(Size.Y);
+    
+    return(Size);
+}
+
+internal inline bool
+IsRangeWithinBounds(vec2 Test, range_v2 Bounds)
+{
+    return (Test.X >= Bounds.Min.X && Test.X <= Bounds.Max.X && 
+            Test.Y >= Bounds.Min.Y && Test.Y <= Bounds.Max.Y);
+}
+
+internal inline range_v2
+RangeFromQuad(quad *Quad)
+{
+    range_v2 Result = {};
+    
+    Result.Min = Quad->TopLeft.Position.XY;
+    Result.Max = Quad->TopRight.Position.XY;
+    
+    return(Result);
+}
+
+// AABB stuff
 
 #define GAME_ON_AWAKE(name) void name(game_memory *Memory, gl_render_data *RenderData, game_state *State)
 typedef GAME_ON_AWAKE(game_on_awake);

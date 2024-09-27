@@ -5,7 +5,7 @@ REM remove -Zi
 
 Set opts=-DCLOVER_SLOW=1 -DCLOVER_PROFILE=0
 
-Set CommonCompilerFlags=-std:c++20 -permissive -F52428800 -fp:fast -Fm -GR- -EHa- -Od -Oi -Zi -W4 -wd4189 -wd4200 -wd4996 -wd4706 -wd4530 -wd4100 -wd4201 -wd4505 -wd4652 -wd4653 -wd4459 -wd4065 -wd4018
+Set CommonCompilerFlags=-std:c++20 -permissive -F52428800 -fp:fast -Fm -GR- -EHa- -Od -Oi -Zi -W4 -wd4200 -wd4996 -wd4706 -wd4530 -wd4100 -wd4201 -wd4505 -wd4652 -wd4653 -wd4459 -wd4065 -wd4018
 Set CommonLinkerFlags=-ignore:4099 -incremental:no shell32.lib kernel32.lib user32.lib gdi32.lib opengl32.lib "../data/deps/ImGUI/ImGuiDEBUG.lib" "../data/deps/Freetype/freetype.lib" "../data/deps/MiniAudio/miniaudio.lib" "../data/deps/OpenGL/glad/src/Glad.lib" "../data/deps/yyjson/lib/yyjson.lib"
 Set CommonIncludes=-I"../data/deps" -I"../data/deps/Freetype/include/"
 

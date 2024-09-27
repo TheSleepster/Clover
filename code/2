@@ -90,7 +90,7 @@ LoadItemData(game_state *State)
     State->GameData.GameItems[ITEM_Branches]         = {.Archetype = ITEM, .Flags = IS_VALID|IS_ITEM|IS_IN_INVENTORY, .Sprite = SPRITE_Branches,      .ItemID = ITEM_Branches,         .MaxStackCount = 64, .ItemName = STR("Branches"),        .ItemDesc = STR("These are some branches!")};
     State->GameData.GameItems[ITEM_Trunk]            = {.Archetype = ITEM, .Flags = IS_VALID|IS_ITEM|IS_IN_INVENTORY, .Sprite = SPRITE_Trunk,         .ItemID = ITEM_Trunk,            .MaxStackCount = 64, .ItemName = STR("Pine Logs"),       .ItemDesc = STR("This is a bundle of logs!")};
     State->GameData.GameItems[ITEM_RubyOreChunk]     = {.Archetype = ITEM, .Flags = IS_VALID|IS_ITEM|IS_IN_INVENTORY, .Sprite = SPRITE_RubyChunk,     .ItemID = ITEM_RubyOreChunk,     .MaxStackCount = 64, .ItemName = STR("Ruby Chunks"),     .ItemDesc = STR("These are chunks of Ruby Rock!")};
-    State->GameData.GameItems[ITEM_SapphireOreChunk] = {.Archetype = ITEM, .Flags = IS_VALID|IS_ITEM|IS_IN_INVENTORY, .Sprite = SPRITE_SapphireChunk, .ItemID = ITEM_SapphireOreChunk, .MaxStackCount = 64, .ItemName = STR("Sapphire Chunks"), .ItemDesc = STR("These are soem chunks of Sapphire Rock!")};
+    State->GameData.GameItems[ITEM_SapphireOreChunk] = {.Archetype = ITEM, .Flags = IS_VALID|IS_ITEM|IS_IN_INVENTORY, .Sprite = SPRITE_SapphireChunk, .ItemID = ITEM_SapphireOreChunk, .MaxStackCount = 64, .ItemName = STR("Sapphire Chunks"), .ItemDesc = STR("These are soem chunks of Saphire Rock!")};
     State->GameData.GameItems[ITEM_ToolPickaxe]      = {.Archetype = ITEM, .Flags = IS_VALID|IS_ITEM|IS_IN_INVENTORY, .Sprite = SPRITE_ToolPickaxe,   .ItemID = ITEM_ToolPickaxe,      .MaxStackCount = 1,  .ItemName = STR("Simple Pickaxe"),  .ItemDesc = STR("This a pickaxe, It can be used to mine ores!")};
     State->GameData.GameItems[ITEM_ToolWoodAxe]      = {.Archetype = ITEM, .Flags = IS_VALID|IS_ITEM|IS_IN_INVENTORY, .Sprite = SPRITE_ToolWoodAxe,   .ItemID = ITEM_ToolWoodAxe,      .MaxStackCount = 1,  .ItemName = STR("Simple Wood Axe"), .ItemDesc = STR("This is a wood axe, It can be used to cut trees!")};
 }
@@ -617,28 +617,6 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             }
         }
     }
-    
-
-    // NOTE(Sleepster): Draw the Tiles
-    ivec2  PlayerOffset = iv2Cast(WorldToTilePos(Player->Position));
-    ivec2  TileRadius   = {14, 14};
-    
-    for(int32 TileX = PlayerOffset.X - TileRadius.X;
-        TileX < PlayerOffset.X + TileRadius.Y;
-        ++TileX)
-    {
-        for(int32 TileY = PlayerOffset.Y - TileRadius.Y;
-            TileY < PlayerOffset.Y + TileRadius.Y;
-            ++TileY)
-        {
-            if((TileX + (TileY % 2 == 0)) % 2 == 0)
-            {
-                real32 X = TileX * TILE_SIZE;
-                real32 Y = TileY * TILE_SIZE;
-                DrawQuad(RenderData, {X, Y - (TILE_SIZE)}, {TILE_SIZE, TILE_SIZE}, 0, DARK_GRAY, 0);
-            }
-        }
-    }
 
     // NOTE(Sleepster): New Hotbar UI 
     {
@@ -678,10 +656,11 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
 
             item *Item = &Player->Inventory.Items[InventorySlot];
             Sprite = GetSprite(State, Item->Sprite);
-            if(Sprite != State->GameData.Sprites[SPRITE_Nil] && !HotbarSlotState.IsHot)
+            if(Sprite != State->GameData.Sprites[SPRITE_Nil])
             {
                 XForm = mat4Multiply(XForm, mat4MakeScale(vec3{0.65, 0.65, 1.0}));
-                DrawUISpriteXForm(RenderData, XForm, Sprite, 0, WHITE);
+                quad *SpriteQuad = DrawUISpriteXForm(RenderData, XForm, Sprite, 0, WHITE);
+                range_v2 TestRange  = RangeFromQuad(SpriteQuad);
             }
 
             if(HotbarSlotState.IsHot)
@@ -689,14 +668,6 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                 HotbarSlot->DrawColor = BLUE;
                 if(Item->Sprite != SPRITE_Nil)
                 {
-                    XForm = mat4Multiply(XForm, mat4MakeScale(vec3{1.0, 1.0, 1.0}));
-                    DrawUISpriteXForm(RenderData, XForm, Sprite, 0, WHITE);
-
-                    XForm = mat4Multiply(XForm, mat4Translate(vec3{-2, 3, 0}));
-                    XForm = mat4Multiply(XForm, mat4MakeScale(vec3{1.0, 1.0, 1.0}));
-                    CloverUISpriteElement(&State->UIContext, SlotPosition, {IconSize, IconSize}, XForm, GetSprite(State, Item->Sprite), WHITE);
-
-                    CloverUIPushLayer(&State->UIContext, 1);
                     CloverUITextBox(&State->UIContext, 
                                      Item->ItemName, 
                                      Item->ItemDesc, 
@@ -705,14 +676,13 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                                      {SlotPosition.X, SlotPosition.Y + 30},
                                      10, 
                                      GetSprite(State, SPRITE_Nil),
-                                     vec4{0.2f, 0.2f, 0.2f, 0.3f}, 
+                                     vec4{0.2f, 0.2f, 0.2f, 1.0f}, 
                                      GREEN,
                                      TEXT_ALIGNMENT_Center);
-                    CloverUIPushLayer(&State->UIContext, 0);
 
-                    DrawUIText(RenderData, Item->ItemName,  {SlotPosition.X - 10, SlotPosition.Y + 45}, 10, UBUNTU_MONO, GREEN);
-                    DrawUIText(RenderData, STR("Amount: "), {SlotPosition.X - 5,  SlotPosition.Y + 38}, 10, UBUNTU_MONO, GREEN);
-                    DrawUIText(RenderData, sprints(&Memory->TemporaryStorage, STR("%d"), Item->CurrentStack), {SlotPosition.X + 15, SlotPosition.Y + 38}, 10, UBUNTU_MONO, GREEN);
+                    CloverUIPushLayer(&State->UIContext, 0);
+                    CloverUIButton(&State->UIContext, STR("Item Sprite"), {SlotPosition.X - 30, SlotPosition.Y + 50}, {IconSize, IconSize}, GetSprite(State, Item->Sprite), {1.0f, 1.0f, 1.0f, 1.0f});
+                    CloverUIPushLayer(&State->UIContext, 1);
                 }
             }
             if(HotbarSlot->IsActive)
@@ -720,11 +690,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             }
         }
     }
-
-    // NOTE(Sleepster): UI Rendering 
-    CloverUIDrawWidgets(RenderData, &State->UIContext);
-    CloverUIResetState(&State->UIContext); 
-
+    
     // TRANSPARENCY TEST
     {
         mat4 Identity  = mat4Identity(1.0f);
@@ -732,14 +698,38 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
         mat4 Scale     = mat4Multiply(Identity, mat4MakeScale(vec3{100.0f, 100.0f, 1.0f}));
         
         mat4 Total = Translate * Scale;
-        DrawRectXForm(RenderData, Total, {16, 16}, 0, vec4{1.0f, 0.0f, 1.0f, 0.3f});
+        DrawRectXForm(RenderData, Total, {16, 16}, 0, vec4{1.0f, 0.0f, 1.0f, 1.0f});
     }
     
-
+    // NOTE(Sleepster): Draw the Tiles
+    ivec2  PlayerOffset = iv2Cast(WorldToTilePos(Player->Position));
+    ivec2  TileRadius   = {14, 14};
+    
+    for(int32 TileX = PlayerOffset.X - TileRadius.X;
+        TileX < PlayerOffset.X + TileRadius.Y;
+        ++TileX)
+    {
+        for(int32 TileY = PlayerOffset.Y - TileRadius.Y;
+            TileY < PlayerOffset.Y + TileRadius.Y;
+            ++TileY)
+        {
+            if((TileX + (TileY % 2 == 0)) % 2 == 0)
+            {
+                real32 X = TileX * TILE_SIZE;
+                real32 Y = TileY * TILE_SIZE;
+                DrawQuad(RenderData, {X, Y - (TILE_SIZE)}, {TILE_SIZE, TILE_SIZE}, 0, DARK_GRAY, 0);
+            }
+        }
+    }
+    
     // NOTE(Sleepster): Sorting, off for now. Breaks too much 
     {
         qsort(State->World.Entities, State->World.EntityCounter, sizeof(struct entity), CompareEntityYAxis); 
     }
+
+    // NOTE(Sleepster): UI Rendering 
+    CloverUIDrawWidgets(RenderData, &State->UIContext);
+    CloverUIResetState(&State->UIContext); 
 
     // NOTE(Sleepster): DRAW ENTITIES
     for(uint32 EntityIndex = 0;
@@ -779,6 +769,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             }
         }
     }
+    
     // NOTE(Sleepster): World Text and Quad at {0,0}
     DrawGameText(RenderData, sprints(&Memory->TemporaryStorage, STR("%f, %f"), MouseToWorld.X, MouseToWorld.Y), {-100, 0}, 15.0f, UBUNTU_MONO, GREEN);
     DrawGameText(RenderData, sprints(&Memory->TemporaryStorage, STR("%f, %f"), MouseToScreen.X, MouseToScreen.Y), {-100, 100}, 15.0f, UBUNTU_MONO, BLUE);

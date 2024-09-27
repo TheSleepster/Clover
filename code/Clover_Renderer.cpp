@@ -86,7 +86,6 @@ CloverLoadFont(memory_arena *Memory, gl_render_data *RenderData, string Filepath
             GlyphIndex < 127;
             ++GlyphIndex)
         {
-            FT_UInt Glyph = FT_Load_Char(Font.FontFace, GlyphIndex, FT_LOAD_RENDER);
             if(Column + Font.FontFace->glyph->bitmap.width + Font.AtlasPadding >= BITMAP_ATLAS_SIZE)
             {
                 Column = Font.AtlasPadding;
@@ -188,6 +187,7 @@ CloverLoadSDFFont(memory_arena *Memory, gl_render_data *RenderData, string Filep
             GlyphIndex < 127;
             ++GlyphIndex)
         {
+            // NOTE(Sleepster): Ignore this warning. The Char needs to be loaded before it can be rendered. 
             FT_UInt Glyph = FT_Load_Char(Font.FontFace, GlyphIndex, FT_LOAD_DEFAULT);
             if(Column + Font.FontFace->glyph->bitmap.width + Font.AtlasPadding >= BITMAP_ATLAS_SIZE)
             {
@@ -543,7 +543,6 @@ CloverRender(memory_arena *Arena, gl_render_data *RenderData)
     glClearDepth(0.0f);
     glViewport(0, 0, SizeData.Width, SizeData.Height);
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-
     // NOTE(Sleepster): Figure out this offset  
     // OPAQUE GAME OBJECT RENDERING PASS
     {
@@ -596,19 +595,40 @@ CloverRender(memory_arena *Arena, gl_render_data *RenderData)
                        GL_UNSIGNED_INT, 
                        (void*)ElementOffset);
     }
+    
+    GLintptr UIBufferOffset   = int32((RenderData->DrawFrame.OpaqueUIElementCount * 4) * sizeof(vertex));
+    GLintptr UIElementOffset  = (RenderData->DrawFrame.OpaqueUIElementCount * 6) * sizeof(uint32); 
+    // TRANSPARENT UI RENDERING PASS
+    {
+        glBindBuffer(GL_ARRAY_BUFFER, RenderData->GameUIVBOID);
+        glBufferSubData(GL_ARRAY_BUFFER, 
+                        UIBufferOffset, 
+                        (RenderData->DrawFrame.TransparentUIElementCount * 4) * sizeof(vertex), 
+                        &RenderData->DrawFrame.UIVertices[int32(MAX_VERTICES * 0.5f)]);
+        
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, RenderData->GameAtlas.TextureID);
+
+        glUniformMatrix4fv(RenderData->ProjectionViewMatrixUID, 1, GL_FALSE, &RenderData->GameUICamera.ProjectionViewMatrix.Elements[0][0]);
+        
+        
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, RenderData->LoadedFonts[UBUNTU_MONO].FontAtlas.TextureID);
+        
+        glBindVertexArray(RenderData->GameUIVAOID);
+        glDrawElements(GL_TRIANGLES, 
+                       RenderData->DrawFrame.TransparentUIElementCount * 6, 
+                       GL_UNSIGNED_INT, 
+                       (void *)UIElementOffset); 
+    }
 
     // OPAQUE UI RENDERING PASS
     {
-        glEnable(GL_DEPTH_TEST);
-
         glBindBuffer(GL_ARRAY_BUFFER, RenderData->GameUIVBOID);
         glBufferSubData(GL_ARRAY_BUFFER, 
                         0, 
                         (RenderData->DrawFrame.OpaqueUIElementCount * 4) * sizeof(vertex), 
                         RenderData->DrawFrame.UIVertices);
-
-        glUniformMatrix4fv(RenderData->ProjectionViewMatrixUID, 1, GL_FALSE, &RenderData->GameUICamera.ProjectionViewMatrix.Elements[0][0]);
-        
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, RenderData->GameAtlas.TextureID);
         
@@ -620,28 +640,5 @@ CloverRender(memory_arena *Arena, gl_render_data *RenderData)
                        RenderData->DrawFrame.OpaqueUIElementCount * 6, 
                        GL_UNSIGNED_INT, 
                        0); 
-    }
-    
-    GLintptr UIBufferOffset   = int32((RenderData->DrawFrame.OpaqueUIElementCount * 4) * sizeof(vertex));
-    GLintptr UIElementOffset  = (RenderData->DrawFrame.OpaqueUIElementCount * 6) * sizeof(uint32); 
-    // TRANSPARENT UI RENDERING PASS
-    {
-        glDisable(GL_DEPTH_TEST);
-        glBufferSubData(GL_ARRAY_BUFFER, 
-                        UIBufferOffset, 
-                        (RenderData->DrawFrame.TransparentUIElementCount * 4) * sizeof(vertex), 
-                        &RenderData->DrawFrame.UIVertices[int32(MAX_VERTICES * 0.5f)]);
-        
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, RenderData->GameAtlas.TextureID);
-        
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, RenderData->LoadedFonts[UBUNTU_MONO].FontAtlas.TextureID);
-        
-        glBindVertexArray(RenderData->GameUIVAOID);
-        glDrawElements(GL_TRIANGLES, 
-                       RenderData->DrawFrame.TransparentUIElementCount * 6, 
-                       GL_UNSIGNED_INT, 
-                       (void *)UIElementOffset); 
     }
 }

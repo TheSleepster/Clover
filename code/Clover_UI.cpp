@@ -18,102 +18,7 @@
 #include "Clover_Globals.h"
 #include "Clover_Renderer.h"
 #include "Clover_Input.h"
-
-enum ui_layer : uint16
-{
-    UI_LAYER_0  = 1 << 0,
-    UI_LAYER_1  = 1 << 1,
-    UI_LAYER_2  = 1 << 2,
-    UI_LAYER_3  = 1 << 3,
-    UI_LAYER_4  = 1 << 4,
-    UI_LAYER_5  = 1 << 5,
-    UI_LAYER_6  = 1 << 6,
-    UI_LAYER_7  = 1 << 7,
-    UI_LAYER_8  = 1 << 8,
-    UI_LAYER_9  = 1 << 9,
-    UI_LAYER_10 = 1 << 10,
-    UI_LAYER_11 = 1 << 11,
-    UI_LAYER_12 = 1 << 12,
-    UI_LAYER_13 = 1 << 13,
-    UI_LAYER_14 = 1 << 14,
-    UI_LAYER_15 = 1 << 15,
-};
-
-enum ui_type : int8
-{
-    UI_Nil,  
-    UI_Button,  
-    UI_Text,
-    UI_TextBox,
-};
-
-enum ui_text_alignment : int8
-{
-    TEXT_ALIGNMENT_Left,
-    TEXT_ALIGNMENT_Right,
-    TEXT_ALIGNMENT_Center,
-};
-
-struct ui_id
-{
-    int32    ID;
-    ui_layer LayerIdx;
-};
-
-struct ui_element
-{
-    ui_type Type;
-    ui_id UIID;  
-
-    string ElementName;
-    string ElementText;
-    ui_text_alignment TextAlignment;
-    real32 FontScale;
-    vec4 TextDrawColor;
-
-    static_sprite_data Sprite;
-
-    vec2 Position;
-    vec2 TextOrigin;
-    vec2 Size;
-    vec4 DrawColor;
-
-    range_v2 OccupiedRange;
-
-    bool IsValid;
-    bool IsDisplayed;
-    bool IsHot;
-    bool IsActive;
-    bool HasText;
-    
-    mat4 XForm;
-};
-
-struct ui_element_state
-{
-    bool IsHot;
-    bool IsPressed;
-    ui_id UIID;
-};
-
-struct clover_ui_context
-{
-    ui_id HotLastFrame;
-    ui_id ActiveLastFrame;
-
-    ui_layer ActiveLayer;
-
-    int32 CreatedElementCounter;
-    ui_element UIElements[MAX_UI_ELEMENTS];
-
-    mat4 UICameraViewMatrix;
-    mat4 UICameraProjectionMatrix;
-
-    Input     *GameInput;
-    font_data *ActiveFont;
-    font_index ActiveFontIndex;
-    real32     LastActiveFontSize;
-};
+#include "Clover_UI.h"
 
 // NOTE(Sleepster): Layer Starts at index 0
 internal void
@@ -287,10 +192,44 @@ CloverUITextBox(clover_ui_context *Context,
     return(BoxState);
 }
 
+internal ui_element_state
+CloverUISpriteElement(clover_ui_context *Context, vec2 Position, vec2 Size, mat4 XForm, static_sprite_data Sprite, vec4 Color)
+{
+    ui_element *SpriteElement = CloverUICreateElement(Context, UI_ItemSprite);
+                SpriteElement->Position = Position;
+                SpriteElement->Size = Size;
+                SpriteElement->Sprite = Sprite;
+                SpriteElement->DrawColor = Color;
+    if(XForm != NULLMATRIX)
+    {
+        SpriteElement->XForm = XForm;
+    }
+
+    ui_element_state SpriteState = {};
+    SpriteState.UIID = SpriteElement->UIID;
+    return(SpriteState);
+}
+
+internal int32
+CloverUISortElementsByLayer(const void *A, const void *B)
+{
+    const ui_element *ElementA = (const ui_element*)A;
+    const ui_element *ElementB = (const ui_element*)B;
+
+    bool IsOpaqueA = (ElementA->DrawColor.A == 1.0f);
+    bool IsOpaqueB = (ElementB->DrawColor.A == 1.0f);
+
+    return((ElementA->UIID.LayerIdx > ElementB->UIID.LayerIdx) ?  1 :
+           (ElementA->UIID.LayerIdx < ElementB->UIID.LayerIdx) ? -1 : 
+           (IsOpaqueA && !IsOpaqueB) ? -1 :
+           (!IsOpaqueA && IsOpaqueB) ?  1 : 0);
+}
+
 internal void
 CloverUIDrawWidgets(gl_render_data *RenderData, clover_ui_context *Context)
 {
     // TODO(Sleepster): Widget->UIID.LayerIdx sorting 
+    qsort(Context->UIElements, Context->CreatedElementCounter, sizeof(struct ui_element), CloverUISortElementsByLayer);
     for(uint32 WidgetIndex = 0;
         WidgetIndex <= Context->CreatedElementCounter;
         WidgetIndex++)
@@ -298,14 +237,15 @@ CloverUIDrawWidgets(gl_render_data *RenderData, clover_ui_context *Context)
         ui_element *Widget = &Context->UIElements[WidgetIndex];
         if(Widget)
         {
+            // NOTE(Sleepster): Generating an XForm, It's required 
+            if(Widget->XForm == NULLMATRIX)
+            {
+                CloverUIWidgetMakeXForm(Widget);
+            }
             switch(Widget->Type)
             {
                 case UI_Button:
                 {
-                    if(Widget->XForm == NULLMATRIX)
-                    {
-                        CloverUIWidgetMakeXForm(Widget);
-                    }
                     quad WidgetQuad = CreateDrawQuad(RenderData, 
                                                      Widget->Position, 
                                                      Widget->Size,
@@ -318,10 +258,6 @@ CloverUIDrawWidgets(gl_render_data *RenderData, clover_ui_context *Context)
                 }break;
                 case UI_TextBox:
                 {
-                    if(Widget->XForm == NULLMATRIX)
-                    {
-                        CloverUIWidgetMakeXForm(Widget);
-                    }
                     quad WidgetQuad = CreateDrawQuad(RenderData, 
                                                      Widget->Position, 
                                                      Widget->Size,
@@ -332,6 +268,18 @@ CloverUIDrawWidgets(gl_render_data *RenderData, clover_ui_context *Context)
                                                      1);
                     DrawUIQuadXForm(RenderData, &WidgetQuad, &Widget->XForm, 0);
                     DrawUIText(RenderData, Widget->ElementText, Widget->TextOrigin, Widget->FontScale, Context->ActiveFontIndex, Widget->TextDrawColor);
+                }break;
+                case UI_ItemSprite:
+                {
+                    quad WidgetQuad = CreateDrawQuad(RenderData, 
+                                                     Widget->Position, 
+                                                     Widget->Size,
+                                                     Widget->Sprite.SpriteSize,
+                                                     Widget->Sprite.AtlasOffset,
+                                                     0,
+                                                     Widget->DrawColor,
+                                                     1);
+                    DrawUIQuadXForm(RenderData, &WidgetQuad, &Widget->XForm, 0);
                 }break;
                 case UI_Nil:{}break;
                 default: {InvalidCodePath;}break;

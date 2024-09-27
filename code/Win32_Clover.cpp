@@ -100,13 +100,13 @@ Win32MainWindowCallback(HWND WindowHandle, UINT Message,
             Running = false;
             DestroyWindow(WindowHandle);
             PostQuitMessage(0);
-            return 0;
+            return(0);
         }
         case WM_DESTROY:
         {
             DestroyWindow(WindowHandle);
             PostQuitMessage(0);
-            return 0;
+            return(0);
         }break;
         default:
         {
@@ -142,7 +142,6 @@ Win32ProcessInputMessages(MSG Message, HWND WindowHandle, game_state *State)
                 case WM_KEYUP:
                 {
                     uint32 VKCode = (uint32)Message.wParam;
-                    bool8 WasDown = ((Message.lParam & (1 << 30)) != 0);
                     bool8 IsDown  = ((Message.lParam & (1 << 31)) == 0);
                     
                     
@@ -480,7 +479,6 @@ WinMain(HINSTANCE hInstance,
                 }
 #endif
                 real64 NewTime     = GetLastTime();
-                real64 FrameTime   = NewTime - CurrentTime;
                 CurrentTime = NewTime;
                 
                 Time.Delta = (real32)GetLastTime();

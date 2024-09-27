@@ -141,7 +141,6 @@ IsKeyDown(KeyCodeID Keycode, Input *GameInput)
 internal inline void
 ConsumeKeyInput(KeyCodeID KeyCode, Input *GameInput)
 {
-    bool Result = IsKeyDown(KeyCode, GameInput);
     GameInput->Keyboard.Keys[KeyCode].HalfTransitionCount = 0;
 }
 
