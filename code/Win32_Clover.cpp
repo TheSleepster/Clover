@@ -475,6 +475,7 @@ WinMain(HINSTANCE hInstance,
                     Game = Win32LoadGameCode(STR("CloverGame.dll"));
                     
                     // NOTE(Sleepster): Audio Engine setup, MiniAudio makes this REALLLLLLYYYYYYYY easy 
+                    Time.CurrentTimeInSeconds = 0.0f;
                     Game.OnAwake(&Memory, &RenderData, &State);
                 }
 #endif
@@ -525,11 +526,6 @@ WinMain(HINSTANCE hInstance,
                 }
                 //printm("%.02fms\n", MSPerFrame);
                 //printm("FPS: %d\n", FPS);
-                
-                if(IsKeyDown(KEY_ESCAPE, &State.GameInput))
-                {
-                    Running = 0;
-                }
             }
         }
         else

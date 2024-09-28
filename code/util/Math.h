@@ -3327,6 +3327,18 @@ static inline vec4 operator-(vec4 In)
     return Result;
 }
 
+static inline 
+real32 NormalizeClamp(real32 value) 
+{
+    if (value < 0.0f) {
+        return 0.0f;
+    } else if (value > 1.0f) {
+        return 1.0f;
+    }
+    return value;
+}
+
+
 static inline bool operator==(mat4 A, mat4 B)
 {
     return((A.Columns[0] == B.Columns[0]) && (A.Columns[1] == B.Columns[1]) &&

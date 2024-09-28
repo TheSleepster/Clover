@@ -101,7 +101,7 @@ CloverUIButton(clover_ui_context *Context,
     if(CloverUIIsHot(Context, Widget))
     {
         ButtonState.IsHot = true;
-        if(IsGameKeyDown(ATTACK, Context->GameInput))
+        if(IsGameKeyPressed(ATTACK, Context->GameInput))
         {
             Widget->IsActive = true;
             ButtonState.IsPressed = true;

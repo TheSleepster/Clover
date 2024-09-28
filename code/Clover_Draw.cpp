@@ -32,9 +32,9 @@
 // RENDERING INTERFACE FUNCTIONS
 
 internal void
-DrawImGui(gl_render_data *RenderData, time Time)
+DrawImGui(game_state *State, gl_render_data *RenderData, time Time)
 {
-    if(RenderData->DrawDebug)
+    if(State->DrawDebug)
     {
         ImGui::SetCurrentContext(RenderData->CurrentImGuiContext);
         ImGui::Begin("Render Quad Color Picker");

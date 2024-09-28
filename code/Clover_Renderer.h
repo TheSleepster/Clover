@@ -185,7 +185,6 @@ struct gl_render_data
     
     // IMGUI STUFF
     ImGuiContext *CurrentImGuiContext;
-    bool DrawDebug;
     
     // DRAW FRAME DATA
     struct

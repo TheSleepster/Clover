@@ -49,12 +49,21 @@ constexpr uint32 MAX_UI_ELEMENTS = 1000;
 constexpr real32 WORLD_SIZE   = 100;
 constexpr real32 TILE_SIZE    = 16;
 
-global_variable int32 PlayerHealth = 10;
-global_variable int32 RockHealth   = 2;
-global_variable int32 TreeHealth   = 2;
-global_variable int32 NodeHealth   = 4;
+constexpr int32 PlayerLifeCount = 3;
+constexpr int32 PlayerHealth    = PlayerLifeCount * 2;
 
-global_variable uint32 PLAYER_HOTBAR_COUNT = 6;
+constexpr int32 RockHealth      = 2;
+constexpr int32 TreeHealth      = 2;
+constexpr int32 NodeHealth      = 4;
+
+constexpr real32 ItemPickupDist  = 30.0f;
+constexpr real32 MaxHitRange     = 60.0f;
+constexpr real32 MaxDropDistance = 60.0f;
+
+// NOTE(Sleepster): not a constexpr because it may change at 
+constexpr uint32 PLAYER_HOTBAR_COUNT = 6;
+constexpr uint32 PLAYER_INVENTORY_SIZE = 15;
+constexpr uint32 InventorySize = PLAYER_HOTBAR_COUNT + PLAYER_INVENTORY_SIZE;
 
 #endif // _CLOVER_GLOBALS_H
 

@@ -1,6 +1,5 @@
 #include "Intrinsics.h"
 
-
 // UTILS
 #include "util/Math.h"
 #include "util/Array.h"
@@ -10,9 +9,10 @@
 // CLOVER HEADERS
 #include "Clover.h"
 #include "Clover_Globals.h"
-#include "Clover_Renderer.h"
 #include "Clover_Audio.h"
 #include "Clover_Input.h"
+#include "Clover_Renderer.h"
+#include "shader/ShaderHeader.h"
 
 // IMGUI IMPl
 #include "../data/deps/ImGui/imgui.h"
@@ -25,35 +25,40 @@
 #include "Clover_UI.cpp"
 
 
+global_variable entity *Player = {};
+
+
+internal inline uint64
+GetRandomSeed()
+{
+    return(__rdtsc());
+}
 
 // NOTE(Sleepster): Random Number Generation stuff
 #define RAND_MAX_64 0xFFFFFFFFFFFFFFFFull
 #define MULTIPLIER 6364136223846793005ull
-#define INCREMENT 1442695040888963407ull 
+#define INCREMENT 1442695040888963407ull
 
-constexpr real32 ItemPickupDist = 30.0f;
+global_variable uint64 RDTSCRandomSeed = GetRandomSeed();
 
-
-global_variable entity *Player = {};
-
+internal inline uint64
+PeekRandom()
+{
+    RDTSCRandomSeed = RDTSCRandomSeed * MULTIPLIER + INCREMENT;
+    return(RDTSCRandomSeed);
+}
 
 internal inline uint64 
 GetRandom(void)
 {
-    // NOTE(Sleepster): Look Ma, the only local_perist(s) in the entire program!
-    local_persist uint64 rng_state = 1;
-    uint64_t x = rng_state;
-    x ^= x << 13;
-    x ^= x >> 7;
-    x ^= x << 17;
-    rng_state = x;
-    return x;
+    uint64 RandomSeed = PeekRandom();
+    return(RandomSeed);
 }
 
 internal inline real32
 GetRandomReal32(void)
 {
-    return((real32)GetRandom()/(real32)UINT64_MAX);
+    return((real32)GetRandom() / (real32)UINT64_MAX);
 }
 
 internal inline real32
@@ -65,21 +70,26 @@ GetRandomReal32_Range(real32 Minimum, real32 Maximum)
 internal inline void
 LoadSpriteData(game_state *State)
 {
-    State->GameData.Sprites[SPRITE_Nil]           = {.AtlasOffset = {  0,  0}, .SpriteSize = {16, 16}};
-    State->GameData.Sprites[SPRITE_Player]        = {.AtlasOffset = { 17,  0}, .SpriteSize = {12, 11}};
-    State->GameData.Sprites[SPRITE_Rock]          = {.AtlasOffset = { 32,  0}, .SpriteSize = {12,  8}};
-    State->GameData.Sprites[SPRITE_Pebbles]       = {.AtlasOffset = { 32, 16}, .SpriteSize = { 6,  5}};
-    State->GameData.Sprites[SPRITE_Tree00]        = {.AtlasOffset = { 48,  0}, .SpriteSize = {11, 14}};
-    State->GameData.Sprites[SPRITE_Branches]      = {.AtlasOffset = { 48, 16}, .SpriteSize = { 7,  7}};
-    State->GameData.Sprites[SPRITE_Tree01]        = {.AtlasOffset = { 64,  0}, .SpriteSize = { 9, 12}};
-    State->GameData.Sprites[SPRITE_Trunk]         = {.AtlasOffset = { 64, 16}, .SpriteSize = { 6,  6}};
-    State->GameData.Sprites[SPRITE_RubyOre]       = {.AtlasOffset = { 80,  0}, .SpriteSize = {14, 11}};
-    State->GameData.Sprites[SPRITE_RubyChunk]     = {.AtlasOffset = { 80, 16}, .SpriteSize = { 8,  6}};
-    State->GameData.Sprites[SPRITE_SaphireOre]    = {.AtlasOffset = { 96,  0}, .SpriteSize = {11, 11}};
-    State->GameData.Sprites[SPRITE_SapphireChunk] = {.AtlasOffset = { 96, 16}, .SpriteSize = { 8,  6}};
-    State->GameData.Sprites[SPRITE_UIItemBox]     = {.AtlasOffset = {112,  0}, .SpriteSize = {16, 16}};
-    State->GameData.Sprites[SPRITE_ToolPickaxe]   = {.AtlasOffset = {  0, 48}, .SpriteSize = {11, 13}};
-    State->GameData.Sprites[SPRITE_ToolWoodAxe]   = {.AtlasOffset = { 16, 48}, .SpriteSize = {11, 13}};
+    State->GameData.Sprites[SPRITE_Nil]                   = {.AtlasOffset = {  0,  0}, .SpriteSize = {16, 16}};
+    State->GameData.Sprites[SPRITE_Player]                = {.AtlasOffset = { 17,  0}, .SpriteSize = {12, 11}};
+    State->GameData.Sprites[SPRITE_Rock]                  = {.AtlasOffset = { 32,  0}, .SpriteSize = {12,  8}};
+    State->GameData.Sprites[SPRITE_Pebbles]               = {.AtlasOffset = { 32, 16}, .SpriteSize = { 6,  5}};
+    State->GameData.Sprites[SPRITE_Tree00]                = {.AtlasOffset = { 48,  0}, .SpriteSize = {11, 14}};
+    State->GameData.Sprites[SPRITE_Branches]              = {.AtlasOffset = { 48, 16}, .SpriteSize = { 7,  7}};
+    State->GameData.Sprites[SPRITE_Tree01]                = {.AtlasOffset = { 64,  0}, .SpriteSize = { 9, 12}};
+    State->GameData.Sprites[SPRITE_Trunk]                 = {.AtlasOffset = { 64, 16}, .SpriteSize = { 6,  6}};
+    State->GameData.Sprites[SPRITE_RubyOre]               = {.AtlasOffset = { 80,  0}, .SpriteSize = {14, 11}};
+    State->GameData.Sprites[SPRITE_RubyChunk]             = {.AtlasOffset = { 80, 16}, .SpriteSize = { 8,  6}};
+    State->GameData.Sprites[SPRITE_SaphireOre]            = {.AtlasOffset = { 96,  0}, .SpriteSize = {11, 11}};
+    State->GameData.Sprites[SPRITE_SapphireChunk]         = {.AtlasOffset = { 96, 16}, .SpriteSize = { 8,  6}};
+    State->GameData.Sprites[SPRITE_UIItemBox]             = {.AtlasOffset = {112,  0}, .SpriteSize = {16, 16}};
+    State->GameData.Sprites[SPRITE_ToolPickaxe]           = {.AtlasOffset = {  0, 48}, .SpriteSize = {11, 13}};
+    State->GameData.Sprites[SPRITE_ToolWoodAxe]           = {.AtlasOffset = { 16, 48}, .SpriteSize = {11, 13}};
+    State->GameData.Sprites[SPRITE_FullHeartContainer]    = {.AtlasOffset = {  0, 64}, .SpriteSize = {11,  9}};
+    State->GameData.Sprites[SPRITE_HalfHeartContainer]    = {.AtlasOffset = { 16, 64}, .SpriteSize = {11,  9}};
+    State->GameData.Sprites[SPRITE_EmptyHeartContainer]   = {.AtlasOffset = { 32, 64}, .SpriteSize = {11,  9}};
+    State->GameData.Sprites[SPRITE_TestEnemyUnit]         = {.AtlasOffset = { 16, 16}, .SpriteSize = {13, 11}};
+    State->GameData.Sprites[SPRITE_SelectionBox]          = {.AtlasOffset = {112, 16}, .SpriteSize = {16, 16}};
 }
 
 internal inline void
@@ -127,6 +137,7 @@ DeleteEntity(entity *Entity)
 internal void
 HandleInput(game_state *State, entity *PlayerIn, time Time)
 {
+    // NOTE(Sleepster): Player Position 
     vec2 InputAxis = {};
     if(IsGameKeyDown(MOVE_UP, &State->GameInput))
     {
@@ -151,6 +162,28 @@ HandleInput(game_state *State, entity *PlayerIn, time Time)
     vec2 NextPos = {PlayerIn->Position.X + (PlayerIn->Position.X - OldPlayerP.X) + (PlayerIn->Speed * InputAxis.X) * (Time.Delta),
         PlayerIn->Position.Y + (PlayerIn->Position.Y - OldPlayerP.Y) + (PlayerIn->Speed * InputAxis.Y) * (Time.Delta)};
     PlayerIn->Position = v2Lerp(NextPos, Time.Delta, OldPlayerP);
+
+
+    // NOTE(Sleepster): Game Update Stuff 
+    if(IsKeyPressed(KEY_ESCAPE, &State->GameInput))
+    {
+        Player->Inventory.SelectedInventoryItem = {};
+    }
+
+    if(IsKeyPressed(KEY_E, &State->GameInput))
+    {
+        State->DisplayPlayerInventory = !State->DisplayPlayerInventory;
+    }
+
+    if(IsKeyPressed(KEY_TAB, &State->GameInput))
+    {
+        State->RenderPlayerHotbar = !State->RenderPlayerHotbar;
+    }
+
+    if(IsKeyPressed(KEY_CONTROL, &State->GameInput))
+    {
+        State->DrawDebug = !State->DrawDebug;
+    }
 }
 
 internal void
@@ -253,7 +286,7 @@ SetupItemPebbles(entity *Entity)
 {
     Entity->Archetype = ITEM;
     Entity->Sprite    = SPRITE_Pebbles;
-    Entity->Flags    += IS_ACTIVE|IS_ITEM;
+    Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP;
     Entity->Size      = {6, 5};
     Entity->ItemID    = ITEM_Pebbles;
 }
@@ -263,7 +296,7 @@ SetupItemBranches(entity *Entity)
 {
     Entity->Archetype = ITEM;
     Entity->Sprite    = SPRITE_Branches;
-    Entity->Flags    += IS_ACTIVE|IS_ITEM;
+    Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP;
     Entity->Size      = {7, 7};
     Entity->ItemID    = ITEM_Branches;
 }
@@ -273,7 +306,7 @@ SetupItemTrunk(entity *Entity)
 {
     Entity->Archetype = ITEM;
     Entity->Sprite    = SPRITE_Trunk;
-    Entity->Flags    += IS_ACTIVE|IS_ITEM;
+    Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP;
     Entity->Size      = {6, 6};
     Entity->ItemID    = ITEM_Trunk;
 }
@@ -283,7 +316,7 @@ SetupItemRubyChunk(entity *Entity)
 {
     Entity->Archetype = ITEM;
     Entity->Sprite    = SPRITE_RubyChunk;
-    Entity->Flags    += IS_ACTIVE|IS_ITEM;
+    Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP;
     Entity->Size      = {6, 5};
     Entity->ItemID    = ITEM_RubyOreChunk;
 }
@@ -293,7 +326,7 @@ SetupItemSaphireChunk(entity *Entity)
 {
     Entity->Archetype = ITEM;
     Entity->Sprite    = SPRITE_SapphireChunk;
-    Entity->Flags    += IS_ACTIVE|IS_ITEM;
+    Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP;
     Entity->Size      = {6, 5};
     Entity->ItemID    = ITEM_SapphireOreChunk;
 }
@@ -303,7 +336,7 @@ SetupItemToolPickaxe(entity *Entity)
 {
     Entity->Archetype = ITEM;
     Entity->Sprite    = SPRITE_ToolPickaxe;
-    Entity->Flags    += IS_ACTIVE|IS_ITEM;
+    Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP;
     Entity->Size      = {11, 13};
     Entity->ItemID    = ITEM_ToolPickaxe;
 }
@@ -331,24 +364,6 @@ ResetGame(gl_render_data *RenderData, game_state *State)
         State->GameData.Sprites[i] = {};
     }
 }
-
-/* internal vec2 */
-/* ConvertMouseToUIPos(mat4 ViewMAtrix, ivec2 MousePos, ivec4 WindowSizeData) */
-/* { */
-/*     vec2 TransformedMousePos  = {}; */
-
-/*     vec2 Ndc = {(MousePos.X / (WindowSizeData.Width * 0.5f)) - 1.0f, 1.0f - (MousePos.Y / (WindowSizeData.Height * 0.5f))}; */
-/*     vec4 NDCPosition = v2Expand(Ndc, 0.0f, 1.0f); */
-
-/*     mat4 InverseProjection = mat4Inverse(RenderData->GameUICamera.ProjectionMatrix); */
-/*     mat4 InverseViewMatrix = mat4Inverse(RenderData->GameUICamera.ViewMatrix); */
-
-/*     NDCPosition = mat4Transform(InverseProjection, NDCPosition); */
-/*     NDCPosition = mat4Transform(InverseViewMatrix, NDCPosition); */
-
-/*     TransformedMousePos = {NDCPosition.X, NDCPosition.Y}; */
-/*     return(TransformedMousePos); */
-/* } */
 
 internal real32
 TileToWorldInt32(real32 Tile)
@@ -384,9 +399,16 @@ WorldToTilePos(vec2 WorldPosition)
 }
 
 internal inline real32
+SinBreatheNormalized(real32 Time, real32 Modifier, real32 Min, real32 Max)
+{
+    real32 SineValue = (sinf(Modifier * 2 * PI32 * Time) + 1.0f) / 2.0f;
+    return(Min + (Max - Min) * SineValue);
+}
+
+internal inline real32
 SinBreathe(real32 Time, real32 Modifier)
 {
-    return(sinf((Modifier*2*PI32*((Time)-(1/(Modifier*4))))+1))/2;
+    return(sinf(Time * Modifier));
 }
 
 inline int
@@ -397,6 +419,17 @@ CompareEntityYAxis(const void *A, const void *B)
     
     return((EntityA->Position.Y > EntityB->Position.Y) ? -1 :
            (EntityA->Position.Y < EntityB->Position.Y) ?  1 : 0);
+}
+
+internal bool
+SwapInventoryItems(entity_item_inventory *Inventory, item *ItemA, item *ItemB)
+{   
+    item TempItem = *ItemA;
+
+    Inventory->Items[ItemA->OccupiedInventorySlot] = *ItemB;
+    Inventory->Items[ItemB->OccupiedInventorySlot] = TempItem;
+
+    return(true);
 }
 
 extern
@@ -411,10 +444,7 @@ GAME_ON_AWAKE(GameOnAwake)
     
     //PlaySound(&Memory->TemporaryStorage, State, STR("boop.wav"), 1);
     //PlayTrackFromDisk(&Memory->TemporaryStorage, State, STR("Test.mp3"), 0.5f);
-    
-    Player = CreateEntity(State);
-    SetupPlayer(Player);
-    
+
     real32 SizeScaler = WORLD_SIZE * 10;
     for(uint32 EntityIndex = 0;
         EntityIndex < 50;
@@ -452,22 +482,25 @@ GAME_ON_AWAKE(GameOnAwake)
     
     entity *Pickaxe = CreateEntity(State);
     SetupItemToolPickaxe(Pickaxe);
-    Pickaxe->Position = {0, 100};
+    Pickaxe->Position = {0, 150};
+    Pickaxe->Target  = {0, 150};
     
     
     entity *Pickaxe2 = CreateEntity(State);
     SetupItemToolPickaxe(Pickaxe2);
-    Pickaxe2->Position = {32, 100};
+    Pickaxe2->Position = {32, 150};
+    Pickaxe2->Target = {32, 150};
+
+    Player = CreateEntity(State);
+    SetupPlayer(Player);
+
+    State->RenderPlayerHotbar = true;
 }
 
 extern
 GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
 {
-    if(IsKeyPressed(KEY_CONTROL, &State->GameInput))
-    {
-        RenderData->DrawDebug = !RenderData->DrawDebug;
-    }
-    DrawImGui(RenderData, Time);
+    DrawImGui(State, RenderData, Time);
     
     State->World.WorldFrame = {};
     
@@ -478,9 +511,11 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
     {
         // NOTE(Sleepster): GAME 
         RenderData->GameCamera.Zoom = 5.3f;
-        RenderData->GameCamera.ViewMatrix             = mat4Identity(1.0f);
+
         mat4 ScaleMatrix                              = mat4MakeScale(vec3{1.0f * RenderData->GameCamera.Zoom, 1.0f * RenderData->GameCamera.Zoom, 1.0f});
         mat4 TranslationMatrix                        = mat4Translate(v2Expand(-RenderData->GameCamera.Position, 0.0f));
+
+        RenderData->GameCamera.ViewMatrix             = mat4Identity(1.0f);
         RenderData->GameCamera.ViewMatrix             = mat4Multiply(TranslationMatrix, RenderData->GameCamera.ViewMatrix);
         RenderData->GameCamera.ViewMatrix             = mat4Multiply(ScaleMatrix, RenderData->GameCamera.ViewMatrix);
         RenderData->GameCamera.ProjectionMatrix       = mat4RHGLOrtho((real32)SizeData.Width * -0.5f, (real32)SizeData.Width * 0.5f, (real32)SizeData.Height * -0.5f, (real32)SizeData.Height * 0.5f, -1.0f, 1.0f); 
@@ -514,8 +549,8 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
         if((Temp->Flags & IS_VALID))
         {
             real32 Distance = fabsf(v2Distance(Temp->Position, MouseToWorld));
-            
-            if(Distance <= SelectionDistance)
+            real32 PlayerToObjectDistance = fabsf(v2Distance(Temp->Position, Player->Position));
+            if(Distance <= SelectionDistance && PlayerToObjectDistance <= MaxHitRange)
             {
                 if(!State->World.WorldFrame.SelectedEntity || (Distance < MinimumDistance))
                 {
@@ -524,7 +559,8 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                 }
                 
                 entity *SelectedEntity = State->World.WorldFrame.SelectedEntity;
-                if(IsGameKeyPressed(ATTACK, &State->GameInput) && (Temp->Flags & IS_DESTRUCTABLE) && !(Temp->Flags & IS_UI))
+
+                if(IsGameKeyPressed(ATTACK, &State->GameInput) && (Temp->Flags & IS_DESTRUCTABLE) && !(Temp->Flags & IS_UI) && PlayerToObjectDistance <= MaxHitRange)
                 {
                     --Temp->Health;
                     if(Temp->Health <= 0)
@@ -536,6 +572,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                                 entity *Pebbles = CreateEntity(State);
                                 SetupItemPebbles(Pebbles);
                                 Pebbles->Position = SelectedEntity->Position;
+                                Pebbles->Target = SelectedEntity->Position;
                             }break;
                             
                             case TREE:
@@ -547,6 +584,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                                         entity *Branches = CreateEntity(State);
                                         SetupItemBranches(Branches);
                                         Branches->Position = SelectedEntity->Position;
+                                        Branches->Target = SelectedEntity->Position;
                                     }break;
                                     
                                     case SPRITE_Tree01:
@@ -554,6 +592,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                                         entity *Trunk = CreateEntity(State);
                                         SetupItemTrunk(Trunk);
                                         Trunk->Position = SelectedEntity->Position;
+                                        Trunk->Target = SelectedEntity->Position;
                                     }break;
                                 }break;
                             }break;
@@ -567,6 +606,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                                         entity *SaphireChunk = CreateEntity(State);
                                         SetupItemSaphireChunk(SaphireChunk);
                                         SaphireChunk->Position = SelectedEntity->Position;
+                                        SaphireChunk->Target = SelectedEntity->Position;
                                     }break;
                                     
                                     case SPRITE_RubyOre:
@@ -574,6 +614,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                                         entity *RubyChunk = CreateEntity(State);
                                         SetupItemRubyChunk(RubyChunk);
                                         RubyChunk->Position = SelectedEntity->Position;
+                                        RubyChunk->Target = SelectedEntity->Position;
                                     }break;
                                 }
                             }
@@ -591,28 +632,39 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                 real32 ItemDistance = fabsf(v2Distance(Temp->Position, Player->Position));
                 if(ItemDistance <= ItemPickupDist)
                 {
-                    item NewItem = State->GameData.GameItems[Temp->ItemID];
-                    
-                    for(int32 InventoryIndex = 0;
-                        InventoryIndex < PLAYER_HOTBAR_COUNT;
-                        ++InventoryIndex)
+                    if(Temp->Flags & CAN_BE_PICKED_UP)
                     {
-                        if(Player->Inventory.Items[InventoryIndex].ItemID == NewItem.ItemID && 
-                           Player->Inventory.Items[InventoryIndex].CurrentStack < 
-                           Player->Inventory.Items[InventoryIndex].MaxStackCount)
+                        item NewItem = State->GameData.GameItems[Temp->ItemID];
+                        for(int32 InventoryIndex = 0;
+                                InventoryIndex < InventorySize;
+                                ++InventoryIndex)
                         {
-                            Player->Inventory.Items[InventoryIndex].CurrentStack++;
-                            // NOTE(Sleepster): If two matching IDs are found, skip to the deletion 
-                            goto Deletion;
+                            if(Player->Inventory.Items[InventoryIndex].ItemID == NewItem.ItemID && 
+                                    Player->Inventory.Items[InventoryIndex].CurrentStack < 
+                                    Player->Inventory.Items[InventoryIndex].MaxStackCount)
+                            {
+                                Player->Inventory.Items[InventoryIndex].CurrentStack++;
+                                // NOTE(Sleepster): If two matching IDs are found, skip to the deletion 
+                                goto Deletion;
+                            }
                         }
+
+                        for(int32 InventoryIndex = 0;
+                                InventoryIndex < InventorySize;
+                                ++InventoryIndex)
+                        {
+                            if(Player->Inventory.Items[InventoryIndex].ItemID == 0)
+                            {
+                                NewItem.CurrentStack = 1;
+                                Player->Inventory.Items[InventoryIndex] = NewItem;
+                                Player->Inventory.Items[InventoryIndex].OccupiedInventorySlot = InventoryIndex;
+                                break;
+                            }
+                        }
+                        // TODO(Sleepster): Investigate a lambda, even though this is simple as shit, it's kinda grody to some people
+Deletion:
+                        DeleteEntity(Temp);
                     }
-                    
-                    NewItem.CurrentStack++;
-                    Player->Inventory.Items[Player->Inventory.CurrentItemCount] = NewItem;
-                    Player->Inventory.CurrentItemCount++;
-                    // TODO(Sleepster): Investigate a lambda, even though this is simple as shit, it's kinda grody to some people
-                    Deletion:
-                    DeleteEntity(Temp);
                 }
             }
         }
@@ -641,6 +693,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
     }
 
     // NOTE(Sleepster): New Hotbar UI 
+    if(State->RenderPlayerHotbar)
     {
         State->UIContext.UICameraViewMatrix       = RenderData->GameUICamera.ViewMatrix;
         State->UIContext.UICameraProjectionMatrix = RenderData->GameUICamera.ProjectionMatrix;
@@ -653,6 +706,8 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
         const real32 IconSize = 16.0f;
         const real32 TotalWidth = (PLAYER_HOTBAR_COUNT * IconSize) + ((PLAYER_HOTBAR_COUNT - 1) * Padding);
         const real32 StartingX = (Width / 2.0f) - (TotalWidth / 2.0f);
+
+        real32 YOffset = -90.0f;
         
         for(int32 InventorySlot = 0;
             InventorySlot < PLAYER_HOTBAR_COUNT;
@@ -661,7 +716,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             real32 SlotOffset = (IconSize + Padding) * InventorySlot;
             
             mat4 XForm = mat4Identity(1.0f);
-                 XForm = mat4Multiply(XForm, mat4Translate(vec3{StartingX + SlotOffset, -90, 0.0}));
+                 XForm = mat4Multiply(XForm, mat4Translate(vec3{StartingX + SlotOffset, YOffset, 0.0}));
                  XForm = mat4Multiply(XForm, mat4Translate(vec3{IconSize * -0.55f, 0.0f, 0.0f}));
                  XForm = mat4Multiply(XForm, mat4MakeScale(vec3{IconSize, IconSize, 1.0}));
 
@@ -672,11 +727,127 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             ui_element_state HotbarSlotState = CloverUIButton(&State->UIContext, STR("HotbarSlot"), SlotPosition, {IconSize, IconSize}, Sprite, WHITE);
             ui_element *HotbarSlot = &State->UIContext.UIElements[HotbarSlotState.UIID.ID];
 
+            Player->Inventory.InventorySlotButtons[InventorySlot] = HotbarSlot;
+
             HotbarSlot->XForm = XForm;
             HotbarSlot->Sprite = Sprite;
             HotbarSlot->DrawColor = WHITE;
 
             item *Item = &Player->Inventory.Items[InventorySlot];
+            Item->OccupiedInventorySlot = InventorySlot;
+
+            Sprite = GetSprite(State, Item->Sprite);
+            if(Sprite != State->GameData.Sprites[SPRITE_Nil] && !HotbarSlotState.IsHot)
+            {
+                XForm = mat4Multiply(XForm, mat4MakeScale(vec3{0.65, 0.65, 1.0}));
+                DrawUISpriteXForm(RenderData, XForm, Sprite, 0, WHITE);
+            }
+
+            if(HotbarSlotState.IsHot)
+            {
+                HotbarSlot->DrawColor = BLUE;
+                if(Item->Sprite != SPRITE_Nil)
+                {
+                    real32 BoxYOffset = 40;
+                    real32 TextYOffset = 30;
+                    real32 ItemNameYOffset = 45;
+                    real32 ItemAmountYOffset = 38;
+                    real32 ItemAmountNumberYOffset = 38;
+
+                    vec2 SpriteOffset = {-2, 3};
+
+                    if(State->DisplayPlayerInventory)
+                    {
+                        BoxYOffset = 50;
+                        TextYOffset = 40;
+                        ItemNameYOffset = 55;
+                        ItemAmountYOffset = 48;
+                        ItemAmountNumberYOffset = 48;
+                        SpriteOffset = {-2, 3.5f};
+                    }
+
+                    XForm = mat4Multiply(XForm, mat4MakeScale(vec3{1.0, 1.0, 1.0}));
+                    DrawUISpriteXForm(RenderData, XForm, Sprite, 0, WHITE);
+
+                    XForm = mat4Multiply(XForm, mat4Translate(v2Expand(SpriteOffset, 0.0f)));
+                    XForm = mat4Multiply(XForm, mat4MakeScale(vec3{1.0, 1.0, 1.0}));
+
+                    CloverUIPushLayer(&State->UIContext, 1);
+                    CloverUISpriteElement(&State->UIContext, SlotPosition, {IconSize, IconSize}, XForm, GetSprite(State, Item->Sprite), WHITE);
+
+                    CloverUIPushLayer(&State->UIContext, 2);
+                    CloverUITextBox(&State->UIContext, 
+                                     Item->ItemName, 
+                                     Item->ItemDesc, 
+                                     {SlotPosition.X, SlotPosition.Y + BoxYOffset},
+                                     {40, 40},
+                                     {SlotPosition.X, SlotPosition.Y + TextYOffset},
+                                     10, 
+                                     GetSprite(State, SPRITE_Nil),
+                                     vec4{0.2f, 0.2f, 0.2f, 0.3f}, 
+                                     GREEN,
+                                     TEXT_ALIGNMENT_Center);
+                    CloverUIPushLayer(&State->UIContext, 0);
+
+                    DrawUIText(RenderData, Item->ItemName,  {SlotPosition.X - 10, SlotPosition.Y + ItemNameYOffset}, 10, UBUNTU_MONO, GREEN);
+                    DrawUIText(RenderData, STR("Amount: "), {SlotPosition.X - 5,  SlotPosition.Y + ItemAmountYOffset}, 10, UBUNTU_MONO, GREEN);
+                    DrawUIText(RenderData, sprints(&Memory->TemporaryStorage, STR("%d"), Item->CurrentStack), {SlotPosition.X + 15, SlotPosition.Y + ItemAmountNumberYOffset}, 10, UBUNTU_MONO, GREEN);
+                }
+            }
+            if(HotbarSlot->IsActive)
+            {
+                if(Item->Sprite != SPRITE_Nil && !Player->Inventory.SelectedInventoryItem)
+                {
+                    Player->Inventory.SelectedInventoryItem = Item;
+                }
+            }
+        }
+    }
+
+    // NOTE(Sleepster): Large Inventory UI 
+    const real32 InventoryYOffset = -70.0f;
+    if(State->DisplayPlayerInventory)
+    {
+        // TODO(Sleepster): This is all copy-pasted, clean it up and move common code into a seperate function 
+        State->UIContext.UICameraViewMatrix       = RenderData->GameUICamera.ViewMatrix;
+        State->UIContext.UICameraProjectionMatrix = RenderData->GameUICamera.ProjectionMatrix;
+        State->UIContext.GameInput                = &State->GameInput;
+        State->UIContext.ActiveFont               = &RenderData->LoadedFonts[UBUNTU_MONO];
+        State->UIContext.ActiveFontIndex          = UBUNTU_MONO;
+
+        const real32 Width = SizeData.X * 0.25f;
+        const real32 Padding = 1.00f;
+        const real32 IconSize = 16.0f;
+        const real32 TotalWidth = (PLAYER_INVENTORY_SIZE * IconSize) + ((PLAYER_INVENTORY_SIZE - 1) * Padding);
+        const real32 StartingX = (Width / 2.0f) - (TotalWidth / 2.0f);
+        
+        for(int32 InventorySlot = 6;
+            InventorySlot < InventorySize;
+            ++InventorySlot)
+        {
+            real32 SlotOffset = (IconSize + Padding) * (InventorySlot - 6);
+            
+            mat4 XForm = mat4Identity(1.0f);
+                 XForm = mat4Multiply(XForm, mat4Translate(vec3{StartingX + SlotOffset, InventoryYOffset, 0.0}));
+                 XForm = mat4Multiply(XForm, mat4Translate(vec3{IconSize * -0.55f, 0.0f, 0.0f}));
+                 XForm = mat4Multiply(XForm, mat4MakeScale(vec3{IconSize, IconSize, 1.0}));
+
+            vec4 MatrixPosition = XForm.Columns[3];
+            vec2 SlotPosition   = {MatrixPosition.X, MatrixPosition.Y};
+            
+            static_sprite_data Sprite = GetSprite(State, SPRITE_UIItemBox);
+            ui_element_state HotbarSlotState = CloverUIButton(&State->UIContext, STR("InventorySlot"), SlotPosition, {IconSize, IconSize}, Sprite, WHITE);
+            ui_element *HotbarSlot = &State->UIContext.UIElements[HotbarSlotState.UIID.ID];
+
+            Player->Inventory.InventorySlotButtons[InventorySlot] = HotbarSlot;
+
+            HotbarSlot->XForm = XForm;
+            HotbarSlot->Sprite = Sprite;
+            HotbarSlot->DrawColor = WHITE;
+
+            item *Item = &Player->Inventory.Items[InventorySlot];
+            Item->OccupiedInventorySlot = InventorySlot;
+
             Sprite = GetSprite(State, Item->Sprite);
             if(Sprite != State->GameData.Sprites[SPRITE_Nil] && !HotbarSlotState.IsHot)
             {
@@ -694,9 +865,10 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
 
                     XForm = mat4Multiply(XForm, mat4Translate(vec3{-2, 3, 0}));
                     XForm = mat4Multiply(XForm, mat4MakeScale(vec3{1.0, 1.0, 1.0}));
+                    CloverUIPushLayer(&State->UIContext, 1);
                     CloverUISpriteElement(&State->UIContext, SlotPosition, {IconSize, IconSize}, XForm, GetSprite(State, Item->Sprite), WHITE);
 
-                    CloverUIPushLayer(&State->UIContext, 1);
+                    CloverUIPushLayer(&State->UIContext, 2);
                     CloverUITextBox(&State->UIContext, 
                                      Item->ItemName, 
                                      Item->ItemDesc, 
@@ -715,11 +887,132 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     DrawUIText(RenderData, sprints(&Memory->TemporaryStorage, STR("%d"), Item->CurrentStack), {SlotPosition.X + 15, SlotPosition.Y + 38}, 10, UBUNTU_MONO, GREEN);
                 }
             }
-            if(HotbarSlot->IsActive)
+        }
+    }
+
+    // NOTE(Sleepster): Swapping Inventory Positions 
+    for(uint32 InventoryIndexSlot = 0;
+        InventoryIndexSlot < InventorySize;
+        InventoryIndexSlot++)
+    {
+        item *Item = &Player->Inventory.Items[InventoryIndexSlot];
+        ui_element *InventoryElement = Player->Inventory.InventorySlotButtons[InventoryIndexSlot]; 
+        if(InventoryElement)
+        {
+            if(InventoryElement->IsActive)
             {
+                if(Item->Sprite != SPRITE_Nil && !Player->Inventory.SelectedInventoryItem)
+                {
+                    Player->Inventory.SelectedInventoryItem = Item;
+                }
+            }
+
+            if(Player->Inventory.SelectedInventoryItem && Player->Inventory.SelectedInventoryItem->Sprite != SPRITE_Nil)
+            {
+                item *Selection = Player->Inventory.SelectedInventoryItem;
+                vec2 MousePos = TransformMouseCoords(RenderData->GameUICamera.ViewMatrix, 
+                        RenderData->GameUICamera.ProjectionMatrix, 
+                        State->GameInput.Keyboard.CurrentMouse, 
+                        SizeData);
+                static_sprite_data SelectionSprite = GetSprite(State, Selection->Sprite);
+                CloverUIPushLayer(&State->UIContext, 1);
+                CloverUISpriteElement(&State->UIContext, MousePos + vec2{1, 0}, v2Cast(SelectionSprite.SpriteSize), NULLMATRIX, SelectionSprite, WHITE);
+                CloverUIPushLayer(&State->UIContext, 0);
+
+                if(IsKeyDown(KEY_RIGHT_MOUSE, &State->GameInput))
+                {
+                    entity *SpawnedItem = CreateEntity(State);
+                    switch(Selection->Sprite)
+                    {
+                        case SPRITE_Pebbles:
+                        {
+                            SetupItemPebbles(SpawnedItem);
+                        }break;
+                        case SPRITE_Trunk:
+                        {
+                            SetupItemTrunk(SpawnedItem);
+                        }break;
+                        case SPRITE_Branches:
+                        {
+                            SetupItemBranches(SpawnedItem);
+                        }break;
+                        case SPRITE_RubyChunk:
+                        {
+                            SetupItemRubyChunk(SpawnedItem);
+                        }break;
+                        case SPRITE_SapphireChunk:
+                        {
+                            SetupItemSaphireChunk(SpawnedItem);
+                        }break;
+                        case SPRITE_ToolPickaxe:
+                        {
+                            SetupItemToolPickaxe(SpawnedItem);
+                        }break;
+                    }
+
+                    SpawnedItem->Flags -= CAN_BE_PICKED_UP;
+
+                    vec2 WorldMouseCoords = TransformMouseCoords(RenderData->GameCamera.ViewMatrix, RenderData->GameCamera.ProjectionMatrix, State->GameInput.Keyboard.CurrentMouse, SizeData);
+                    real32 Distance = fabsf(v2Distance(Player->Position, MouseToWorld));
+                    vec2 Direction = v2Normalize(WorldMouseCoords - Player->Position);
+
+                    SpawnedItem->Position = Player->Position;
+                    if(Distance <= MaxDropDistance)
+                    {
+                        vec2 DropPosition = Player->Position + Direction * Distance;
+                        SpawnedItem->Target = DropPosition;
+                    }
+                    else
+                    {
+                        vec2 MaxDropPosition = Player->Position + Direction * MaxDropDistance;
+                        SpawnedItem->Target = MaxDropPosition;
+                    }
+                    
+                    Player->Inventory.Items[Player->Inventory.SelectedInventoryItem->OccupiedInventorySlot] = {};
+                    Player->Inventory.SelectedInventoryItem = {};
+                }
+            }
+
+            if(!Player->Inventory.SwapItem)
+            {
+                item *Check = &Player->Inventory.Items[InventoryIndexSlot];
+                if(InventoryElement->IsActive && Player->Inventory.SelectedInventoryItem && Check->OccupiedInventorySlot != Player->Inventory.SelectedInventoryItem->OccupiedInventorySlot)
+                {
+                    Player->Inventory.SwapItem = Check;
+                }
+            }
+
+            if(Player->Inventory.SwapItem && Player->Inventory.SelectedInventoryItem)
+            {
+                SwapInventoryItems(&Player->Inventory, Player->Inventory.SelectedInventoryItem, Player->Inventory.SwapItem); 
+                Player->Inventory.SwapItem = NULL;
+                Player->Inventory.SelectedInventoryItem = NULL;
             }
         }
     }
+    
+
+/*     for(uint32 InventorySlotIndex = 0; */
+/*         InventorySlotIndex < InventorySize; */
+/*         InventorySlotIndex++) */
+/*     { */
+/*         ui_element *SlotElement = Player->Inventory.InventorySlotButtons[InventorySlotIndex]; */
+/*         if(SlotElement) */
+/*         { */
+/*             Player->Inventory.DesiredInventorySwapIdx = &Player->Inventory.Items[InventorySlotIndex]; */
+/*             if(SlotElement->IsActive && Selection->OccupiedInventorySlot != Player->Inventory.DesiredInventorySwapIdx->OccupiedInventorySlot) */
+/*             { */
+/*                 uint32 Temp = Player->Inventory.DesiredInventorySwapIdx->OccupiedInventorySlot; */ 
+/*                 Player->Inventory.DesiredInventorySwapIdx->OccupiedInventorySlot = Player->Inventory.SelectedInventoryItem->OccupiedInventorySlot; */
+/*                 Player->Inventory.SelectedInventoryItem->OccupiedInventorySlot = Temp; */
+
+/*                 SwapInventoryItemIndices(&Player->Inventory, Selection->OccupiedInventorySlot, Player->Inventory.SelectedInventoryItem->OccupiedInventorySlot); */
+/*                 Player->Inventory.SelectedInventoryItem = {}; */
+/*                 Player->Inventory.DesiredInventorySwapIdx = {}; */
+/*             } */
+/*         } */
+/*     } */
+
 
     // NOTE(Sleepster): UI Rendering 
     CloverUIDrawWidgets(RenderData, &State->UIContext);
@@ -738,15 +1031,20 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
 
     // NOTE(Sleepster): Sorting, off for now. Breaks too much 
     {
-        qsort(State->World.Entities, State->World.EntityCounter, sizeof(struct entity), CompareEntityYAxis); 
+//        qsort(State->World.Entities, State->World.EntityCounter, sizeof(struct entity), CompareEntityYAxis); 
     }
+        
 
+    vec2 SelectionBoxDrawSize = {16, 16};
     // NOTE(Sleepster): DRAW ENTITIES
     for(uint32 EntityIndex = 0;
         EntityIndex <= State->World.EntityCounter;
         ++EntityIndex)
     {
         entity *Temp = &State->World.Entities[EntityIndex];
+        SelectionBoxDrawSize.X = SinBreatheNormalized(Time.CurrentTimeInSeconds, 0.5f, 13.0f, 15.0f);
+        SelectionBoxDrawSize.Y = SinBreatheNormalized(Time.CurrentTimeInSeconds, 0.5f, 13.0f, 15.0f);
+
         if(Temp->Flags & IS_VALID)
         {
             switch(Temp->Archetype)
@@ -762,19 +1060,40 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                 
                 case ITEM:
                 {
-                    Temp->Position.Y += (Time.Delta * 5) * SinBreathe(Time.CurrentTimeInSeconds / 5.0f, 2.0f);
+                    Temp->Position.Y += 0.05f * SinBreathe(Time.CurrentTimeInSeconds, 2.0f);
+                    v2Approach(&Temp->Position, Temp->Target, 30.0f, Time.Delta);
+                    if(Temp->Position == Temp->Target)
+                    {
+                        Temp->Flags += CAN_BE_PICKED_UP;
+                    }
+
                     DrawEntity(RenderData, State, Temp, Temp->Position, WHITE);
+                    if(State->World.WorldFrame.SelectedEntity == Temp)
+                    {
+                        State->World.WorldFrame.SelectedEntity = Temp;
+                        static_sprite_data SelectionBoxSprite = GetSprite(State, SPRITE_SelectionBox);
+                        static_sprite_data EntitySprite = GetSprite(State, Temp->Sprite);
+                    }
                 }break;
                 
                 default:
                 {
-                    vec4 Color = WHITE;
                     if(State->World.WorldFrame.SelectedEntity == Temp)
                     {
                         State->World.WorldFrame.SelectedEntity = Temp;
-                        Color = BLUE;
+                        static_sprite_data SelectionBoxSprite = GetSprite(State, SPRITE_SelectionBox);
+                        static_sprite_data EntitySprite = GetSprite(State, Temp->Sprite);
+
+                        DrawSprite(RenderData, 
+                                   SelectionBoxSprite, 
+                                   Temp->Position 
+                                   - vec2{0, real32(EntitySprite.SpriteSize.Y * 0.25f)},
+                                   SelectionBoxDrawSize, 
+                                   WHITE, 
+                                   0, 
+                                   1);
                     }
-                    DrawEntity(RenderData, State, Temp, Temp->Position, Color);
+                    DrawEntity(RenderData, State, Temp, Temp->Position, WHITE);
                 }break;
             }
         }

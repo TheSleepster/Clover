@@ -47,21 +47,26 @@ struct box2D : range_v2
 
 enum sprite_type
 {
-    SPRITE_Nil           = 0,
-    SPRITE_Player        = 1,
-    SPRITE_Rock          = 2,
-    SPRITE_Tree00        = 3,
-    SPRITE_Tree01        = 4,
-    SPRITE_Pebbles       = 5,
-    SPRITE_Branches      = 6,
-    SPRITE_Trunk         = 7,
-    SPRITE_RubyOre       = 8,
-    SPRITE_SaphireOre    = 9,
-    SPRITE_RubyChunk     = 10,
-    SPRITE_SapphireChunk = 11,
-    SPRITE_UIItemBox     = 12,
-    SPRITE_ToolPickaxe   = 13,
-    SPRITE_ToolWoodAxe   = 14,
+    SPRITE_Nil                 = 0,
+    SPRITE_Player              = 1,
+    SPRITE_Rock                = 2,
+    SPRITE_Tree00              = 3,
+    SPRITE_Tree01              = 4,
+    SPRITE_Pebbles             = 5,
+    SPRITE_Branches            = 6,
+    SPRITE_Trunk               = 7,
+    SPRITE_RubyOre             = 8,
+    SPRITE_SaphireOre          = 9,
+    SPRITE_RubyChunk           = 10,
+    SPRITE_SapphireChunk       = 11,
+    SPRITE_UIItemBox           = 12,
+    SPRITE_ToolPickaxe         = 13,
+    SPRITE_ToolWoodAxe         = 14,
+    SPRITE_FullHeartContainer  = 15,
+    SPRITE_HalfHeartContainer  = 16,
+    SPRITE_EmptyHeartContainer = 17,
+    SPRITE_TestEnemyUnit       = 18,
+    SPRITE_SelectionBox        = 19,
     SPRITE_Count
 };
 
@@ -80,15 +85,16 @@ enum item_id
 
 enum entity_flags
 {
-    IS_VALID        = 1 << 0,
-    IS_SOLID        = 1 << 1,
-    IS_ACTOR        = 1 << 2,
-    IS_TILE         = 1 << 3,
-    IS_ACTIVE       = 1 << 4,
-    IS_ITEM         = 1 << 5,
-    IS_DESTRUCTABLE = 1 << 6,
-    IS_IN_INVENTORY = 1 << 7,
-    IS_UI           = 1 << 8,
+    IS_VALID                = 1 << 0,
+    IS_SOLID                = 1 << 1,
+    IS_ACTOR                = 1 << 2,
+    IS_TILE                 = 1 << 3,
+    IS_ACTIVE               = 1 << 4,
+    IS_ITEM                 = 1 << 5,
+    IS_DESTRUCTABLE         = 1 << 6,
+    IS_IN_INVENTORY         = 1 << 7,
+    IS_UI                   = 1 << 8,
+    CAN_BE_PICKED_UP        = 1 << 9,
     ENTITY_FLAGS_COUNT
 };
 
@@ -110,9 +116,11 @@ struct item
     uint32      Flags;
     sprite_type Sprite;
     item_id     ItemID;
-    
+
     int32       MaxStackCount;
     int32       CurrentStack;
+
+    int32       OccupiedInventorySlot;
 
     string      ItemName;
     string      ItemDesc;
@@ -120,8 +128,14 @@ struct item
 
 struct entity_item_inventory
 {
-    item  Items[ITEM_IDCount];
+    item  Items[InventorySize];
     uint32 CurrentItemCount;
+    uint32 LowestAvaliableSlot;
+
+    item *SelectedInventoryItem;
+    item *SwapItem;
+    
+    ui_element *InventorySlotButtons[InventorySize];
 };
 
 struct entity
@@ -134,6 +148,8 @@ struct entity
     uint32      Health;
     
     vec2        Position;
+    vec2        Target;
+
     vec2        Size;
     real32      Speed;
     real32      Rotation;
@@ -151,7 +167,12 @@ struct game_state
     Input GameInput;
 
     clover_ui_context UIContext;
+
+    bool RenderPlayerHotbar;
+    bool DisplayPlayerInventory;
     
+    bool DrawDebug;
+
     // NOTE(Sleepster): World Data
     struct
     {
@@ -279,6 +300,12 @@ RangeFromQuad(quad *Quad)
 }
 
 // AABB stuff
+
+internal inline real32
+EaseOutQuad(real32 X)
+{
+    return 1 - (1 - X) * (1 - X);
+}
 
 #define GAME_ON_AWAKE(name) void name(game_memory *Memory, gl_render_data *RenderData, game_state *State)
 typedef GAME_ON_AWAKE(game_on_awake);
