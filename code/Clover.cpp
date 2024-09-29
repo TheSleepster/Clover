@@ -200,6 +200,10 @@ HandleInput(game_state *State, entity *PlayerIn, time Time)
     {
         Player->Inventory.CurrentInventorySlot = 5;
     }
+    if(IsGameKeyPressed(HOTBAR_07, &State->GameInput))
+    {
+        Player->Inventory.CurrentInventorySlot = 6;
+    }
     if(IsKeyPressed(KEY_HOME, &State->GameInput))
     {
         State->DrawDebug = !State->DrawDebug;
@@ -586,7 +590,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
         RenderData->GameCamera.Zoom = 5.3f;
 
         mat4 ScaleMatrix                              = mat4MakeScale(vec3{1.0f * RenderData->GameCamera.Zoom, 1.0f * RenderData->GameCamera.Zoom, 1.0f});
-        mat4 TranslationMatrix                        = mat4Translate(v2Expand(-RenderData->GameCamera.Position, 0.0f));
+        mat4 TranslationMatrix                        = mat4Translate(vec3{-RenderData->GameCamera.Position.X, -RenderData->GameCamera.Position.Y, 0.0f});
 
         RenderData->GameCamera.ViewMatrix             = mat4Identity(1.0f);
         RenderData->GameCamera.ViewMatrix             = mat4Multiply(TranslationMatrix, RenderData->GameCamera.ViewMatrix);
@@ -824,16 +828,12 @@ Deletion:
                 {
                     XForm = mat4Multiply(XForm, mat4MakeScale(vec3{0.65, 0.65, 1.0}));
                 }
-                if(InventorySlot == Player->Inventory.CurrentInventorySlot)
-                {
-                    XForm = mat4Multiply(XForm, mat4MakeScale(vec3{1.2, 1.2, 1.0}));
-                }
                 DrawUISpriteXForm(RenderData, XForm, Sprite, 0, WHITE);
             }
 
             if(HotbarSlotState.IsHot)
             {
-                HotbarSlot->DrawColor = BLUE;
+                HotbarSlot->DrawColor = RED;
                 if(Item->Sprite != SPRITE_Nil)
                 {
                     real32 BoxYOffset = 40;
@@ -913,10 +913,10 @@ Deletion:
         const real32 Width = SizeData.X * 0.25f;
         const real32 Padding = 1.00f;
         const real32 IconSize = 16.0f;
-        const real32 TotalWidth = (PLAYER_INVENTORY_SIZE * IconSize) + ((PLAYER_INVENTORY_SIZE - 1) * Padding);
+        const real32 TotalWidth = ((PLAYER_INVENTORY_SIZE * IconSize) + (IconSize * 2) - 7) + ((PLAYER_INVENTORY_SIZE - 1) * Padding);
         const real32 StartingX = (Width / 2.0f) - (TotalWidth / 2.0f);
         
-        for(uint32 InventorySlot = 6;
+        for(uint32 InventorySlot = PLAYER_HOTBAR_COUNT;
             InventorySlot < InventorySize;
             ++InventorySlot)
         {
@@ -952,7 +952,7 @@ Deletion:
 
             if(HotbarSlotState.IsHot)
             {
-                HotbarSlot->DrawColor = BLUE;
+                HotbarSlot->DrawColor = RED;
                 if(Item->Sprite != SPRITE_Nil)
                 {
                     XForm = mat4Multiply(XForm, mat4MakeScale(vec3{1.0, 1.0, 1.0}));
@@ -995,6 +995,7 @@ Deletion:
         if(Item->CurrentStack == 0 && InventoryIndexSlot == Player->Inventory.CurrentInventorySlot)
         {
             memset(Item, 0, sizeof(struct item));
+            Player->Inventory.CurrentInventorySlot = NULLSLOT;
         }
 
         if(InventoryElement)

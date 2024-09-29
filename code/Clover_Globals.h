@@ -61,11 +61,12 @@ constexpr real32 MaxHitRange     = 60.0f;
 constexpr real32 MaxDropDistance = 60.0f;
 
 // NOTE(Sleepster): not a constexpr because it may change at 
-constexpr uint32 PLAYER_HOTBAR_COUNT = 6;
+constexpr uint32 PLAYER_HOTBAR_COUNT = 7;
 constexpr uint32 PLAYER_INVENTORY_SIZE = 15;
-constexpr uint32 InventorySize = PLAYER_HOTBAR_COUNT + PLAYER_INVENTORY_SIZE;
+constexpr uint32 MAX_CRAFTING_ELEMENTS = 9;
+constexpr uint32 TOTAL_INVENTORY_SIZE = PLAYER_HOTBAR_COUNT + PLAYER_INVENTORY_SIZE;
 
-constexpr real32 PickupEpsilon = 1.0f;
+constexpr real32 PickupEpsilon = 5.0f;
 
 #define NULLSLOT 100;
 

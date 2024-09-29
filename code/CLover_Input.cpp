@@ -142,6 +142,7 @@ Win32LoadDefaultBindings(Input *GameInput)
     GameInput->Keyboard.Bindings[HOTBAR_04]       = AddKeyBinding(KEY_4, KEY_NUMPAD_4);
     GameInput->Keyboard.Bindings[HOTBAR_05]       = AddKeyBinding(KEY_5, KEY_NUMPAD_5);
     GameInput->Keyboard.Bindings[HOTBAR_06]       = AddKeyBinding(KEY_6, KEY_NUMPAD_6);
+    GameInput->Keyboard.Bindings[HOTBAR_07]       = AddKeyBinding(KEY_7, KEY_NUMPAD_7);
     GameInput->Keyboard.Bindings[DROP_HELD]       = AddKeyBinding(KEY_Q, KEY_Q);
     GameInput->Keyboard.Bindings[DROP_ITEM]       = AddKeyBinding(KEY_RIGHT_MOUSE, KEY_RIGHT_MOUSE);
     GameInput->Keyboard.Bindings[CRAFTING_MENU]   = AddKeyBinding(KEY_E, KEY_E);

@@ -95,6 +95,7 @@ enum KeyBindings
     HOTBAR_04,
     HOTBAR_05,
     HOTBAR_06,
+    HOTBAR_07,
     DROP_ITEM,
     DROP_HELD,
     CRAFTING_MENU,

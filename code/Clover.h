@@ -141,6 +141,19 @@ struct entity_item_inventory
     uint32 CurrentInventorySlot;
 };
 
+struct crafting_item
+{
+    item_id Material;
+    int32   MaterialCount;
+};
+
+struct crafting_formula
+{
+    crafting_item Materials[MAX_CRAFTING_ELEMENTS];
+    string Name;
+    string Desc;
+};
+
 struct entity
 {
     sprite_type Sprite;
@@ -166,12 +179,19 @@ struct entity
     int32       DroppedItemCount;
 };
 
+enum ui_state
+{
+    UI_STATE_NONE,
+    UI_STATE_CRAFTING_MENU,
+};
+
 struct game_state
 {
     KeyCodeID KeyCodeLookup[KEY_COUNT];
     Input GameInput;
 
     clover_ui_context UIContext;
+    ui_state UIState;
 
     bool DisplayPlayerHotbar;
     bool DisplayPlayerInventory;
