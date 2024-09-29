@@ -128,9 +128,21 @@ AddKeyBinding(KeyCodeID MainKey, KeyCodeID AltKey)
 internal void
 Win32LoadDefaultBindings(Input *GameInput)
 {
-    GameInput->Keyboard.Bindings[MOVE_UP] = AddKeyBinding(KEY_W, KEY_UP);
-    GameInput->Keyboard.Bindings[MOVE_DOWN] = AddKeyBinding(KEY_S, KEY_DOWN);
-    GameInput->Keyboard.Bindings[MOVE_LEFT] = AddKeyBinding(KEY_A, KEY_LEFT);
-    GameInput->Keyboard.Bindings[MOVE_RIGHT] = AddKeyBinding(KEY_D, KEY_RIGHT);
-    GameInput->Keyboard.Bindings[ATTACK] = AddKeyBinding(KEY_LEFT_MOUSE, KEY_SPACE);
+    GameInput->Keyboard.Bindings[MOVE_UP]         = AddKeyBinding(KEY_W, KEY_UP);
+    GameInput->Keyboard.Bindings[MOVE_DOWN]       = AddKeyBinding(KEY_S, KEY_DOWN);
+    GameInput->Keyboard.Bindings[MOVE_LEFT]       = AddKeyBinding(KEY_A, KEY_LEFT);
+    GameInput->Keyboard.Bindings[MOVE_RIGHT]      = AddKeyBinding(KEY_D, KEY_RIGHT);
+    GameInput->Keyboard.Bindings[ATTACK]          = AddKeyBinding(KEY_LEFT_MOUSE, KEY_SPACE);
+    GameInput->Keyboard.Bindings[INTERACT]        = AddKeyBinding(KEY_F, KEY_F);
+    GameInput->Keyboard.Bindings[INVENTORY]       = AddKeyBinding(KEY_ESCAPE, KEY_ESCAPE);
+    GameInput->Keyboard.Bindings[SHOW_HOTBAR]     = AddKeyBinding(KEY_TAB, KEY_TAB);
+    GameInput->Keyboard.Bindings[HOTBAR_01]       = AddKeyBinding(KEY_1, KEY_NUMPAD_1);
+    GameInput->Keyboard.Bindings[HOTBAR_02]       = AddKeyBinding(KEY_2, KEY_NUMPAD_2);
+    GameInput->Keyboard.Bindings[HOTBAR_03]       = AddKeyBinding(KEY_3, KEY_NUMPAD_3);
+    GameInput->Keyboard.Bindings[HOTBAR_04]       = AddKeyBinding(KEY_4, KEY_NUMPAD_4);
+    GameInput->Keyboard.Bindings[HOTBAR_05]       = AddKeyBinding(KEY_5, KEY_NUMPAD_5);
+    GameInput->Keyboard.Bindings[HOTBAR_06]       = AddKeyBinding(KEY_6, KEY_NUMPAD_6);
+    GameInput->Keyboard.Bindings[DROP_HELD]       = AddKeyBinding(KEY_Q, KEY_Q);
+    GameInput->Keyboard.Bindings[DROP_ITEM]       = AddKeyBinding(KEY_RIGHT_MOUSE, KEY_RIGHT_MOUSE);
+    GameInput->Keyboard.Bindings[CRAFTING_MENU]   = AddKeyBinding(KEY_E, KEY_E);
 }

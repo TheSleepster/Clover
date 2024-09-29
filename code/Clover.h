@@ -134,14 +134,16 @@ struct entity_item_inventory
 
     item *SelectedInventoryItem;
     item *SwapItem;
+
+    item *SelectedHotbarItem;
     
     ui_element *InventorySlotButtons[InventorySize];
+    uint32 CurrentInventorySlot;
 };
 
 struct entity
 {
     sprite_type Sprite;
-    item_id     ItemID;
     
     uint32      Archetype;
     uint32      Flags;
@@ -149,16 +151,19 @@ struct entity
     
     vec2        Position;
     vec2        Target;
-
     vec2        Size;
+
     real32      Speed;
     real32      Rotation;
     
     box2D       SelectionBox;
     box2D       BoxCollider;
     
-    uint32      UsedInventorySlots;
     entity_item_inventory Inventory;
+    uint32      UsedInventorySlots;
+
+    item_id     ItemID;
+    int32       DroppedItemCount;
 };
 
 struct game_state
@@ -168,8 +173,9 @@ struct game_state
 
     clover_ui_context UIContext;
 
-    bool RenderPlayerHotbar;
+    bool DisplayPlayerHotbar;
     bool DisplayPlayerInventory;
+    bool DisplayCraftingMenu;
     
     bool DrawDebug;
 

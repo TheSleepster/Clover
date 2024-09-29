@@ -65,5 +65,9 @@ constexpr uint32 PLAYER_HOTBAR_COUNT = 6;
 constexpr uint32 PLAYER_INVENTORY_SIZE = 15;
 constexpr uint32 InventorySize = PLAYER_HOTBAR_COUNT + PLAYER_INVENTORY_SIZE;
 
+constexpr real32 PickupEpsilon = 1.0f;
+
+#define NULLSLOT 100;
+
 #endif // _CLOVER_GLOBALS_H
 

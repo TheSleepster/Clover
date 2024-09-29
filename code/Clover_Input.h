@@ -86,6 +86,18 @@ enum KeyBindings
     MOVE_LEFT,
     MOVE_RIGHT,
     ATTACK,
+    INTERACT,
+    INVENTORY,
+    SHOW_HOTBAR,
+    HOTBAR_01,
+    HOTBAR_02,
+    HOTBAR_03,
+    HOTBAR_04,
+    HOTBAR_05,
+    HOTBAR_06,
+    DROP_ITEM,
+    DROP_HELD,
+    CRAFTING_MENU,
     BINDING_COUNT,
 };
 

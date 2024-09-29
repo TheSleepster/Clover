@@ -163,24 +163,44 @@ HandleInput(game_state *State, entity *PlayerIn, time Time)
         PlayerIn->Position.Y + (PlayerIn->Position.Y - OldPlayerP.Y) + (PlayerIn->Speed * InputAxis.Y) * (Time.Delta)};
     PlayerIn->Position = v2Lerp(NextPos, Time.Delta, OldPlayerP);
 
-
     // NOTE(Sleepster): Game Update Stuff 
     if(IsKeyPressed(KEY_ESCAPE, &State->GameInput))
     {
         Player->Inventory.SelectedInventoryItem = {};
     }
-
-    if(IsKeyPressed(KEY_E, &State->GameInput))
+    if(IsGameKeyPressed(INVENTORY, &State->GameInput))
     {
         State->DisplayPlayerInventory = !State->DisplayPlayerInventory;
     }
-
-    if(IsKeyPressed(KEY_TAB, &State->GameInput))
+    if(IsGameKeyPressed(SHOW_HOTBAR, &State->GameInput))
     {
-        State->RenderPlayerHotbar = !State->RenderPlayerHotbar;
+        State->DisplayPlayerHotbar = !State->DisplayPlayerHotbar;
     }
-
-    if(IsKeyPressed(KEY_CONTROL, &State->GameInput))
+    if(IsGameKeyPressed(HOTBAR_01, &State->GameInput))
+    {
+        Player->Inventory.CurrentInventorySlot = 0;
+    }
+    if(IsGameKeyPressed(HOTBAR_02, &State->GameInput))
+    {
+        Player->Inventory.CurrentInventorySlot = 1;
+    }
+    if(IsGameKeyPressed(HOTBAR_03, &State->GameInput))
+    {
+        Player->Inventory.CurrentInventorySlot = 2;
+    }
+    if(IsGameKeyPressed(HOTBAR_04, &State->GameInput))
+    {
+        Player->Inventory.CurrentInventorySlot = 3;
+    }
+    if(IsGameKeyPressed(HOTBAR_05, &State->GameInput))
+    {
+        Player->Inventory.CurrentInventorySlot = 4;
+    }
+    if(IsGameKeyPressed(HOTBAR_06, &State->GameInput))
+    {
+        Player->Inventory.CurrentInventorySlot = 5;
+    }
+    if(IsKeyPressed(KEY_HOME, &State->GameInput))
     {
         State->DrawDebug = !State->DrawDebug;
     }
@@ -425,11 +445,64 @@ internal bool
 SwapInventoryItems(entity_item_inventory *Inventory, item *ItemA, item *ItemB)
 {   
     item TempItem = *ItemA;
-
     Inventory->Items[ItemA->OccupiedInventorySlot] = *ItemB;
     Inventory->Items[ItemB->OccupiedInventorySlot] = TempItem;
 
     return(true);
+}
+
+internal void
+SetupDroppedEntity(gl_render_data *RenderData, game_state *State, item *Selection, entity *SpawnedItem)
+{
+    if(Selection->Sprite != SPRITE_Nil)
+    {
+        switch(Selection->Sprite)
+        {
+            case SPRITE_Pebbles:
+                {
+                    SetupItemPebbles(SpawnedItem);
+                }break;
+            case SPRITE_Trunk:
+                {
+                    SetupItemTrunk(SpawnedItem);
+                }break;
+            case SPRITE_Branches:
+                {
+                    SetupItemBranches(SpawnedItem);
+                }break;
+            case SPRITE_RubyChunk:
+                {
+                    SetupItemRubyChunk(SpawnedItem);
+                }break;
+            case SPRITE_SapphireChunk:
+                {
+                    SetupItemSaphireChunk(SpawnedItem);
+                }break;
+            case SPRITE_ToolPickaxe:
+                {
+                    SetupItemToolPickaxe(SpawnedItem);
+                }break;
+        }
+
+        SpawnedItem->Flags -= CAN_BE_PICKED_UP;
+        SpawnedItem->DroppedItemCount = Selection->CurrentStack;
+
+        vec2 WorldMouseCoords = TransformMouseCoords(RenderData->GameCamera.ViewMatrix, RenderData->GameCamera.ProjectionMatrix, State->GameInput.Keyboard.CurrentMouse, SizeData);
+        real32 Distance = fabsf(v2Distance(Player->Position, WorldMouseCoords));
+        vec2 Direction = v2Normalize(WorldMouseCoords - Player->Position);
+
+        SpawnedItem->Position = Player->Position;
+        if(Distance <= MaxDropDistance)
+        {
+            vec2 DropPosition = Player->Position + Direction * Distance;
+            SpawnedItem->Target = DropPosition;
+        }
+        else
+        {
+            vec2 MaxDropPosition = Player->Position + Direction * MaxDropDistance;
+            SpawnedItem->Target = MaxDropPosition;
+        }
+    }
 }
 
 extern
@@ -494,7 +567,7 @@ GAME_ON_AWAKE(GameOnAwake)
     Player = CreateEntity(State);
     SetupPlayer(Player);
 
-    State->RenderPlayerHotbar = true;
+    State->DisplayPlayerHotbar = true;
 }
 
 extern
@@ -649,16 +722,24 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                             }
                         }
 
-                        for(int32 InventoryIndex = 0;
-                                InventoryIndex < InventorySize;
-                                ++InventoryIndex)
+                        if(Player->UsedInventorySlots < InventorySize)
                         {
-                            if(Player->Inventory.Items[InventoryIndex].ItemID == 0)
+                            for(int32 InventoryIndex = 0;
+                                    InventoryIndex < InventorySize;
+                                    ++InventoryIndex)
                             {
-                                NewItem.CurrentStack = 1;
-                                Player->Inventory.Items[InventoryIndex] = NewItem;
-                                Player->Inventory.Items[InventoryIndex].OccupiedInventorySlot = InventoryIndex;
-                                break;
+                                if(Player->Inventory.Items[InventoryIndex].ItemID == 0)
+                                {
+                                    NewItem.CurrentStack = Temp->DroppedItemCount;
+                                    if(NewItem.CurrentStack == 0)
+                                    {
+                                        NewItem.CurrentStack = 1;
+                                    }
+                                    Player->Inventory.Items[InventoryIndex] = NewItem;
+                                    Player->Inventory.Items[InventoryIndex].OccupiedInventorySlot = InventoryIndex;
+                                    Player->UsedInventorySlots++;
+                                    break;
+                                }
                             }
                         }
                         // TODO(Sleepster): Investigate a lambda, even though this is simple as shit, it's kinda grody to some people
@@ -693,7 +774,7 @@ Deletion:
     }
 
     // NOTE(Sleepster): New Hotbar UI 
-    if(State->RenderPlayerHotbar)
+    if(State->DisplayPlayerHotbar)
     {
         State->UIContext.UICameraViewMatrix       = RenderData->GameUICamera.ViewMatrix;
         State->UIContext.UICameraProjectionMatrix = RenderData->GameUICamera.ProjectionMatrix;
@@ -709,7 +790,7 @@ Deletion:
 
         real32 YOffset = -90.0f;
         
-        for(int32 InventorySlot = 0;
+        for(uint32 InventorySlot = 0;
             InventorySlot < PLAYER_HOTBAR_COUNT;
             ++InventorySlot)
         {
@@ -737,9 +818,16 @@ Deletion:
             Item->OccupiedInventorySlot = InventorySlot;
 
             Sprite = GetSprite(State, Item->Sprite);
-            if(Sprite != State->GameData.Sprites[SPRITE_Nil] && !HotbarSlotState.IsHot)
+            if(Sprite != State->GameData.Sprites[SPRITE_Nil])
             {
-                XForm = mat4Multiply(XForm, mat4MakeScale(vec3{0.65, 0.65, 1.0}));
+                if(!HotbarSlotState.IsHot)
+                {
+                    XForm = mat4Multiply(XForm, mat4MakeScale(vec3{0.65, 0.65, 1.0}));
+                }
+                if(InventorySlot == Player->Inventory.CurrentInventorySlot)
+                {
+                    XForm = mat4Multiply(XForm, mat4MakeScale(vec3{1.2, 1.2, 1.0}));
+                }
                 DrawUISpriteXForm(RenderData, XForm, Sprite, 0, WHITE);
             }
 
@@ -794,12 +882,19 @@ Deletion:
                     DrawUIText(RenderData, sprints(&Memory->TemporaryStorage, STR("%d"), Item->CurrentStack), {SlotPosition.X + 15, SlotPosition.Y + ItemAmountNumberYOffset}, 10, UBUNTU_MONO, GREEN);
                 }
             }
+            
+            // SELECTED INVENTORY ITEM
             if(HotbarSlot->IsActive)
             {
                 if(Item->Sprite != SPRITE_Nil && !Player->Inventory.SelectedInventoryItem)
                 {
                     Player->Inventory.SelectedInventoryItem = Item;
                 }
+            }
+
+            if(Player->Inventory.CurrentInventorySlot == InventorySlot)
+            {
+                Player->Inventory.SelectedHotbarItem = &Player->Inventory.Items[InventorySlot];
             }
         }
     }
@@ -821,7 +916,7 @@ Deletion:
         const real32 TotalWidth = (PLAYER_INVENTORY_SIZE * IconSize) + ((PLAYER_INVENTORY_SIZE - 1) * Padding);
         const real32 StartingX = (Width / 2.0f) - (TotalWidth / 2.0f);
         
-        for(int32 InventorySlot = 6;
+        for(uint32 InventorySlot = 6;
             InventorySlot < InventorySize;
             ++InventorySlot)
         {
@@ -897,6 +992,11 @@ Deletion:
     {
         item *Item = &Player->Inventory.Items[InventoryIndexSlot];
         ui_element *InventoryElement = Player->Inventory.InventorySlotButtons[InventoryIndexSlot]; 
+        if(Item->CurrentStack == 0 && InventoryIndexSlot == Player->Inventory.CurrentInventorySlot)
+        {
+            memset(Item, 0, sizeof(struct item));
+        }
+
         if(InventoryElement)
         {
             if(InventoryElement->IsActive)
@@ -906,68 +1006,30 @@ Deletion:
                     Player->Inventory.SelectedInventoryItem = Item;
                 }
             }
+            if(InventoryIndexSlot == Player->Inventory.CurrentInventorySlot)
+            {
+                InventoryElement->XForm = mat4Multiply(InventoryElement->XForm, mat4MakeScale(vec3{1.20f, 1.20f, 1.0f}));
+            }
 
-            if(Player->Inventory.SelectedInventoryItem && Player->Inventory.SelectedInventoryItem->Sprite != SPRITE_Nil)
+            if((Player->Inventory.SelectedInventoryItem && Player->Inventory.SelectedInventoryItem->Sprite != SPRITE_Nil))
             {
                 item *Selection = Player->Inventory.SelectedInventoryItem;
                 vec2 MousePos = TransformMouseCoords(RenderData->GameUICamera.ViewMatrix, 
                         RenderData->GameUICamera.ProjectionMatrix, 
                         State->GameInput.Keyboard.CurrentMouse, 
                         SizeData);
+
                 static_sprite_data SelectionSprite = GetSprite(State, Selection->Sprite);
                 CloverUIPushLayer(&State->UIContext, 1);
                 CloverUISpriteElement(&State->UIContext, MousePos + vec2{1, 0}, v2Cast(SelectionSprite.SpriteSize), NULLMATRIX, SelectionSprite, WHITE);
                 CloverUIPushLayer(&State->UIContext, 0);
 
-                if(IsKeyDown(KEY_RIGHT_MOUSE, &State->GameInput))
+                // NOTE(Sleepster): Dropping Selected inventory Items 
+                if(IsGameKeyPressed(DROP_ITEM, &State->GameInput))
                 {
                     entity *SpawnedItem = CreateEntity(State);
-                    switch(Selection->Sprite)
-                    {
-                        case SPRITE_Pebbles:
-                        {
-                            SetupItemPebbles(SpawnedItem);
-                        }break;
-                        case SPRITE_Trunk:
-                        {
-                            SetupItemTrunk(SpawnedItem);
-                        }break;
-                        case SPRITE_Branches:
-                        {
-                            SetupItemBranches(SpawnedItem);
-                        }break;
-                        case SPRITE_RubyChunk:
-                        {
-                            SetupItemRubyChunk(SpawnedItem);
-                        }break;
-                        case SPRITE_SapphireChunk:
-                        {
-                            SetupItemSaphireChunk(SpawnedItem);
-                        }break;
-                        case SPRITE_ToolPickaxe:
-                        {
-                            SetupItemToolPickaxe(SpawnedItem);
-                        }break;
-                    }
+                    SetupDroppedEntity(RenderData, State, Selection, SpawnedItem);
 
-                    SpawnedItem->Flags -= CAN_BE_PICKED_UP;
-
-                    vec2 WorldMouseCoords = TransformMouseCoords(RenderData->GameCamera.ViewMatrix, RenderData->GameCamera.ProjectionMatrix, State->GameInput.Keyboard.CurrentMouse, SizeData);
-                    real32 Distance = fabsf(v2Distance(Player->Position, MouseToWorld));
-                    vec2 Direction = v2Normalize(WorldMouseCoords - Player->Position);
-
-                    SpawnedItem->Position = Player->Position;
-                    if(Distance <= MaxDropDistance)
-                    {
-                        vec2 DropPosition = Player->Position + Direction * Distance;
-                        SpawnedItem->Target = DropPosition;
-                    }
-                    else
-                    {
-                        vec2 MaxDropPosition = Player->Position + Direction * MaxDropDistance;
-                        SpawnedItem->Target = MaxDropPosition;
-                    }
-                    
                     Player->Inventory.Items[Player->Inventory.SelectedInventoryItem->OccupiedInventorySlot] = {};
                     Player->Inventory.SelectedInventoryItem = {};
                 }
@@ -990,29 +1052,46 @@ Deletion:
             }
         }
     }
-    
 
-/*     for(uint32 InventorySlotIndex = 0; */
-/*         InventorySlotIndex < InventorySize; */
-/*         InventorySlotIndex++) */
-/*     { */
-/*         ui_element *SlotElement = Player->Inventory.InventorySlotButtons[InventorySlotIndex]; */
-/*         if(SlotElement) */
-/*         { */
-/*             Player->Inventory.DesiredInventorySwapIdx = &Player->Inventory.Items[InventorySlotIndex]; */
-/*             if(SlotElement->IsActive && Selection->OccupiedInventorySlot != Player->Inventory.DesiredInventorySwapIdx->OccupiedInventorySlot) */
-/*             { */
-/*                 uint32 Temp = Player->Inventory.DesiredInventorySwapIdx->OccupiedInventorySlot; */ 
-/*                 Player->Inventory.DesiredInventorySwapIdx->OccupiedInventorySlot = Player->Inventory.SelectedInventoryItem->OccupiedInventorySlot; */
-/*                 Player->Inventory.SelectedInventoryItem->OccupiedInventorySlot = Temp; */
+    // NOTE(Sleepster): Quickdropping HotbarItem
+    if(IsGameKeyPressed(DROP_HELD, &State->GameInput))
+    {
+        item *HotbarItem = Player->Inventory.SelectedHotbarItem;
+        if(HotbarItem)
+        {
+            if(HotbarItem->CurrentStack != 0)
+            {
+                if(IsKeyDown(KEY_CONTROL, &State->GameInput))
+                {
+                    for(uint32 ItemCount = 0;
+                        ItemCount < HotbarItem->CurrentStack;
+                        ItemCount++)
+                    {
+                        entity *DroppedEntity = CreateEntity(State);
+                        SetupDroppedEntity(RenderData, State, HotbarItem, DroppedEntity);
+                        HotbarItem->CurrentStack = 0;
+                    }
+                }
+                else
+                {
+                    --HotbarItem->CurrentStack;
+                    entity *DroppedEntity = CreateEntity(State);
+                    SetupDroppedEntity(RenderData, State, HotbarItem, DroppedEntity);
+                    DroppedEntity->DroppedItemCount = 1;
+                }
+            }
+            else
+            {
+                Player->Inventory.SelectedHotbarItem = {};
+            }
+        }
+    }
 
-/*                 SwapInventoryItemIndices(&Player->Inventory, Selection->OccupiedInventorySlot, Player->Inventory.SelectedInventoryItem->OccupiedInventorySlot); */
-/*                 Player->Inventory.SelectedInventoryItem = {}; */
-/*                 Player->Inventory.DesiredInventorySwapIdx = {}; */
-/*             } */
-/*         } */
-/*     } */
 
+    // NOTE(Sleepster): Crafting Menu 
+    {
+                    
+    }
 
     // NOTE(Sleepster): UI Rendering 
     CloverUIDrawWidgets(RenderData, &State->UIContext);
@@ -1054,15 +1133,16 @@ Deletion:
                     Player = Temp;
                     HandleInput(State, Temp, Time);
                     RenderData->GameCamera.Target = Temp->Position;
+
                     v2Approach(&RenderData->GameCamera.Position, RenderData->GameCamera.Target, 5.0f, Time.Delta);
                     DrawEntity(RenderData, State, Temp, Temp->Position, WHITE);
                 }break;
                 
                 case ITEM:
                 {
-                    Temp->Position.Y += 0.05f * SinBreathe(Time.CurrentTimeInSeconds, 2.0f);
-                    v2Approach(&Temp->Position, Temp->Target, 30.0f, Time.Delta);
-                    if(Temp->Position == Temp->Target)
+                    v2Approach(&Temp->Position, Temp->Target, 5.0f, Time.Delta);
+                    Temp->Position.Y += 0.01f * SinBreathe(Time.CurrentTimeInSeconds, 1.25f);
+                    if(v2Distance(Temp->Target, Temp->Position) <= PickupEpsilon)
                     {
                         Temp->Flags += CAN_BE_PICKED_UP;
                     }
