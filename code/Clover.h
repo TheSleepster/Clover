@@ -128,7 +128,7 @@ struct item
 
 struct entity_item_inventory
 {
-    item  Items[InventorySize];
+    item  Items[TOTAL_INVENTORY_SIZE];
     uint32 CurrentItemCount;
     uint32 LowestAvaliableSlot;
 
@@ -137,7 +137,7 @@ struct entity_item_inventory
 
     item *SelectedHotbarItem;
     
-    ui_element *InventorySlotButtons[InventorySize];
+    ui_element *InventorySlotButtons[TOTAL_INVENTORY_SIZE];
     uint32 CurrentInventorySlot;
 };
 

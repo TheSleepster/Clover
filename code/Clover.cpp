@@ -713,7 +713,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     {
                         item NewItem = State->GameData.GameItems[Temp->ItemID];
                         for(int32 InventoryIndex = 0;
-                                InventoryIndex < InventorySize;
+                                InventoryIndex < TOTAL_INVENTORY_SIZE;
                                 ++InventoryIndex)
                         {
                             if(Player->Inventory.Items[InventoryIndex].ItemID == NewItem.ItemID && 
@@ -726,10 +726,10 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                             }
                         }
 
-                        if(Player->UsedInventorySlots < InventorySize)
+                        if(Player->UsedInventorySlots < TOTAL_INVENTORY_SIZE)
                         {
                             for(int32 InventoryIndex = 0;
-                                    InventoryIndex < InventorySize;
+                                    InventoryIndex < TOTAL_INVENTORY_SIZE;
                                     ++InventoryIndex)
                             {
                                 if(Player->Inventory.Items[InventoryIndex].ItemID == 0)
@@ -917,7 +917,7 @@ Deletion:
         const real32 StartingX = (Width / 2.0f) - (TotalWidth / 2.0f);
         
         for(uint32 InventorySlot = PLAYER_HOTBAR_COUNT;
-            InventorySlot < InventorySize;
+            InventorySlot < TOTAL_INVENTORY_SIZE;
             ++InventorySlot)
         {
             real32 SlotOffset = (IconSize + Padding) * (InventorySlot - 6);
@@ -987,7 +987,7 @@ Deletion:
 
     // NOTE(Sleepster): Swapping Inventory Positions 
     for(uint32 InventoryIndexSlot = 0;
-        InventoryIndexSlot < InventorySize;
+        InventoryIndexSlot < TOTAL_INVENTORY_SIZE;
         InventoryIndexSlot++)
     {
         item *Item = &Player->Inventory.Items[InventoryIndexSlot];
