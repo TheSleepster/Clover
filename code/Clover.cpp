@@ -178,30 +178,66 @@ HandleInput(game_state *State, entity *PlayerIn, time Time)
     }
     if(IsGameKeyPressed(HOTBAR_01, &State->GameInput))
     {
+        if(Player->Inventory.CurrentInventorySlot == 0) 
+        {
+            Player->Inventory.CurrentInventorySlot = NULLSLOT;
+            return;
+        }
+
         Player->Inventory.CurrentInventorySlot = 0;
     }
     if(IsGameKeyPressed(HOTBAR_02, &State->GameInput))
     {
+        if(Player->Inventory.CurrentInventorySlot == 1) 
+        {
+            Player->Inventory.CurrentInventorySlot = NULLSLOT;
+            return;
+        }
         Player->Inventory.CurrentInventorySlot = 1;
     }
     if(IsGameKeyPressed(HOTBAR_03, &State->GameInput))
     {
+        if(Player->Inventory.CurrentInventorySlot == 2) 
+        {
+            Player->Inventory.CurrentInventorySlot = NULLSLOT;
+            return;
+        }
         Player->Inventory.CurrentInventorySlot = 2;
     }
     if(IsGameKeyPressed(HOTBAR_04, &State->GameInput))
     {
+        if(Player->Inventory.CurrentInventorySlot == 3) 
+        {
+            Player->Inventory.CurrentInventorySlot = NULLSLOT;
+            return;
+        }
         Player->Inventory.CurrentInventorySlot = 3;
     }
     if(IsGameKeyPressed(HOTBAR_05, &State->GameInput))
     {
+        if(Player->Inventory.CurrentInventorySlot == 4) 
+        {
+            Player->Inventory.CurrentInventorySlot = NULLSLOT;
+            return;
+        }
         Player->Inventory.CurrentInventorySlot = 4;
     }
     if(IsGameKeyPressed(HOTBAR_06, &State->GameInput))
     {
+        if(Player->Inventory.CurrentInventorySlot == 5) 
+        {
+            Player->Inventory.CurrentInventorySlot = NULLSLOT;
+            return;
+        }
         Player->Inventory.CurrentInventorySlot = 5;
     }
     if(IsGameKeyPressed(HOTBAR_07, &State->GameInput))
     {
+        if(Player->Inventory.CurrentInventorySlot == 6) 
+        {
+            Player->Inventory.CurrentInventorySlot = NULLSLOT;
+            return;
+        }
         Player->Inventory.CurrentInventorySlot = 6;
     }
     if(IsKeyPressed(KEY_HOME, &State->GameInput))
@@ -463,29 +499,29 @@ SetupDroppedEntity(gl_render_data *RenderData, game_state *State, item *Selectio
         switch(Selection->Sprite)
         {
             case SPRITE_Pebbles:
-                {
-                    SetupItemPebbles(SpawnedItem);
-                }break;
+            {
+                SetupItemPebbles(SpawnedItem);
+            }break;
             case SPRITE_Trunk:
-                {
-                    SetupItemTrunk(SpawnedItem);
-                }break;
+            {
+                SetupItemTrunk(SpawnedItem);
+            }break;
             case SPRITE_Branches:
-                {
-                    SetupItemBranches(SpawnedItem);
-                }break;
+            {
+                SetupItemBranches(SpawnedItem);
+            }break;
             case SPRITE_RubyChunk:
-                {
-                    SetupItemRubyChunk(SpawnedItem);
-                }break;
+            {
+                SetupItemRubyChunk(SpawnedItem);
+            }break;
             case SPRITE_SapphireChunk:
-                {
-                    SetupItemSaphireChunk(SpawnedItem);
-                }break;
+            {
+                SetupItemSaphireChunk(SpawnedItem);
+            }break;
             case SPRITE_ToolPickaxe:
-                {
-                    SetupItemToolPickaxe(SpawnedItem);
-                }break;
+            {
+                SetupItemToolPickaxe(SpawnedItem);
+            }break;
         }
 
         SpawnedItem->Flags -= CAN_BE_PICKED_UP;
@@ -507,6 +543,33 @@ SetupDroppedEntity(gl_render_data *RenderData, game_state *State, item *Selectio
             SpawnedItem->Target = MaxDropPosition;
         }
     }
+}
+
+internal real32
+r32Clamp(real32 Value, real32 Min, real32 Max)
+{
+    if (Value <= Min) return Min;
+    if (Value >= Max) return Max;
+    return Value;
+}
+
+internal vec2 
+v2Clamp(vec2 Value, vec2 Min, vec2 Max)
+{
+    Value.X = r32Clamp(Value.X, Min.X, Max.X);
+    Value.Y = r32Clamp(Value.Y, Min.Y, Max.Y);
+    return(Value);
+}
+
+internal void
+ResetItemSlotState(item *Item)
+{
+    Item->Sprite = {};
+    Item->CurrentStack = 0;
+    Item->ItemName = {};
+    Item->ItemDesc = {};
+    Item->ItemID   = {};
+    Item->MaxStackCount = {};
 }
 
 extern
@@ -828,6 +891,11 @@ Deletion:
                 {
                     XForm = mat4Multiply(XForm, mat4MakeScale(vec3{0.65, 0.65, 1.0}));
                 }
+
+                if(InventorySlot == Player->Inventory.CurrentInventorySlot)
+                {
+                    XForm = mat4Multiply(XForm, mat4MakeScale(vec3{1.2, 1.2, 1.0}));
+                }
                 DrawUISpriteXForm(RenderData, XForm, Sprite, 0, WHITE);
             }
 
@@ -836,50 +904,64 @@ Deletion:
                 HotbarSlot->DrawColor = RED;
                 if(Item->Sprite != SPRITE_Nil)
                 {
-                    real32 BoxYOffset = 40;
-                    real32 TextYOffset = 30;
-                    real32 ItemNameYOffset = 45;
-                    real32 ItemAmountYOffset = 38;
-                    real32 ItemAmountNumberYOffset = 38;
-
-                    vec2 SpriteOffset = {-2, 3};
-
+                    XForm = mat4Multiply(XForm, mat4MakeScale(vec3{0.8, 0.8, 1.0}));
+                    
+                    real32 NewUIYOffset;
+                    real32 NewUIYDescOffset;
+                    real32 SpriteYOffset;
                     if(State->DisplayPlayerInventory)
                     {
-                        BoxYOffset = 50;
-                        TextYOffset = 40;
-                        ItemNameYOffset = 55;
-                        ItemAmountYOffset = 48;
-                        ItemAmountNumberYOffset = 48;
-                        SpriteOffset = {-2, 3.5f};
+                        NewUIYOffset = 24.0f;
+                        NewUIYDescOffset = 8.0f;
+                        SpriteYOffset = 25.0f;
+                    }
+                    else
+                    {
+                        NewUIYOffset = 16.0f;
+                        NewUIYDescOffset = 3.0f;
+                        SpriteYOffset = 20.0f;
                     }
 
-                    XForm = mat4Multiply(XForm, mat4MakeScale(vec3{1.0, 1.0, 1.0}));
-                    DrawUISpriteXForm(RenderData, XForm, Sprite, 0, WHITE);
+                    vec2 UIBoxSize = {10, 25};
 
-                    XForm = mat4Multiply(XForm, mat4Translate(v2Expand(SpriteOffset, 0.0f)));
-                    XForm = mat4Multiply(XForm, mat4MakeScale(vec3{1.0, 1.0, 1.0}));
+                    mat4 UIXForm = mat4Identity(1.0f);
+                         UIXForm = mat4Multiply(UIXForm, mat4Translate(vec3{StartingX + SlotOffset, YOffset, 0.0}));
+                         UIXForm = mat4Multiply(UIXForm, mat4Translate(vec3{IconSize * -0.55f, NewUIYOffset, 0.0f}));
 
-                    CloverUIPushLayer(&State->UIContext, 1);
-                    CloverUISpriteElement(&State->UIContext, SlotPosition, {IconSize, IconSize}, XForm, GetSprite(State, Item->Sprite), WHITE);
+                    // NOTE(Sleepster): String Size to influence the BosSize
+                    vec4 UIMatrixPosition = UIXForm.Columns[3];
+                    vec2 Position = vec2{UIMatrixPosition.X, UIMatrixPosition.Y};
 
-                    CloverUIPushLayer(&State->UIContext, 2);
-                    CloverUITextBox(&State->UIContext, 
-                                     Item->ItemName, 
-                                     Item->ItemDesc, 
-                                     {SlotPosition.X, SlotPosition.Y + BoxYOffset},
-                                     {40, 40},
-                                     {SlotPosition.X, SlotPosition.Y + TextYOffset},
-                                     10, 
-                                     GetSprite(State, SPRITE_Nil),
-                                     vec4{0.2f, 0.2f, 0.2f, 0.3f}, 
-                                     GREEN,
-                                     TEXT_ALIGNMENT_Center);
-                    CloverUIPushLayer(&State->UIContext, 0);
+                    static_sprite_data SpriteData = GetSprite(State, Item->Sprite);
+                    vec2 SpriteSize = v2Cast(SpriteData.SpriteSize);
 
-                    DrawUIText(RenderData, Item->ItemName,  {SlotPosition.X - 10, SlotPosition.Y + ItemNameYOffset}, 10, UBUNTU_MONO, GREEN);
-                    DrawUIText(RenderData, STR("Amount: "), {SlotPosition.X - 5,  SlotPosition.Y + ItemAmountYOffset}, 10, UBUNTU_MONO, GREEN);
-                    DrawUIText(RenderData, sprints(&Memory->TemporaryStorage, STR("%d"), Item->CurrentStack), {SlotPosition.X + 15, SlotPosition.Y + ItemAmountNumberYOffset}, 10, UBUNTU_MONO, GREEN);
+                    ui_element *ItemDescData = CloverUIMakeTextElement(&State->UIContext, Item->ItemDesc, {Position.X, Position.Y + NewUIYDescOffset}, 10, TEXT_ALIGNMENT_Center, GREEN);
+                    CloverUIMakeTextElement(&State->UIContext, Item->ItemName, {Position.X + 4, Position.Y + NewUIYOffset}, 10, TEXT_ALIGNMENT_Center, GREEN);
+
+                    mat4 SpriteXForm = UIXForm;
+                    UIXForm = mat4Multiply(UIXForm, mat4Translate(vec3{0, NewUIYOffset, 0}));
+                    UIXForm = mat4Multiply(UIXForm, mat4MakeScale(v2Expand(UIBoxSize + ItemDescData->Size, 1.0f)));
+                    DrawUISpriteXForm(RenderData, UIXForm, GetSprite(State, SPRITE_Nil), 0, vec4{0.2f, 0.2f, 0.2f, 0.2f});
+
+                    SpriteXForm = mat4Multiply(SpriteXForm, mat4Translate(vec3{UIBoxSize.X + ItemDescData->Size.X * -0.5f, SpriteYOffset, 0}));
+                    SpriteXForm = mat4Multiply(SpriteXForm, mat4MakeScale(vec3{IconSize, IconSize, 1.0f}));
+                    DrawUISpriteXForm(RenderData, SpriteXForm, SpriteData, 0, WHITE);
+
+                    SpriteXForm = mat4Multiply(SpriteXForm, mat4MakeScale(vec3{1 / IconSize, 1 / IconSize, 1.0f}));
+                    SpriteXForm = mat4Multiply(SpriteXForm, mat4Translate(vec3{-(UIBoxSize.X + ItemDescData->Size.X * -0.5f), 0, 0}));
+                    SpriteXForm = mat4Multiply(SpriteXForm, mat4Translate(vec3{(UIBoxSize.X + ItemDescData->Size.X * -0.5f), 19, 0}));
+                    SpriteXForm = mat4Multiply(SpriteXForm, mat4Translate(vec3{-7, 0, 0}));
+                    SpriteXForm = mat4Multiply(SpriteXForm, mat4MakeScale(vec3{16, 16, 1.0f}));
+
+                    DrawUISpriteXForm(RenderData, SpriteXForm, GetSprite(State, SPRITE_Nil), 0, vec4{0.1f, 0.1f, 0.1f, 0.4f});
+
+                    SpriteXForm = mat4Multiply(SpriteXForm, mat4MakeScale(vec3{1 / IconSize, 1 / IconSize, 1.0f}));
+                    SpriteXForm = mat4Multiply(SpriteXForm, mat4Translate(vec3{2, -6, 0}));
+                    SpriteXForm = mat4Multiply(SpriteXForm, mat4MakeScale(vec3{16, 16, 1.0f}));
+
+                    vec4 ItemCountTextPosition = SpriteXForm.Columns[3];
+                    Position = vec2{ItemCountTextPosition.X, ItemCountTextPosition.Y};
+                    CloverUIMakeTextElement(&State->UIContext, sprints(&Memory->TemporaryStorage, STR("x%d"), Item->CurrentStack), {Position.X + 3, Position.Y}, 15, TEXT_ALIGNMENT_Center, GREEN);
                 }
             }
             
@@ -957,29 +1039,63 @@ Deletion:
                 {
                     XForm = mat4Multiply(XForm, mat4MakeScale(vec3{1.0, 1.0, 1.0}));
                     DrawUISpriteXForm(RenderData, XForm, Sprite, 0, WHITE);
+                    
+                    real32 NewUIYOffset;
+                    real32 NewUIYDescOffset;
+                    real32 SpriteYOffset;
+                    if(State->DisplayPlayerInventory)
+                    {
+                        NewUIYOffset = 24.0f;
+                        NewUIYDescOffset = 8.0f;
+                        SpriteYOffset = 25.0f;
+                    }
+                    else
+                    {
+                        NewUIYOffset = 16.0f;
+                        NewUIYDescOffset = 3.0f;
+                        SpriteYOffset = 20.0f;
+                    }
 
-                    XForm = mat4Multiply(XForm, mat4Translate(vec3{-2, 3, 0}));
-                    XForm = mat4Multiply(XForm, mat4MakeScale(vec3{1.0, 1.0, 1.0}));
-                    CloverUIPushLayer(&State->UIContext, 1);
-                    CloverUISpriteElement(&State->UIContext, SlotPosition, {IconSize, IconSize}, XForm, GetSprite(State, Item->Sprite), WHITE);
+                    vec2 UIBoxSize = {10, 25};
 
-                    CloverUIPushLayer(&State->UIContext, 2);
-                    CloverUITextBox(&State->UIContext, 
-                                     Item->ItemName, 
-                                     Item->ItemDesc, 
-                                     {SlotPosition.X, SlotPosition.Y + 40},
-                                     {40, 40},
-                                     {SlotPosition.X, SlotPosition.Y + 30},
-                                     10, 
-                                     GetSprite(State, SPRITE_Nil),
-                                     vec4{0.2f, 0.2f, 0.2f, 0.3f}, 
-                                     GREEN,
-                                     TEXT_ALIGNMENT_Center);
-                    CloverUIPushLayer(&State->UIContext, 0);
+                    mat4 UIXForm = mat4Identity(1.0f);
+                         UIXForm = mat4Multiply(UIXForm, mat4Translate(vec3{StartingX + SlotOffset, -90, 0.0}));
+                         UIXForm = mat4Multiply(UIXForm, mat4Translate(vec3{IconSize * -0.55f, NewUIYOffset, 0.0f}));
 
-                    DrawUIText(RenderData, Item->ItemName,  {SlotPosition.X - 10, SlotPosition.Y + 45}, 10, UBUNTU_MONO, GREEN);
-                    DrawUIText(RenderData, STR("Amount: "), {SlotPosition.X - 5,  SlotPosition.Y + 38}, 10, UBUNTU_MONO, GREEN);
-                    DrawUIText(RenderData, sprints(&Memory->TemporaryStorage, STR("%d"), Item->CurrentStack), {SlotPosition.X + 15, SlotPosition.Y + 38}, 10, UBUNTU_MONO, GREEN);
+                    // NOTE(Sleepster): String Size to influence the BosSize
+                    vec4 UIMatrixPosition = UIXForm.Columns[3];
+                    vec2 Position = vec2{UIMatrixPosition.X, UIMatrixPosition.Y};
+
+                    static_sprite_data SpriteData = GetSprite(State, Item->Sprite);
+                    vec2 SpriteSize = v2Cast(SpriteData.SpriteSize);
+
+                    ui_element *ItemDescData = CloverUIMakeTextElement(&State->UIContext, Item->ItemDesc, {Position.X, Position.Y + NewUIYDescOffset}, 10, TEXT_ALIGNMENT_Center, GREEN);
+                    CloverUIMakeTextElement(&State->UIContext, Item->ItemName, {Position.X + 4, Position.Y + NewUIYOffset}, 10, TEXT_ALIGNMENT_Center, GREEN);
+
+                    mat4 SpriteXForm = UIXForm;
+                    UIXForm = mat4Multiply(UIXForm, mat4Translate(vec3{0, NewUIYOffset, 0}));
+                    UIXForm = mat4Multiply(UIXForm, mat4MakeScale(v2Expand(UIBoxSize + ItemDescData->Size, 1.0f)));
+                    DrawUISpriteXForm(RenderData, UIXForm, GetSprite(State, SPRITE_Nil), 0, vec4{0.2f, 0.2f, 0.2f, 0.2f});
+
+                    SpriteXForm = mat4Multiply(SpriteXForm, mat4Translate(vec3{UIBoxSize.X + ItemDescData->Size.X * -0.5f, SpriteYOffset, 0}));
+                    SpriteXForm = mat4Multiply(SpriteXForm, mat4MakeScale(vec3{IconSize, IconSize, 1.0f}));
+                    DrawUISpriteXForm(RenderData, SpriteXForm, SpriteData, 0, WHITE);
+
+                    SpriteXForm = mat4Multiply(SpriteXForm, mat4MakeScale(vec3{1 / IconSize, 1 / IconSize, 1.0f}));
+                    SpriteXForm = mat4Multiply(SpriteXForm, mat4Translate(vec3{-(UIBoxSize.X + ItemDescData->Size.X * -0.5f), 0, 0}));
+                    SpriteXForm = mat4Multiply(SpriteXForm, mat4Translate(vec3{(UIBoxSize.X + ItemDescData->Size.X * -0.5f), 19, 0}));
+                    SpriteXForm = mat4Multiply(SpriteXForm, mat4Translate(vec3{-7, 0, 0}));
+                    SpriteXForm = mat4Multiply(SpriteXForm, mat4MakeScale(vec3{16, 16, 1.0f}));
+
+                    DrawUISpriteXForm(RenderData, SpriteXForm, GetSprite(State, SPRITE_Nil), 0, vec4{0.1f, 0.1f, 0.1f, 0.4f});
+
+                    SpriteXForm = mat4Multiply(SpriteXForm, mat4MakeScale(vec3{1 / IconSize, 1 / IconSize, 1.0f}));
+                    SpriteXForm = mat4Multiply(SpriteXForm, mat4Translate(vec3{2, -6, 0}));
+                    SpriteXForm = mat4Multiply(SpriteXForm, mat4MakeScale(vec3{16, 16, 1.0f}));
+
+                    vec4 ItemCountTextPosition = SpriteXForm.Columns[3];
+                    Position = vec2{ItemCountTextPosition.X, ItemCountTextPosition.Y};
+                    CloverUIMakeTextElement(&State->UIContext, sprints(&Memory->TemporaryStorage, STR("x%d"), Item->CurrentStack), {Position.X + 3, Position.Y}, 15, TEXT_ALIGNMENT_Center, GREEN);
                 }
             }
         }
@@ -994,8 +1110,7 @@ Deletion:
         ui_element *InventoryElement = Player->Inventory.InventorySlotButtons[InventoryIndexSlot]; 
         if(Item->CurrentStack == 0 && InventoryIndexSlot == Player->Inventory.CurrentInventorySlot)
         {
-            memset(Item, 0, sizeof(struct item));
-            Player->Inventory.CurrentInventorySlot = NULLSLOT;
+            ResetItemSlotState(Item);
         }
 
         if(InventoryElement)
@@ -1058,7 +1173,7 @@ Deletion:
     if(IsGameKeyPressed(DROP_HELD, &State->GameInput))
     {
         item *HotbarItem = Player->Inventory.SelectedHotbarItem;
-        if(HotbarItem)
+        if(HotbarItem && Player->Inventory.CurrentInventorySlot != NULLSLOT)
         {
             if(HotbarItem->CurrentStack != 0)
             {

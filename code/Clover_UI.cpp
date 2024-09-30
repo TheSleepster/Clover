@@ -111,13 +111,16 @@ CloverUIButton(clover_ui_context *Context,
     return(ButtonState);
 } 
 
-internal ui_element
-CloverUICalculateTextOffset(clover_ui_context *Context,
-                            string             FormattedText,
-                            vec2               Position,
-                            real32             FontScaleFactor,
-                            ui_text_alignment  Alignment)
+internal ui_element*
+CloverUIMakeTextElement(clover_ui_context *Context,
+                        string             FormattedText,
+                        vec2               Position,
+                        real32             FontScaleFactor,
+                        ui_text_alignment  Alignment, 
+                        vec4               DrawColor)
 {
+    ui_element *TextElement = CloverUICreateElement(Context, UI_Text);
+
     vec2 TextOrigin = Position;
     real32 TrueScale = FontScaleFactor / 100.0f;
 
@@ -144,7 +147,6 @@ CloverUICalculateTextOffset(clover_ui_context *Context,
         {
             TextOrigin.X -= TotalTextSize.X;
         }break;
-
         case TEXT_ALIGNMENT_Center:
         {
             TextOrigin.X -= TotalTextSize.X * 0.5f;
@@ -152,11 +154,13 @@ CloverUICalculateTextOffset(clover_ui_context *Context,
         default: break;
     }
 
-    ui_element Text = {};
-    Text.Position   = TextOrigin;
-    Text.Size       = TotalTextSize;
-    Text.FontScale  = FontScaleFactor;
-    return(Text);
+    TextElement->Position    = TextOrigin;
+    TextElement->TextOrigin  = TextOrigin;
+    TextElement->Size        = TotalTextSize;
+    TextElement->FontScale   = FontScaleFactor;
+    TextElement->ElementText = FormattedText;
+    TextElement->TextDrawColor   = DrawColor;
+    return(TextElement);
 }
 
 internal ui_element_state
@@ -172,16 +176,16 @@ CloverUITextBox(clover_ui_context *Context,
                 vec4               TextColor, 
                 ui_text_alignment  ContentAlignment)
 {
-    ui_element  TextData     = CloverUICalculateTextOffset(Context, FormattedText, TextOrigin, FontScaleFactor, ContentAlignment);
+    ui_element *TextData     = CloverUIMakeTextElement(Context, FormattedText, TextOrigin, FontScaleFactor, ContentAlignment, TextColor);
     ui_element *Container    = CloverUICreateElement(Context, UI_TextBox);
 
     Container->ElementName   = Name;
     Container->ElementText   = FormattedText;
-    Container->TextOrigin    = TextData.Position;
+    Container->TextOrigin    = TextData->Position;
     Container->FontScale     = FontScaleFactor;
 
     Container->Position      = BoxPosition;
-    Container->Size          = TextData.Size + BoxSize;
+    Container->Size          = TextData->Size + BoxSize;
     Container->Sprite        = Sprite;
     Container->DrawColor     = BoxColor;
     Container->TextDrawColor = TextColor; 
@@ -190,6 +194,18 @@ CloverUITextBox(clover_ui_context *Context,
     BoxState.IsHot = CloverUIIsHot(Context, Container);
     BoxState.UIID  = Container->UIID;
     return(BoxState);
+}
+
+internal void
+CloverUITextBoxXForm(clover_ui_context *Context,
+                     string             Name, 
+                     string             FormattedText,
+                     real32             FontScaleFactor,
+                     static_sprite_data Sprite,
+                     mat4               XForm,
+                     vec4               BoxColor,
+                     vec4               TextColor)
+{
 }
 
 internal ui_element_state
@@ -281,6 +297,10 @@ CloverUIDrawWidgets(gl_render_data *RenderData, clover_ui_context *Context)
                                                      1);
                     DrawUIQuadXForm(RenderData, &WidgetQuad, &Widget->XForm, 0);
                 }break;
+                case UI_Text:
+                {
+                    DrawUIText(RenderData, Widget->ElementText, Widget->TextOrigin, Widget->FontScale, Context->ActiveFontIndex, Widget->TextDrawColor);
+                }
                 case UI_Nil:{}break;
                 default: {InvalidCodePath;}break;
             }
