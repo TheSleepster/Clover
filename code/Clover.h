@@ -67,6 +67,8 @@ enum sprite_type
     SPRITE_EmptyHeartContainer = 17,
     SPRITE_TestEnemyUnit       = 18,
     SPRITE_SelectionBox        = 19,
+    SPRITE_Workbench           = 20, 
+    SPRITE_Furnace             = 21, 
     SPRITE_Count
 };
 
@@ -80,10 +82,12 @@ enum item_id
     ITEM_SapphireOreChunk,
     ITEM_ToolPickaxe,
     ITEM_ToolWoodAxe,
+    ITEM_Workbench,
+    ITEM_Furnace,
     ITEM_IDCount
 };
 
-enum entity_flags
+enum entity_flags : uint32
 {
     IS_VALID                = 1 << 0,
     IS_SOLID                = 1 << 1,
@@ -95,18 +99,22 @@ enum entity_flags
     IS_IN_INVENTORY         = 1 << 7,
     IS_UI                   = 1 << 8,
     CAN_BE_PICKED_UP        = 1 << 9,
+    IS_BUILDABLE            = 1 << 10,
+    IS_PLACED               = 1 << 11,
+    IS_INTERACTING          = 1 << 12,
     ENTITY_FLAGS_COUNT
 };
 
 enum entity_arch
 {
-    NIL    = 0,
-    PLAYER = 1,
-    ROCK   = 2,
-    TREE   = 3,
-    NODE   = 4,
-    ITEM   = 5,
-    UI     = 6,
+    NIL       = 0,
+    PLAYER    = 1,
+    ROCK      = 2,
+    TREE      = 3,
+    NODE      = 4,
+    ITEM      = 5,
+    UI        = 6,
+    BUILDING  = 7,
     COUNT
 };
 
@@ -116,12 +124,12 @@ struct item
     uint32      Flags;
     sprite_type Sprite;
     item_id     ItemID;
-
+    
     int32       MaxStackCount;
     int32       CurrentStack;
-
+    
     int32       OccupiedInventorySlot;
-
+    
     string      ItemName;
     string      ItemDesc;
 };
@@ -131,10 +139,10 @@ struct entity_item_inventory
     item  Items[TOTAL_INVENTORY_SIZE];
     uint32 CurrentItemCount;
     uint32 LowestAvaliableSlot;
-
+    
     item *SelectedInventoryItem;
     item *SwapItem;
-
+    
     item *SelectedHotbarItem;
     
     ui_element *InventorySlotButtons[TOTAL_INVENTORY_SIZE];
@@ -152,6 +160,8 @@ struct crafting_formula
     crafting_item Materials[MAX_CRAFTING_ELEMENTS];
     string Name;
     string Desc;
+    
+    item_id FormulaResult;
 };
 
 struct entity
@@ -165,47 +175,49 @@ struct entity
     vec2        Position;
     vec2        Target;
     vec2        Size;
-
+    
     real32      Speed;
     real32      Rotation;
     
     box2D       SelectionBox;
-    box2D       BoxCollider;
+    range_v2    BoxCollider;
     
     entity_item_inventory Inventory;
     uint32      UsedInventorySlots;
-
+    
     item_id     ItemID;
     int32       DroppedItemCount;
 };
 
-enum ui_state
+struct occupied_world_sector
 {
-    UI_STATE_NONE,
-    UI_STATE_CRAFTING_MENU,
+    range_v2 OccupiedArea;
+    bool IsOccupied;
+    bool IsValid;
 };
 
 struct game_state
 {
     KeyCodeID KeyCodeLookup[KEY_COUNT];
     Input GameInput;
-
+    
     clover_ui_context UIContext;
-    ui_state UIState;
-
+    
     bool DisplayPlayerHotbar;
     bool DisplayPlayerInventory;
     bool DisplayCraftingMenu;
     
     bool DrawDebug;
-
+    
     // NOTE(Sleepster): World Data
     struct
     {
         entity Entities[MAX_ENTITIES];  
+        occupied_world_sector OccupiedSectors[1000];
         item   Items[1000];
         
         uint32 EntityCounter;
+        uint32 OccupiedSectorCounter;
         
         struct 
         {
@@ -230,6 +242,7 @@ struct game_state
     { 
         static_sprite_data     Sprites[SPRITE_Count];
         item                   GameItems[ITEM_IDCount];
+        crafting_formula       CraftingDictionary[1];
     }GameData;
 };
 
@@ -369,7 +382,7 @@ operator!=(static_sprite_data A, static_sprite_data B)
 {
     bool Result = {};
     v2Cast(A.AtlasOffset) != v2Cast(B.AtlasOffset) ? Result = true : Result = false;
-
+    
     return(Result);
 }
 

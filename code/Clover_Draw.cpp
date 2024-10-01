@@ -41,7 +41,7 @@ DrawImGui(game_state *State, gl_render_data *RenderData, time Time)
         ImGui::Text("Famerate: %i", Time.FPSCounter);
         ImGui::Text("FrameTime: %.02f", Time.MSPerFrame);
         ImGui::Separator();
-
+        
         ImGui::Text("Clear Color:");
         ImGui::ColorPicker4("ClearColor", &RenderData->ClearColor.R, ImGuiColorEditFlags_PickerHueWheel);
         ImGui::SameLine();
@@ -96,7 +96,7 @@ internal quad
 CreateDrawRect(gl_render_data *RenderData, vec2 Size, real32 Rotation, vec4 Color)
 {
     quad Quad = {};
-
+    
     Quad.TopLeft.Position     = {0, 0};
     Quad.TopRight.Position    = {Size.X, 0};
     Quad.BottomRight.Position = {Size.X, Size.Y};
@@ -106,11 +106,11 @@ CreateDrawRect(gl_render_data *RenderData, vec2 Size, real32 Rotation, vec4 Colo
     Quad.TopRight.DrawColor = Color;
     Quad.BottomRight.DrawColor = Color;
     Quad.BottomLeft.DrawColor = Color;
-
+    
     Quad.DrawColor = Color;
     Quad.Size = Size;
     Quad.Rotation = Rotation;
-
+    
     for(int32 Index = 0;
         Index < 4;
         ++Index)
@@ -118,7 +118,7 @@ CreateDrawRect(gl_render_data *RenderData, vec2 Size, real32 Rotation, vec4 Colo
         Quad.Elements[Index].DrawColor    = Color;
         Quad.Elements[Index].TextureIndex = 0;
     }
-
+    
     return(Quad);
 }
 
@@ -134,7 +134,7 @@ DrawQuadXForm(gl_render_data *RenderData, quad *Quad, mat4 *Transform, bool IsFo
     Quad->Elements[1].Position = vec4{ 0.5f,  0.5f, 0.0f, 1.0f};
     Quad->Elements[2].Position = vec4{ 0.5f, -0.5f, 0.0f, 1.0f};
     Quad->Elements[3].Position = vec4{-0.5f, -0.5f, 0.0f, 1.0f};
-
+    
     Quad->Elements[0].Position = mat4Transform(*Transform, Quad->Elements[0].Position);
     Quad->Elements[1].Position = mat4Transform(*Transform, Quad->Elements[1].Position);
     Quad->Elements[2].Position = mat4Transform(*Transform, Quad->Elements[2].Position);
@@ -142,7 +142,7 @@ DrawQuadXForm(gl_render_data *RenderData, quad *Quad, mat4 *Transform, bool IsFo
     
     vertex **VertexBufferptr;
     uint32  *ElementCounter;
-
+    
     bool IsOpaque = (Quad->DrawColor.A == 1.0f && !IsFont);
     if(IsOpaque)
     {
@@ -201,7 +201,7 @@ DrawUIQuadXForm(gl_render_data *RenderData, quad *Quad, mat4 *Transform, bool Is
     Quad->Elements[1].Position = vec4{ 0.5f,  0.5f, 0.0f, 1.0f};
     Quad->Elements[2].Position = vec4{ 0.5f, -0.5f, 0.0f, 1.0f};
     Quad->Elements[3].Position = vec4{-0.5f, -0.5f, 0.0f, 1.0f};
-
+    
     Quad->Elements[0].Position = mat4Transform(*Transform, Quad->Elements[0].Position);
     Quad->Elements[1].Position = mat4Transform(*Transform, Quad->Elements[1].Position);
     Quad->Elements[2].Position = mat4Transform(*Transform, Quad->Elements[2].Position);
@@ -209,7 +209,7 @@ DrawUIQuadXForm(gl_render_data *RenderData, quad *Quad, mat4 *Transform, bool Is
     
     vertex **UIVertexBufferptr;
     uint32  *ElementCounter;
-
+    
     bool IsOpaque = (Quad->DrawColor.A == 1.0f && !IsFont);
     if(IsOpaque)
     {
@@ -355,7 +355,7 @@ internal quad *
 DrawEntity(gl_render_data *RenderData, game_state *State, entity *Entity, vec2 Position, vec4 Color)
 {
     static_sprite_data SpriteData = State->GameData.Sprites[Entity->Sprite];
-    return(DrawSprite(RenderData, SpriteData, Entity->Position, v2Cast(SpriteData.SpriteSize), Color, Entity->Rotation, 1));
+    return(DrawSprite(RenderData, SpriteData, Entity->Position, Entity->Size, Color, Entity->Rotation, 1));
 }
 
 

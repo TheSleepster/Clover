@@ -196,18 +196,6 @@ CloverUITextBox(clover_ui_context *Context,
     return(BoxState);
 }
 
-internal void
-CloverUITextBoxXForm(clover_ui_context *Context,
-                     string             Name, 
-                     string             FormattedText,
-                     real32             FontScaleFactor,
-                     static_sprite_data Sprite,
-                     mat4               XForm,
-                     vec4               BoxColor,
-                     vec4               TextColor)
-{
-}
-
 internal ui_element_state
 CloverUISpriteElement(clover_ui_context *Context, vec2 Position, vec2 Size, mat4 XForm, static_sprite_data Sprite, vec4 Color)
 {
@@ -237,14 +225,13 @@ CloverUISortElementsByLayer(const void *A, const void *B)
 
     return((ElementA->UIID.LayerIdx > ElementB->UIID.LayerIdx) ?  1 :
            (ElementA->UIID.LayerIdx < ElementB->UIID.LayerIdx) ? -1 : 
-           (IsOpaqueA && !IsOpaqueB) ? -1 :
-           (!IsOpaqueA && IsOpaqueB) ?  1 : 0);
+           (IsOpaqueA && !IsOpaqueB) ?  1 :
+           (!IsOpaqueA && IsOpaqueB) ? -1 : 0);
 }
 
 internal void
 CloverUIDrawWidgets(gl_render_data *RenderData, clover_ui_context *Context)
 {
-    // TODO(Sleepster): Widget->UIID.LayerIdx sorting 
     qsort(Context->UIElements, Context->CreatedElementCounter, sizeof(struct ui_element), CloverUISortElementsByLayer);
     for(uint32 WidgetIndex = 0;
         WidgetIndex <= Context->CreatedElementCounter;
