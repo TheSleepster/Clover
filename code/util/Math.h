@@ -1929,6 +1929,11 @@ static inline mat4 mat4Translate(vec3 Translation)
     return Result;
 }
 
+static inline mat4 mat4Translation(mat4 A, vec3 Translation)
+{
+    return(mat4Multiply(A, mat4Translate(Translation)));
+}
+
 static inline mat4 mat4InvTranslate(mat4 TranslationMatrix)
 {
     
@@ -1986,6 +1991,11 @@ static inline mat4 mat4MakeScale(vec3 Scale)
     Result.Elements[2][2] = Scale.Z;
     
     return Result;
+}
+
+static inline mat4 mat4Scale(mat4 A, vec3 Scale)
+{
+    return(mat4Multiply(A, mat4MakeScale(Scale)));
 }
 
 static inline mat4 mat4InvScale(mat4 ScaleMatrix) 

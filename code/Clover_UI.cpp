@@ -40,7 +40,7 @@ CloverUICreateElement(clover_ui_context *Context, ui_type Type)
         if(!Found->IsValid)
         {
             Result = Found;
-
+            
             Result->IsValid = true;
             Result->UIID.ID = ElementIndex;
             Result->UIID.LayerIdx = Context->ActiveLayer;
@@ -60,7 +60,7 @@ CloverUIWidgetMakeXForm(ui_element *Widget)
     mat4 Identity    = mat4Identity(1.0f);
     mat4 Translation = mat4Multiply(Identity, mat4Translate(v2Expand(Widget->Position, 0.0f)));
     mat4 Scale       = mat4Multiply(Identity, mat4MakeScale(v2Expand(Widget->Size,     1.0f)));
-
+    
     Widget->XForm = Translation * Scale;
 } 
 
@@ -88,7 +88,7 @@ CloverUIButton(clover_ui_context *Context,
                vec4               Color) 
 {
     ui_element *Widget = CloverUICreateElement(Context, UI_Button);
-
+    
     Widget->ElementName = Name;
     Widget->Sprite      = Sprite;
     Widget->Position    = Position;
@@ -104,12 +104,53 @@ CloverUIButton(clover_ui_context *Context,
         if(IsGameKeyPressed(ATTACK, Context->GameInput))
         {
             Widget->IsActive = true;
+            ButtonState.IsReleased = false;
+            ButtonState.IsPressed = true;
+        }
+        if(IsGameKeyReleased(ATTACK, Context->GameInput))
+        {
+            Widget->IsActive = false;
+            ButtonState.IsReleased = true;
+            ButtonState.IsPressed = false;
+        }
+    }
+    ButtonState.UIID  = Widget->UIID;
+    return(ButtonState);
+} 
+
+
+internal ui_element_state
+CloverUIHoldButton(clover_ui_context *Context, 
+                   string             Name, 
+                   vec2               Position, 
+                   vec2               Size, 
+                   static_sprite_data Sprite, 
+                   vec4               Color) 
+{
+    ui_element *Widget = CloverUICreateElement(Context, UI_Button);
+    
+    Widget->ElementName = Name;
+    Widget->Sprite      = Sprite;
+    Widget->Position    = Position;
+    Widget->Size        = Size;
+    Widget->DrawColor   = Color;
+    Widget->HasText     = true;
+    Widget->OccupiedRange = CreateRange(vec2{Widget->Position.X - (Widget->Size.X * 0.5f), Widget->Position.Y - (Widget->Size.Y * 0.5f)}, 
+                                        vec2{Widget->Position.X + (Widget->Size.X * 0.5f), Widget->Position.Y + (Widget->Size.Y * 0.5f)});
+    ui_element_state ButtonState = {};
+    if(CloverUIIsHot(Context, Widget))
+    {
+        ButtonState.IsHot = true;
+        if(IsGameKeyDown(ATTACK, Context->GameInput))
+        {
+            Widget->IsActive = true;
             ButtonState.IsPressed = true;
         }
     }
     ButtonState.UIID  = Widget->UIID;
     return(ButtonState);
 } 
+
 
 internal ui_element*
 CloverUIMakeTextElement(clover_ui_context *Context,
@@ -120,12 +161,12 @@ CloverUIMakeTextElement(clover_ui_context *Context,
                         vec4               DrawColor)
 {
     ui_element *TextElement = CloverUICreateElement(Context, UI_Text);
-
+    
     vec2 TextOrigin = Position;
     real32 TrueScale = FontScaleFactor / 100.0f;
-
+    
     vec2 TotalTextSize   = {};
-         TotalTextSize.Y = Context->ActiveFont->FontHeight * TrueScale; 
+    TotalTextSize.Y = Context->ActiveFont->FontHeight * TrueScale; 
     for(uint32 StringIndex = 0;
         StringIndex < FormattedText.Length;
         StringIndex++)
@@ -135,12 +176,12 @@ CloverUIMakeTextElement(clover_ui_context *Context,
             TotalTextSize.Y += Context->ActiveFont->FontHeight * TrueScale; 
             continue; 
         }
-
+        
         char Character = (char)FormattedText.Data[StringIndex];
         font_glyph Glyph = Context->ActiveFont->Glyphs[Character];
         TotalTextSize.X += Glyph.GlyphAdvance.X * TrueScale;
     }
-
+    
     switch(Alignment)
     {
         case TEXT_ALIGNMENT_Left:
@@ -153,7 +194,7 @@ CloverUIMakeTextElement(clover_ui_context *Context,
         }break;
         default: break;
     }
-
+    
     TextElement->Position    = TextOrigin;
     TextElement->TextOrigin  = TextOrigin;
     TextElement->Size        = TotalTextSize;
@@ -178,18 +219,18 @@ CloverUITextBox(clover_ui_context *Context,
 {
     ui_element *TextData     = CloverUIMakeTextElement(Context, FormattedText, TextOrigin, FontScaleFactor, ContentAlignment, TextColor);
     ui_element *Container    = CloverUICreateElement(Context, UI_TextBox);
-
+    
     Container->ElementName   = Name;
     Container->ElementText   = FormattedText;
     Container->TextOrigin    = TextData->Position;
     Container->FontScale     = FontScaleFactor;
-
+    
     Container->Position      = BoxPosition;
     Container->Size          = TextData->Size + BoxSize;
     Container->Sprite        = Sprite;
     Container->DrawColor     = BoxColor;
     Container->TextDrawColor = TextColor; 
-
+    
     ui_element_state BoxState = {};
     BoxState.IsHot = CloverUIIsHot(Context, Container);
     BoxState.UIID  = Container->UIID;
@@ -200,15 +241,15 @@ internal ui_element_state
 CloverUISpriteElement(clover_ui_context *Context, vec2 Position, vec2 Size, mat4 XForm, static_sprite_data Sprite, vec4 Color)
 {
     ui_element *SpriteElement = CloverUICreateElement(Context, UI_ItemSprite);
-                SpriteElement->Position = Position;
-                SpriteElement->Size = Size;
-                SpriteElement->Sprite = Sprite;
-                SpriteElement->DrawColor = Color;
+    SpriteElement->Position = Position;
+    SpriteElement->Size = Size;
+    SpriteElement->Sprite = Sprite;
+    SpriteElement->DrawColor = Color;
     if(XForm != NULLMATRIX)
     {
         SpriteElement->XForm = XForm;
     }
-
+    
     ui_element_state SpriteState = {};
     SpriteState.UIID = SpriteElement->UIID;
     return(SpriteState);
@@ -219,10 +260,10 @@ CloverUISortElementsByLayer(const void *A, const void *B)
 {
     const ui_element *ElementA = (const ui_element*)A;
     const ui_element *ElementB = (const ui_element*)B;
-
+    
     bool IsOpaqueA = (ElementA->DrawColor.A == 1.0f);
     bool IsOpaqueB = (ElementB->DrawColor.A == 1.0f);
-
+    
     return((ElementA->UIID.LayerIdx > ElementB->UIID.LayerIdx) ?  1 :
            (ElementA->UIID.LayerIdx < ElementB->UIID.LayerIdx) ? -1 : 
            (IsOpaqueA && !IsOpaqueB) ?  1 :

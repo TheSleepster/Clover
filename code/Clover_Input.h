@@ -98,7 +98,7 @@ enum KeyBindings
     HOTBAR_07,
     DROP_ITEM,
     DROP_HELD,
-    CRAFTING_MENU,
+    CRAFTING,
     BINDING_COUNT,
 };
 

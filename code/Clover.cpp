@@ -5,6 +5,7 @@
 #include "util/Array.h"
 #include "util/FileIO.h"
 #include "util/CustomStrings.h"
+#include "util/Pairs.h"
 
 // CLOVER HEADERS
 #include "Clover.h"
@@ -28,18 +29,12 @@
 global_variable entity *Player = {};
 
 
-internal inline uint64
-GetRandomSeed()
-{
-    return(__rdtsc());
-}
-
 // NOTE(Sleepster): Random Number Generation stuff
 #define RAND_MAX_64 0xFFFFFFFFFFFFFFFFull
 #define MULTIPLIER 6364136223846793005ull
 #define INCREMENT 1442695040888963407ull
 
-global_variable uint64 RDTSCRandomSeed = GetRandomSeed();
+global_variable uint64 RDTSCRandomSeed = __rdtsc();
 
 internal inline uint64
 PeekRandom()
@@ -92,21 +87,177 @@ LoadSpriteData(game_state *State)
     State->GameData.Sprites[SPRITE_SelectionBox]          = {.AtlasOffset = {112, 16}, .SpriteSize = {16, 16}};
     State->GameData.Sprites[SPRITE_Workbench]             = {.AtlasOffset = { 16, 80}, .SpriteSize = {16, 16}};
     State->GameData.Sprites[SPRITE_Furnace]               = {.AtlasOffset = {  0, 80}, .SpriteSize = {16, 16}};
+    State->GameData.Sprites[SPRITE_Outline]               = {.AtlasOffset = {128,  0}, .SpriteSize = {16, 16}};
 }
 
 internal inline void
 LoadItemData(game_state *State)
 {
-    State->GameData.GameItems[ITEM_Nil]              = {};
-    State->GameData.GameItems[ITEM_Pebbles]          = {.Archetype = ITEM,      .Flags = IS_VALID|IS_ITEM|IS_IN_INVENTORY, .Sprite = SPRITE_Pebbles,       .ItemID = ITEM_Pebbles,          .MaxStackCount = 64, .ItemName = STR("Pebbles"),         .ItemDesc = STR("These are some pebbles!")};
-    State->GameData.GameItems[ITEM_Branches]         = {.Archetype = ITEM,      .Flags = IS_VALID|IS_ITEM|IS_IN_INVENTORY, .Sprite = SPRITE_Branches,      .ItemID = ITEM_Branches,         .MaxStackCount = 64, .ItemName = STR("Branches"),        .ItemDesc = STR("These are some branches!")};
-    State->GameData.GameItems[ITEM_Trunk]            = {.Archetype = ITEM,      .Flags = IS_VALID|IS_ITEM|IS_IN_INVENTORY, .Sprite = SPRITE_Trunk,         .ItemID = ITEM_Trunk,            .MaxStackCount = 64, .ItemName = STR("Pine Logs"),       .ItemDesc = STR("This is a bundle of logs!")};
-    State->GameData.GameItems[ITEM_RubyOreChunk]     = {.Archetype = ITEM,      .Flags = IS_VALID|IS_ITEM|IS_IN_INVENTORY, .Sprite = SPRITE_RubyChunk,     .ItemID = ITEM_RubyOreChunk,     .MaxStackCount = 64, .ItemName = STR("Ruby Chunks"),     .ItemDesc = STR("These are chunks of Ruby Rock!")};
-    State->GameData.GameItems[ITEM_SapphireOreChunk] = {.Archetype = ITEM,      .Flags = IS_VALID|IS_ITEM|IS_IN_INVENTORY, .Sprite = SPRITE_SapphireChunk, .ItemID = ITEM_SapphireOreChunk, .MaxStackCount = 64, .ItemName = STR("Sapphire Chunks"), .ItemDesc = STR("These are some chunks of Sapphire Rock!")};
-    State->GameData.GameItems[ITEM_ToolPickaxe]      = {.Archetype = ITEM,      .Flags = IS_VALID|IS_ITEM|IS_IN_INVENTORY, .Sprite = SPRITE_ToolPickaxe,   .ItemID = ITEM_ToolPickaxe,      .MaxStackCount = 1,  .ItemName = STR("Simple Pickaxe"),  .ItemDesc = STR("This a pickaxe, It can be used to mine ores!")};
-    State->GameData.GameItems[ITEM_ToolWoodAxe]      = {.Archetype = ITEM,      .Flags = IS_VALID|IS_ITEM|IS_IN_INVENTORY, .Sprite = SPRITE_ToolWoodAxe,   .ItemID = ITEM_ToolWoodAxe,      .MaxStackCount = 1,  .ItemName = STR("Simple Wood Axe"), .ItemDesc = STR("This is a wood axe, It can be used to cut trees!")};
-    State->GameData.GameItems[ITEM_Workbench]        = {.Archetype = BUILDING,  .Flags = IS_VALID|IS_BUILDABLE,            .Sprite = SPRITE_Workbench,   .ItemID = ITEM_Workbench,      .MaxStackCount = 1,  .ItemName = STR("Workbench"), .ItemDesc = STR("This is a Workbench, it is used for crafting!")};
-    State->GameData.GameItems[ITEM_Furnace]          = {.Archetype = BUILDING,  .Flags = IS_VALID|IS_BUILDABLE,            .Sprite = SPRITE_Furnace,   .ItemID = ITEM_Furnace,      .MaxStackCount = 1,  .ItemName = STR("Furnace"), .ItemDesc = STR("This is a Furnace, It can be used to smelt ores!")};
+    State->GameData.GameItems[ITEM_Nil] = {};
+    State->GameData.GameItems[ITEM_Pebbles] = 
+    {
+        .Archetype = ITEM,      
+        .Flags = IS_VALID|IS_ITEM|IS_IN_INVENTORY, 
+        .Sprite = SPRITE_Pebbles,       
+        .ItemID = ITEM_Pebbles,          
+        .MaxStackCount = 64, 
+        .ItemName = STR("Pebbles"),         
+        .ItemDesc = STR("These are some pebbles!"),
+        .CraftingFormula = 
+        {
+            {ITEM_SapphireOreChunk, 1}, 
+        },
+        .UniqueMaterialCount = 1,
+        .FormulaResultCount  = 3,
+        .Craftable = true,
+    };
+    
+    State->GameData.GameItems[ITEM_Branches] = 
+    {
+        .Archetype = ITEM,     
+        .Flags = IS_VALID|IS_ITEM|IS_IN_INVENTORY, 
+        .Sprite = SPRITE_Branches,      
+        .ItemID = ITEM_Branches,         
+        .MaxStackCount = 64,
+        .ItemName = STR("Branches"),        
+        .ItemDesc = STR("These are some branches!"),
+        .CraftingFormula = 
+        {
+            {ITEM_Trunk, 1},
+        },
+        .UniqueMaterialCount = 1,
+        .FormulaResultCount  = 3,
+        .Craftable = true,
+    };
+    
+    State->GameData.GameItems[ITEM_Trunk] = 
+    {
+        .Archetype = ITEM,      
+        .Flags = IS_VALID|IS_ITEM|IS_IN_INVENTORY, 
+        .Sprite = SPRITE_Trunk,         
+        .ItemID = ITEM_Trunk,            
+        .MaxStackCount = 64, 
+        .ItemName = STR("Pine Logs"),       
+        .ItemDesc = STR("This is a bundle of logs!"),
+        .CraftingFormula = 
+        {
+            {ITEM_Branches, 3}
+        },
+        .UniqueMaterialCount = 1,
+        .FormulaResultCount  = 1,
+        .Craftable = true,
+    };
+    
+    State->GameData.GameItems[ITEM_RubyOreChunk] = 
+    {
+        .Archetype = ITEM,      
+        .Flags = IS_VALID|IS_ITEM|IS_IN_INVENTORY, 
+        .Sprite = SPRITE_RubyChunk,     
+        .ItemID = ITEM_RubyOreChunk,     
+        .MaxStackCount = 64, 
+        .ItemName = STR("Ruby Chunks"),     
+        .ItemDesc = STR("These are chunks of Ruby Rock!"),
+        .Craftable = false,
+    };
+    
+    State->GameData.GameItems[ITEM_SapphireOreChunk] = 
+    {
+        .Archetype = ITEM,      
+        .Flags = IS_VALID|IS_ITEM|IS_IN_INVENTORY, 
+        .Sprite = SPRITE_SapphireChunk, 
+        .ItemID = ITEM_SapphireOreChunk, 
+        .MaxStackCount = 64, 
+        .ItemName = STR("Sapphire Chunks"), 
+        .ItemDesc = STR("These are some chunks of Sapphire Rock!"),
+        .Craftable = false,
+    };
+    
+    State->GameData.GameItems[ITEM_ToolPickaxe] = 
+    {
+        .Archetype = ITEM,      
+        .Flags = IS_VALID|IS_ITEM|IS_IN_INVENTORY, 
+        .Sprite = SPRITE_ToolPickaxe,   
+        .ItemID = ITEM_ToolPickaxe,      
+        .MaxStackCount = 1,  
+        .ItemName = STR("Simple Pickaxe"),  
+        .ItemDesc = STR("This a pickaxe, It can be used to mine ores!"),
+        .CraftingFormula = 
+        {
+            {ITEM_Branches, 1},
+            {ITEM_Pebbles, 2},
+        },
+        .UniqueMaterialCount = 2,
+        .FormulaResultCount  = 1,
+        .Craftable = true,
+    };
+    
+    State->GameData.GameItems[ITEM_ToolWoodAxe] = 
+    {
+        .Archetype = ITEM,      
+        .Flags = IS_VALID|IS_ITEM|IS_IN_INVENTORY, 
+        .Sprite = SPRITE_ToolWoodAxe,   
+        .ItemID = ITEM_ToolWoodAxe,      
+        .MaxStackCount = 1,  
+        .ItemName = STR("Simple Wood Axe"), 
+        .ItemDesc = STR("This is a wood axe, It can be used to cut trees!"),
+        .CraftingFormula = 
+        {
+            {ITEM_Branches, 1},
+            {ITEM_Pebbles, 2},
+        },
+        .UniqueMaterialCount = 2,
+        .FormulaResultCount  = 1,
+        .Craftable = true,
+    };
+    
+    State->GameData.GameItems[ITEM_Workbench] = 
+    {
+        .Archetype = BUILDING,  
+        .Flags = IS_VALID|IS_BUILDABLE,            
+        .Sprite = SPRITE_Workbench,   
+        .ItemID = ITEM_Workbench,      
+        .MaxStackCount = 1,  
+        .ItemName = STR("Workbench"), 
+        .ItemDesc = STR("This is a Workbench, it is used for crafting!"),
+        .CraftingFormula = 
+        {
+            {ITEM_Trunk, 2},
+            {ITEM_Branches, 3},
+            {ITEM_Pebbles, 2},
+        },
+        .UniqueMaterialCount = 3,
+        .FormulaResultCount  = 1,
+        .Craftable = true,
+    };
+    
+    State->GameData.GameItems[ITEM_Furnace] = 
+    {
+        .Archetype = BUILDING,  
+        .Flags = IS_VALID|IS_BUILDABLE,            
+        .Sprite = SPRITE_Furnace,   
+        .ItemID = ITEM_Furnace,      
+        .MaxStackCount = 1,  
+        .ItemName = STR("Furnace"), 
+        .ItemDesc = STR("This is a Furnace, It can be used to smelt ores!"),
+        .CraftingFormula = 
+        {
+            {ITEM_SapphireOreChunk, 3},
+            {ITEM_Pebbles, 6},
+        },
+        .UniqueMaterialCount = 2,
+        .FormulaResultCount  = 1,
+        .Craftable = true,
+    };
+    
+    State->GameData.ItemSprites[ITEM_Pebbles]          = MakePair(ITEM_Pebbles,          SPRITE_Pebbles);
+    State->GameData.ItemSprites[ITEM_Branches]         = MakePair(ITEM_Branches,         SPRITE_Branches);
+    State->GameData.ItemSprites[ITEM_Trunk]            = MakePair(ITEM_Trunk,            SPRITE_Trunk);
+    State->GameData.ItemSprites[ITEM_SapphireOreChunk] = MakePair(ITEM_SapphireOreChunk, SPRITE_SapphireChunk);
+    State->GameData.ItemSprites[ITEM_RubyOreChunk]     = MakePair(ITEM_RubyOreChunk,     SPRITE_RubyChunk);
+    State->GameData.ItemSprites[ITEM_ToolPickaxe]      = MakePair(ITEM_ToolPickaxe,      SPRITE_ToolPickaxe);
+    State->GameData.ItemSprites[ITEM_ToolWoodAxe]      = MakePair(ITEM_ToolWoodAxe,      SPRITE_ToolWoodAxe);
+    State->GameData.ItemSprites[ITEM_Workbench]        = MakePair(ITEM_Workbench,        SPRITE_Workbench);
+    State->GameData.ItemSprites[ITEM_Furnace]          = MakePair(ITEM_Furnace,          SPRITE_Furnace);
 }
 
 internal entity *
@@ -187,7 +338,6 @@ HandleInput(game_state *State, entity *PlayerIn, time Time)
             Player->Inventory.CurrentInventorySlot = NULLSLOT;
             return;
         }
-        
         Player->Inventory.CurrentInventorySlot = 0;
     }
     if(IsGameKeyPressed(HOTBAR_02, &State->GameInput))
@@ -244,6 +394,7 @@ HandleInput(game_state *State, entity *PlayerIn, time Time)
         }
         Player->Inventory.CurrentInventorySlot = 6;
     }
+    
     if(IsKeyPressed(KEY_HOME, &State->GameInput))
     {
         State->DrawDebug = !State->DrawDebug;
@@ -430,7 +581,7 @@ SetupBuildingWorkbench(entity *Entity)
 {
     Entity->Archetype = BUILDING;
     Entity->Sprite    = SPRITE_Workbench;
-    Entity->Flags    += IS_ACTIVE|IS_BUILDABLE|IS_PLACED;
+    Entity->Flags    += IS_ACTIVE|IS_BUILDABLE|IS_PLACED|IS_DESTRUCTABLE;
     Entity->Size      = {16, 16}; 
     Entity->Health      = NodeHealth;
     Entity->Rotation    = 0;
@@ -445,7 +596,7 @@ SetupBuildingFurnace(entity *Entity)
 {
     Entity->Archetype = BUILDING;
     Entity->Sprite    = SPRITE_Furnace;
-    Entity->Flags    += IS_ACTIVE|IS_BUILDABLE|IS_PLACED;
+    Entity->Flags    += IS_ACTIVE|IS_BUILDABLE|IS_PLACED|IS_DESTRUCTABLE;
     Entity->Size      = {16, 16};
     
     Entity->Health      = NodeHealth;
@@ -454,29 +605,6 @@ SetupBuildingFurnace(entity *Entity)
     Entity->BoxCollider = {};
     
     Entity->ItemID      = ITEM_Furnace;
-}
-
-internal occupied_world_sector *
-CreateOccupiedSector(game_state *State)
-{
-    occupied_world_sector *Result = {};
-    
-    for(uint32 SlotIndex = 1;
-        SlotIndex < MAX_ENTITIES;
-        ++SlotIndex)
-    {
-        occupied_world_sector *Found = &State->World.OccupiedSectors[SlotIndex]; 
-        if(!Found->IsValid)
-        {
-            Result = Found;            
-            break;
-        }
-    }
-    Assert(Result);
-    
-    ++State->World.OccupiedSectorCounter;
-    Result->IsValid = true;
-    return(Result);
 }
 
 internal inline void
@@ -492,6 +620,12 @@ ResetGame(gl_render_data *RenderData, game_state *State)
     {
         State->GameData.Sprites[i] = {};
     }
+    
+    State->DisplayPlayerHotbar = true;
+    State->DisplayPlayerInventory = false;
+    State->DisplayCraftingMenu = false;
+    State->ActiveCraftingStation = {};
+    State->ActiveRecipe = {};
 }
 
 internal int32
@@ -658,6 +792,19 @@ ResetItemSlotState(item *Item)
     Item->Flags = {};
 }
 
+internal inline sprite_type
+GetSpriteFromPair(game_state *State, item_id ID)
+{
+    for(const auto &ItemData : State->GameData.ItemSprites)
+    {
+        if(ItemData.First == ID)
+        {
+            return(ItemData.Second);
+        }
+    }
+    return(SPRITE_Nil);
+}
+
 extern
 GAME_ON_AWAKE(GameOnAwake)
 {
@@ -710,24 +857,27 @@ GAME_ON_AWAKE(GameOnAwake)
     SetupBuildingWorkbench(WorkbenchTest);
     WorkbenchTest->Position = {0, -80};
     WorkbenchTest->Position = TileToWorldPos(WorldToTilePos(WorkbenchTest->Position));
+    WorkbenchTest->BoxCollider = CreateRange(vec2{WorkbenchTest->Position.X - (TILE_SIZE * 0.5f), WorkbenchTest->Position.Y}, 
+                                             vec2{WorkbenchTest->Position.X - (TILE_SIZE * 0.5f), WorkbenchTest->Position.Y} + WorkbenchTest->Size);
     
     entity *FurnaceTest = CreateEntity(State);
     SetupBuildingFurnace(FurnaceTest);
     FurnaceTest->Position = {20, -80};
     FurnaceTest->Position = TileToWorldPos(WorldToTilePos(FurnaceTest->Position));
-    
+    FurnaceTest->BoxCollider = CreateRange(vec2{FurnaceTest->Position.X - (TILE_SIZE * 0.5f), FurnaceTest->Position.Y}, 
+                                           vec2{FurnaceTest->Position.X - (TILE_SIZE * 0.5f), FurnaceTest->Position.Y} + FurnaceTest->Size);
     
     entity *GroundWorkbench = CreateEntity(State);
     SetupItemWorkbench(GroundWorkbench);
     GroundWorkbench->Position = {0, -100};
     GroundWorkbench->Target   = {0, -100};
-    
+    GroundWorkbench->BoxCollider = CreateRange(vec2{GroundWorkbench->Position.X - (TILE_SIZE * 0.5f), GroundWorkbench->Position.Y}, 
+                                               vec2{GroundWorkbench->Position.X - (TILE_SIZE * 0.5f), GroundWorkbench->Position.Y} + GroundWorkbench->Size);
     
     entity *GroundFurnace = CreateEntity(State);
     SetupItemFurnace(GroundFurnace);
     GroundFurnace->Position = {20, -100};
     GroundFurnace->Target   = {20, -100};
-    
     
     entity *Pickaxe = CreateEntity(State);
     SetupItemToolPickaxe(Pickaxe);
@@ -739,6 +889,7 @@ GAME_ON_AWAKE(GameOnAwake)
     SetupItemToolPickaxe(Pickaxe2);
     Pickaxe2->Position = {32, 150};
     Pickaxe2->Target = {32, 150};
+    
     
     Player = CreateEntity(State);
     SetupPlayer(Player);
@@ -809,7 +960,11 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                 
                 entity *SelectedEntity = State->World.WorldFrame.SelectedEntity;
                 
-                if(IsGameKeyPressed(ATTACK, &State->GameInput) && (Temp->Flags & IS_DESTRUCTABLE) && !(Temp->Flags & IS_UI) && PlayerToObjectDistance <= MaxHitRange)
+                if(IsGameKeyPressed(ATTACK, &State->GameInput) && 
+                   (Temp->Flags & IS_DESTRUCTABLE) && 
+                   !(Temp->Flags & IS_UI) && 
+                   PlayerToObjectDistance <= MaxHitRange &&
+                   !State->DisplayCraftingMenu)
                 {
                     --Temp->Health;
                     if(Temp->Health <= 0)
@@ -867,6 +1022,26 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                                     }break;
                                 }
                             }
+                            case BUILDING:
+                            {
+                                switch(SelectedEntity->Sprite)
+                                {
+                                    case SPRITE_Furnace:
+                                    {
+                                        entity *Furnace = CreateEntity(State);
+                                        SetupItemFurnace(Furnace);
+                                        Furnace->Position = SelectedEntity->Position;
+                                        Furnace->Target   = SelectedEntity->Position;
+                                    }break;
+                                    case SPRITE_Workbench:
+                                    {
+                                        entity *Workbench = CreateEntity(State);
+                                        SetupItemWorkbench(Workbench);
+                                        Workbench->Position = SelectedEntity->Position;
+                                        Workbench->Target   = SelectedEntity->Position;
+                                    }break;
+                                }
+                            }break;
                         }
                         //PlaySound(&Memory->TemporaryStorage, State, STR("boop.wav"), 1);
                         State->World.WorldFrame.SelectedEntity = {};
@@ -1061,7 +1236,6 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     SpriteXForm = mat4Multiply(SpriteXForm, mat4Translate(vec3{(UIBoxSize.X + ItemDescData->Size.X * -0.5f), 19, 0}));
                     SpriteXForm = mat4Multiply(SpriteXForm, mat4Translate(vec3{-7, 0, 0}));
                     SpriteXForm = mat4Multiply(SpriteXForm, mat4MakeScale(vec3{16, 16, 1.0f}));
-                    
                     DrawUISpriteXForm(RenderData, SpriteXForm, GetSprite(State, SPRITE_Nil), 0, vec4{0.1f, 0.1f, 0.1f, 0.4f});
                     
                     SpriteXForm = mat4Multiply(SpriteXForm, mat4MakeScale(vec3{1 / IconSize, 1 / IconSize, 1.0f}));
@@ -1331,6 +1505,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
     
     // NOTE(Sleepster): Building
     {
+        // TODO(Sleepster): BUILD MENU
         if((Player->Inventory.SelectedHotbarItem || Player->Inventory.SelectedInventoryItem) && (Player->Inventory.CurrentInventorySlot != NULLSLOT))
         {
             item *InventoryItem = {};
@@ -1405,8 +1580,251 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
     
     // NOTE(Sleepster): Crafting
     {
+        // NOTE(Sleepster): Can the crafting dialogue be displayed?
+        if(IsGameKeyPressed(CRAFTING, &State->GameInput))
+        {
+            if(!State->ActiveCraftingStation)
+            {
+                for(uint32 EntityIndex = 0;
+                    EntityIndex <= State->World.EntityCounter;
+                    EntityIndex++)
+                {
+                    entity *Temp = &State->World.Entities[EntityIndex];
+                    if((Temp->Flags & IS_PLACED) && (Temp->Archetype == BUILDING))
+                    {
+                        real32 Distance = v2Distance(Player->Position, Temp->Position);
+                        if(Distance <= ItemPickupDist && State->World.WorldFrame.SelectedEntity && 
+                           Temp->ItemID == State->World.WorldFrame.SelectedEntity->ItemID)
+                        {
+                            State->DisplayCraftingMenu = !State->DisplayCraftingMenu;
+                            State->ActiveCraftingStation = Temp;
+                            break;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                State->DisplayCraftingMenu = !State->DisplayCraftingMenu;
+                State->ActiveCraftingStation = {};
+            }
+        }
         
+        // NOTE(Sleepster): If it can, display it
+        if(State->DisplayCraftingMenu)
+        {
+            const real32 IconSize = 12;
+            const real32 Padding = 2;
+            const real32 BoxWidth  = (IconSize * 5) + ((5 - 1) * Padding);
+            const real32 BoxHeight = 120;
+            
+            const vec2 BoxPosition = {-45, 0};
+            const vec4 BoxColor = {0.0, 0.0, 0.0, 0.6};
+            
+            const real32 StartingXOffset = -BoxWidth;
+            const real32 StartingYOffset = 32;
+            
+            // NOTE(Sleepster): This can be up to 4;
+            int IconCount = 0;
+            int RowCount = 0;
+            
+            mat4 XForm = mat4Identity(1.0f);
+            XForm = mat4Translation(XForm, v2Expand(BoxPosition, 0));
+            XForm = mat4Scale(XForm, vec3{BoxWidth, BoxHeight, 1});
+            CloverUISpriteElement(&State->UIContext, {0, 0}, {0, 0}, XForm, GetSprite(State, SPRITE_Nil), BoxColor);
+            
+            XForm = mat4Identity(1.0f);
+            XForm = mat4Translation(XForm, v2Expand(BoxPosition * -1, 0));
+            XForm = mat4Scale(XForm, vec3{BoxWidth, BoxHeight, 1});
+            CloverUISpriteElement(&State->UIContext, {0, 0}, {0, 0}, XForm, GetSprite(State, SPRITE_Nil), BoxColor);
+            
+            DrawUIText(RenderData, STR("Crafting"), {-55, 40}, 15, UBUNTU_MONO, WHITE);
+            
+            for(uint32 Element = 0;
+                Element < ITEM_IDCount;
+                Element++)
+            {
+                item *Item = &State->GameData.GameItems[Element];
+                if(Item && Item->Craftable)
+                {
+                    real32 NewXOffset = StartingXOffset + ((IconSize + Padding) * IconCount);
+                    real32 NewYOffset = StartingYOffset - ((IconSize + Padding) * RowCount);
+                    
+                    XForm = mat4Identity(1.0f);
+                    XForm = mat4Translation(XForm, vec3{NewXOffset, NewYOffset, 0});
+                    
+                    vec2 SpriteSize = {IconSize, IconSize};
+                    if(Item == State->ActiveRecipe)
+                    {
+                        SpriteSize = {14, 14};
+                    }
+                    XForm = mat4Scale(XForm, v2Expand(SpriteSize, 1));
+                    CloverUISpriteElement(&State->UIContext, {0, 0}, {0, 0}, XForm, GetSprite(State, Item->Sprite), WHITE);
+                    vec2 Position = XForm.Columns[3].XY;
+                    CloverUIPushLayer(&State->UIContext, 1);
+                    ui_element_state Button = CloverUIButton(&State->UIContext, STR("Element"), Position, SpriteSize, GetSprite(State, SPRITE_Outline), WHITE);
+                    CloverUIPushLayer(&State->UIContext, 0);
+                    
+                    IconCount++;
+                    if(IconCount >= 4)
+                    {
+                        IconCount = 0;
+                        RowCount = 1;
+                    }
+                    
+                    if((Button.IsPressed && !State->ActiveRecipe) || (Button.IsPressed && Item->ItemID != State->ActiveRecipe->ItemID))
+                    {
+                        State->ActiveRecipe = Item;
+                    }
+                    else if(Button.IsPressed && State->ActiveRecipe)
+                    {
+                        State->ActiveRecipe = {};
+                    }
+                }
+            }
+            
+            // NOTE(Sleepster): If we have an active recipe, display the recipe
+            if(State->ActiveRecipe)
+            {
+                item *Item = State->ActiveRecipe;
+                CloverUIMakeTextElement(&State->UIContext, Item->ItemName, {50, 40}, 15, TEXT_ALIGNMENT_Center, WHITE);
+                
+                XForm = mat4Identity(1.0f);
+                XForm = mat4Translation(XForm, vec3{45, 30, 0});
+                XForm = mat4Scale(XForm, vec3{IconSize, IconSize, 1});
+                CloverUISpriteElement(&State->UIContext, {0, 0}, {0, 0}, XForm, GetSprite(State, Item->Sprite), WHITE);
+                
+                int InventoryCount[MAX_CRAFTING_ELEMENTS] = {};
+                for(uint32 InventorySlotIndex = 0;
+                    InventorySlotIndex < TOTAL_INVENTORY_SIZE;
+                    InventorySlotIndex++)
+                {
+                    item *InventoryItem = &Player->Inventory.Items[InventorySlotIndex];
+                    for(uint32 FormulaIndex = 0;
+                        FormulaIndex < State->ActiveRecipe->UniqueMaterialCount;
+                        ++FormulaIndex)
+                    {
+                        crafting_material *FormulaItem = &State->ActiveRecipe->CraftingFormula[FormulaIndex];
+                        if(InventoryItem->ItemID == FormulaItem->CraftingMaterial)
+                        {
+                            InventoryCount[FormulaIndex] = InventoryItem->CurrentStack;
+                        }
+                    }
+                }
+                
+                const real32 InitialYOffset = 10;
+                for(uint32 MaterialIndex = 0;
+                    MaterialIndex < Item->UniqueMaterialCount;
+                    MaterialIndex++)
+                {
+                    crafting_material *Material = &Item->CraftingFormula[MaterialIndex];
+                    real32 NewYOffset = InitialYOffset - ((14 + Padding) * MaterialIndex);
+                    
+                    XForm = mat4Identity(1.0f);
+                    XForm = mat4Translation(XForm, vec3{45, NewYOffset, 0});
+                    XForm = mat4Scale(XForm, vec3{30, 12, 1});
+                    CloverUISpriteElement(&State->UIContext, {0, 0}, {0, 0}, XForm, GetSprite(State, SPRITE_Nil), {0.4, 0.4, 0.4, 0.3});
+                    
+                    XForm = mat4Identity(1.0f);
+                    XForm = mat4Translation(XForm, vec3{40, NewYOffset, 0});
+                    XForm = mat4Scale(XForm, vec3{8, 8, 1});
+                    
+                    static_sprite_data Sprite = GetSprite(State, GetSpriteFromPair(State, Material->CraftingMaterial));
+                    
+                    CloverUIPushLayer(&State->UIContext, 2);
+                    CloverUISpriteElement(&State->UIContext, {0, 0}, {0, 0}, XForm, Sprite, WHITE);
+                    CloverUIMakeTextElement(&State->UIContext, sprints(&Memory->TemporaryStorage, STR("%d/%d"), InventoryCount[MaterialIndex], Material->RequiredCount), {55, NewYOffset - 5}, 10, TEXT_ALIGNMENT_Center, BLACK);
+                    CloverUIPushLayer(&State->UIContext, 0);
+                }
+                
+                vec4 ButtonColor = {0.2, 0.2, 0.2, 0.4};
+                ui_element_state Button = CloverUIButton(&State->UIContext, STR("Element"), {45, -50}, {40, 12}, GetSprite(State, SPRITE_Nil), ButtonColor);
+                ui_element *ButtonId = &State->UIContext.UIElements[Button.UIID.ID];
+                if(Button.IsHot)
+                {
+                    ButtonId->DrawColor = {0.6, 0.2, 0.2, 0.4};
+                    if(IsGameKeyDown(ATTACK, &State->GameInput))
+                    {
+                        ButtonId->Size = ButtonId->Size * 1.1;
+                    }
+                }
+                if(Button.IsPressed)
+                {
+                    auto Craftable = [ItemCountTotal = &InventoryCount[0], Recipe = State->ActiveRecipe](int *ItemCounts, item *Craft) -> bool
+                    {
+                        if(Craft->CraftingFormula)
+                        {
+                            for(uint32 FormulaIndex = 0;
+                                FormulaIndex < Craft->UniqueMaterialCount;
+                                FormulaIndex++)
+                            {
+                                int ItemCount = ItemCounts[FormulaIndex];
+                                if(ItemCount >= Craft->CraftingFormula[FormulaIndex].RequiredCount)
+                                {
+                                    continue;
+                                }
+                                else
+                                {
+                                    return(false);
+                                }
+                            }
+                            return(true);
+                        }
+                        return(false);
+                    };
+                    
+                    bool CanBeCrafted = Craftable(&InventoryCount[0], State->ActiveRecipe);
+                    if(CanBeCrafted)
+                    {
+                        for(uint32 Index = 0;
+                            Index < State->ActiveRecipe->FormulaResultCount;
+                            Index++)
+                        {
+                            entity *CraftedItem = CreateEntity(State);
+                            SetupDroppedEntity(RenderData, State, State->ActiveRecipe, CraftedItem);
+                            CraftedItem->Position = State->ActiveCraftingStation->Position;
+                            CraftedItem->Target = State->ActiveCraftingStation->Position;
+                        }
+                        
+                        for(uint32 InventorySlotIndex = 0;
+                            InventorySlotIndex < TOTAL_INVENTORY_SIZE;
+                            InventorySlotIndex++)
+                        {
+                            item *InventoryItem = &Player->Inventory.Items[InventorySlotIndex];
+                            for(uint32 FormulaIndex = 0;
+                                FormulaIndex < State->ActiveRecipe->UniqueMaterialCount;
+                                ++FormulaIndex)
+                            {
+                                crafting_material *FormulaItem = &State->ActiveRecipe->CraftingFormula[FormulaIndex];
+                                if(InventoryItem->ItemID == FormulaItem->CraftingMaterial)
+                                {
+                                    InventoryItem->CurrentStack -= FormulaItem->RequiredCount;
+                                    if(InventoryItem->CurrentStack <= 0)
+                                    {
+                                        ResetItemSlotState(InventoryItem);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                CloverUIMakeTextElement(&State->UIContext, STR("Craft"), {48, -55}, 10, TEXT_ALIGNMENT_Center, BLACK);
+            }
+            else
+            {
+                CloverUIMakeTextElement(&State->UIContext, STR("Please Select an Item"), {50, 0}, 10, TEXT_ALIGNMENT_Center, WHITE);
+            }
+            
+            // NOTE(Sleepster): If the player gets to far, stop displaying it
+            real32 Distance = v2Distance(Player->Position, State->ActiveCraftingStation->Position);
+            if(Distance > ItemPickupDist)
+            {
+                State->DisplayCraftingMenu = !State->DisplayCraftingMenu;
+                State->ActiveCraftingStation = {};
+            }
+        }
     }
+    
     
     // TRANSPARENCY TEST
     {

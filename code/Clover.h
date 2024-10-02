@@ -9,6 +9,7 @@
 #include "util/Array.h"
 #include "util/FileIO.h"
 #include "util/CustomStrings.h"
+#include "util/Pairs.h"
 
 #include "Clover_Input.h"
 #include "Clover_Audio.h"
@@ -69,25 +70,30 @@ enum sprite_type
     SPRITE_SelectionBox        = 19,
     SPRITE_Workbench           = 20, 
     SPRITE_Furnace             = 21, 
+    SPRITE_Outline             = 22,
     SPRITE_Count
 };
 
 enum item_id
 {
-    ITEM_Nil,
-    ITEM_Pebbles,
-    ITEM_Branches,
-    ITEM_Trunk,
-    ITEM_RubyOreChunk,
-    ITEM_SapphireOreChunk,
-    ITEM_ToolPickaxe,
-    ITEM_ToolWoodAxe,
-    ITEM_Workbench,
-    ITEM_Furnace,
+    ITEM_Nil = 0,
+    
+    // CRAFTABLE
+    ITEM_Pebbles           = 1,
+    ITEM_Branches          = 2,
+    ITEM_Trunk             = 3,
+    ITEM_ToolPickaxe       = 4,
+    ITEM_ToolWoodAxe       = 5,
+    ITEM_Workbench         = 6,
+    ITEM_Furnace           = 7,
+    
+    // NON-CRAFTABLE
+    ITEM_RubyOreChunk      = 8,
+    ITEM_SapphireOreChunk  = 9,
     ITEM_IDCount
 };
 
-enum entity_flags : uint32
+enum entity_flags
 {
     IS_VALID                = 1 << 0,
     IS_SOLID                = 1 << 1,
@@ -109,13 +115,18 @@ enum entity_arch
 {
     NIL       = 0,
     PLAYER    = 1,
-    ROCK      = 2,
-    TREE      = 3,
-    NODE      = 4,
-    ITEM      = 5,
-    UI        = 6,
-    BUILDING  = 7,
-    COUNT
+    BUILDING  = 2,
+    ROCK      = 3,
+    TREE      = 4,
+    NODE      = 5,
+    ITEM      = 6,
+    ARCH_MAX,
+};
+
+struct crafting_material
+{
+    item_id CraftingMaterial;
+    int32   RequiredCount;
 };
 
 struct item
@@ -132,6 +143,12 @@ struct item
     
     string      ItemName;
     string      ItemDesc;
+    
+    crafting_material CraftingFormula[MAX_CRAFTING_ELEMENTS];
+    int32 UniqueMaterialCount;
+    int32 FormulaResultCount;
+    
+    bool Craftable;
 };
 
 struct entity_item_inventory
@@ -147,21 +164,6 @@ struct entity_item_inventory
     
     ui_element *InventorySlotButtons[TOTAL_INVENTORY_SIZE];
     uint32 CurrentInventorySlot;
-};
-
-struct crafting_item
-{
-    item_id Material;
-    int32   MaterialCount;
-};
-
-struct crafting_formula
-{
-    crafting_item Materials[MAX_CRAFTING_ELEMENTS];
-    string Name;
-    string Desc;
-    
-    item_id FormulaResult;
 };
 
 struct entity
@@ -189,13 +191,6 @@ struct entity
     int32       DroppedItemCount;
 };
 
-struct occupied_world_sector
-{
-    range_v2 OccupiedArea;
-    bool IsOccupied;
-    bool IsValid;
-};
-
 struct game_state
 {
     KeyCodeID KeyCodeLookup[KEY_COUNT];
@@ -206,18 +201,18 @@ struct game_state
     bool DisplayPlayerHotbar;
     bool DisplayPlayerInventory;
     bool DisplayCraftingMenu;
-    
+    bool DisplayBuildMenu;
     bool DrawDebug;
+    
+    entity *ActiveCraftingStation;
+    item   *ActiveRecipe;
     
     // NOTE(Sleepster): World Data
     struct
     {
         entity Entities[MAX_ENTITIES];  
-        occupied_world_sector OccupiedSectors[1000];
         item   Items[1000];
-        
         uint32 EntityCounter;
-        uint32 OccupiedSectorCounter;
         
         struct 
         {
@@ -240,9 +235,9 @@ struct game_state
     // NOTE(Sleepster): Visual Assets
     struct 
     { 
-        static_sprite_data     Sprites[SPRITE_Count];
-        item                   GameItems[ITEM_IDCount];
-        crafting_formula       CraftingDictionary[1];
+        static_sprite_data          Sprites[SPRITE_Count];
+        item                        GameItems[ITEM_IDCount];
+        pair <item_id, sprite_type> ItemSprites[ITEM_IDCount];
     }GameData;
 };
 

@@ -22,7 +22,7 @@
 #include "Clover_Renderer.h"
 #include "Clover_Input.h"
 
-enum ui_layer : uint16
+enum ui_layer
 {
     UI_LAYER_0  = 1 << 0,
     UI_LAYER_1  = 1 << 1,
@@ -42,7 +42,7 @@ enum ui_layer : uint16
     UI_LAYER_15 = 1 << 15,
 };
 
-enum ui_type : int8
+enum ui_type
 {
     UI_Nil,  
     UI_Button,  
@@ -51,7 +51,7 @@ enum ui_type : int8
     UI_ItemSprite,
 };
 
-enum ui_text_alignment : int8
+enum ui_text_alignment
 {
     TEXT_ALIGNMENT_Left,
     TEXT_ALIGNMENT_Right,
@@ -68,22 +68,22 @@ struct ui_element
 {
     ui_type Type;
     ui_id UIID;  
-
+    
     string ElementName;
     string ElementText;
     ui_text_alignment TextAlignment;
     real32 FontScale;
     vec4 TextDrawColor;
-
+    
     static_sprite_data Sprite;
-
+    
     vec2 Position;
     vec2 TextOrigin;
     vec2 Size;
     vec4 DrawColor;
-
+    
     range_v2 OccupiedRange;
-
+    
     bool IsValid;
     bool IsDisplayed;
     bool IsHot;
@@ -97,6 +97,7 @@ struct ui_element_state
 {
     bool IsHot;
     bool IsPressed;
+    bool IsReleased;
     ui_id UIID;
 };
 
@@ -104,19 +105,23 @@ struct clover_ui_context
 {
     ui_id HotLastFrame;
     ui_id ActiveLastFrame;
-
+    
     ui_layer ActiveLayer;
-
+    
     int32 CreatedElementCounter;
     ui_element UIElements[MAX_UI_ELEMENTS];
-
+    
     mat4 UICameraViewMatrix;
     mat4 UICameraProjectionMatrix;
-
+    
     Input     *GameInput;
     font_data *ActiveFont;
     font_index ActiveFontIndex;
     real32     LastActiveFontSize;
+    
+    real32 ButtonDelta;
+    real32 HoldCooldown;
+    real32 CurrentHoldTime;
 };
 
 #endif // CLOVER_UI_H

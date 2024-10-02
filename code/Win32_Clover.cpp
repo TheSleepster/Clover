@@ -75,7 +75,7 @@ GetCurrentTimeInSeconds(void)
 {
     LARGE_INTEGER Counter;
     QueryPerformanceCounter(&Counter);
-
+    
     return((real64)Counter.QuadPart / PerfCountFrequency);
 }
 
@@ -143,7 +143,6 @@ Win32ProcessInputMessages(MSG Message, HWND WindowHandle, game_state *State)
                 {
                     uint32 VKCode = (uint32)Message.wParam;
                     bool8 IsDown  = ((Message.lParam & (1 << 31)) == 0);
-                    
                     
                     KeyCodeID KeyCode  = State->KeyCodeLookup[Message.wParam];
                     Key *Key = &State->GameInput.Keyboard.Keys[KeyCode];
@@ -378,7 +377,7 @@ WinMain(HINSTANCE hInstance,
             RenderData.DrawFrame.Vertices = (vertex *)ArenaAlloc(&Memory.PermanentStorage, sizeof(vertex) * MAX_VERTICES);
             RenderData.DrawFrame.UIVertices = (vertex *)ArenaAlloc(&Memory.PermanentStorage, sizeof(vertex) * MAX_VERTICES);
             CloverResetRendererState(&RenderData);
-
+            
             Win32LoadKeyData(&State);
             Win32LoadDefaultBindings(&State.GameInput);
             
