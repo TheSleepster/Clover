@@ -99,6 +99,7 @@ enum KeyBindings
     DROP_ITEM,
     DROP_HELD,
     CRAFTING,
+    BUILD_MENU,
     BINDING_COUNT,
 };
 

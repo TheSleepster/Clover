@@ -146,4 +146,5 @@ Win32LoadDefaultBindings(Input *GameInput)
     GameInput->Keyboard.Bindings[DROP_HELD]       = AddKeyBinding(KEY_Q, KEY_Q);
     GameInput->Keyboard.Bindings[DROP_ITEM]       = AddKeyBinding(KEY_RIGHT_MOUSE, KEY_RIGHT_MOUSE);
     GameInput->Keyboard.Bindings[CRAFTING]        = AddKeyBinding(KEY_E, KEY_E);
+    GameInput->Keyboard.Bindings[BUILD_MENU]      = AddKeyBinding(KEY_B, KEY_B);
 }

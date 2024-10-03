@@ -123,6 +123,13 @@ enum entity_arch
     ARCH_MAX,
 };
 
+enum game_ui_state
+{
+    UI_State_Nil,
+    UI_State_Building,
+    UI_State_Crafting,
+};
+
 struct crafting_material
 {
     item_id CraftingMaterial;
@@ -168,6 +175,7 @@ struct entity_item_inventory
 
 struct entity
 {
+    int32 EntityID;
     sprite_type Sprite;
     
     uint32      Archetype;
@@ -197,6 +205,7 @@ struct game_state
     Input GameInput;
     
     clover_ui_context UIContext;
+    game_ui_state     GameUIState;
     
     bool DisplayPlayerHotbar;
     bool DisplayPlayerInventory;
@@ -206,6 +215,8 @@ struct game_state
     
     entity *ActiveCraftingStation;
     item   *ActiveRecipe;
+    
+    item   *ActiveBlueprint;
     
     // NOTE(Sleepster): World Data
     struct

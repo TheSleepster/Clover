@@ -177,7 +177,7 @@ CloverLoadSDFFont(memory_arena *Memory, gl_render_data *RenderData, string Filep
     Font.AtlasPadding = 8;
     int32 Row = {};
     int32 Column = Font.AtlasPadding;
-
+    
     FT_GlyphSlot CurrentSlot = Font.FontFace->glyph;
     
     char *TextureData = ArenaAlloc(Memory, (uint64)(sizeof(char) * (BITMAP_ATLAS_SIZE * BITMAP_ATLAS_SIZE)));
@@ -194,12 +194,12 @@ CloverLoadSDFFont(memory_arena *Memory, gl_render_data *RenderData, string Filep
                 Column = Font.AtlasPadding;
                 Row += int32(Font.FontSize * 1.20);
             }
-
+            
             Error = FT_Render_Glyph(CurrentSlot, FT_RENDER_MODE_SDF);
             Check(Error == 0, "Issues here\n");
-
+            
             RenderData->LoadedFonts[FontName].FontHeight   = MAX((Font.FontFace->size->metrics.ascender - Font.FontFace->size->metrics.descender) >> 6,
-                                                                (int32)RenderData->LoadedFonts[GlyphIndex].FontHeight);
+                                                                 (int32)RenderData->LoadedFonts[GlyphIndex].FontHeight);
             for(uint32 YIndex = 0;
                 YIndex < Font.FontFace->glyph->bitmap.rows;
                 ++YIndex)
@@ -212,7 +212,7 @@ CloverLoadSDFFont(memory_arena *Memory, gl_render_data *RenderData, string Filep
                         Font.FontFace->glyph->bitmap.buffer[YIndex * Font.FontFace->glyph->bitmap.width + XIndex];
                 }
             }
-
+            
             font_glyph *CurrentGlyph = &RenderData->LoadedFonts[0].Glyphs[GlyphIndex];
             CurrentGlyph->GlyphUVs  = {Column, Row};
             CurrentGlyph->GlyphSize = 
@@ -234,10 +234,10 @@ CloverLoadSDFFont(memory_arena *Memory, gl_render_data *RenderData, string Filep
             Column += Font.FontFace->glyph->bitmap.width + Font.AtlasPadding;
         }
     }
-        
+    
     FT_Done_Face(Font.FontFace);
     FT_Done_FreeType(Font.FontFile);
-
+    
     // SDF TEXTURE DATA
     {
         glActiveTexture(GL_TEXTURE0 + RenderData->TextureCount);
@@ -249,11 +249,11 @@ CloverLoadSDFFont(memory_arena *Memory, gl_render_data *RenderData, string Filep
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
+        
         glGenerateMipmap(GL_TEXTURE_2D);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 3);
-
+        
         glBindTexture(GL_TEXTURE_2D, 0);
     }
 }
@@ -396,7 +396,7 @@ CompareVertexYAxis(const void *A, const void *B)
 {
     const vertex *VertexA = (vertex *)A;
     const vertex *VertexB = (vertex *)B;
-
+    
     return((VertexA->Position.Y > VertexB->Position.Y) ? -1 :
            (VertexA->Position.Y < VertexB->Position.Y) ?  1 : 0);
 }
@@ -423,7 +423,7 @@ CloverSetupRenderer(memory_arena *Memory, gl_render_data *RenderData)
         RenderData->ClearColor = DARK_GRAY;
         RenderData->TextureCount = 1;
     }
-
+    
     
     uint32 Indices[MAX_INDICES] = {};
     uint32 Offset               = 0;
@@ -440,7 +440,7 @@ CloverSetupRenderer(memory_arena *Memory, gl_render_data *RenderData)
         Offset += 4;
     }
     
-
+    
     // GAME ASSETS BUFFER SETUP
     {
         glGenVertexArrays(1, &RenderData->GameVAOID);
@@ -465,7 +465,7 @@ CloverSetupRenderer(memory_arena *Memory, gl_render_data *RenderData)
         glEnableVertexAttribArray(3);
     }
     
-
+    
     // GAME UI BUFFER SETUP
     {
         glGenVertexArrays(1, &RenderData->GameUIVAOID);
@@ -490,7 +490,7 @@ CloverSetupRenderer(memory_arena *Memory, gl_render_data *RenderData)
         glEnableVertexAttribArray(3);
     }
     
-
+    
     // SHADER SETUP
     {
         RenderData->BasicShader = 
@@ -567,13 +567,13 @@ CloverRender(memory_arena *Arena, gl_render_data *RenderData)
                        GL_UNSIGNED_INT, 
                        0); 
     }
-
+    
     GLintptr BufferOffset   =  (RenderData->DrawFrame.OpaqueQuadCount * 4) * sizeof(vertex);
     GLintptr ElementOffset  =  (RenderData->DrawFrame.OpaqueQuadCount * 6) * sizeof(uint32); 
     // TRANSPARENT GAME OBJECT RENDERERING PASS
     {
         glDisable(GL_DEPTH_TEST);
-
+        
         glEnable(GL_BLEND);        
         glBlendEquation(GL_FUNC_ADD);
         glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_LINES, GL_ONE_MINUS_SRC_ALPHA);
@@ -608,7 +608,7 @@ CloverRender(memory_arena *Arena, gl_render_data *RenderData)
         
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, RenderData->GameAtlas.TextureID);
-
+        
         glUniformMatrix4fv(RenderData->ProjectionViewMatrixUID, 1, GL_FALSE, &RenderData->GameUICamera.ProjectionViewMatrix.Elements[0][0]);
         
         
@@ -621,7 +621,7 @@ CloverRender(memory_arena *Arena, gl_render_data *RenderData)
                        GL_UNSIGNED_INT, 
                        (void *)UIElementOffset); 
     }
-
+    
     // OPAQUE UI RENDERING PASS
     {
         glBindBuffer(GL_ARRAY_BUFFER, RenderData->GameUIVBOID);

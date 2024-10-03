@@ -6,12 +6,13 @@
 #include "util/FileIO.h"
 #include "util/CustomStrings.h"
 #include "util/Pairs.h"
+#include "util/Sorting.h"
 
 // CLOVER HEADERS
 #include "Clover.h"
 #include "Clover_Globals.h"
 #include "Clover_Audio.h"
-#include "Clover_Input.h"
+#include "Clover_Input.h" 
 #include "Clover_Renderer.h"
 #include "shader/ShaderHeader.h"
 
@@ -24,7 +25,6 @@
 #include "Clover_Audio.cpp"
 #include "Clover_Draw.cpp"
 #include "Clover_UI.cpp"
-
 
 global_variable entity *Player = {};
 
@@ -272,7 +272,8 @@ CreateEntity(game_state *State)
         entity *Found = &State->World.Entities[EntityIndex]; 
         if(!(Found->Flags & IS_VALID))
         {
-            Result = Found;            
+            Result = Found;
+            Result->EntityID = EntityIndex;
             break;
         }
     }
@@ -330,6 +331,15 @@ HandleInput(game_state *State, entity *PlayerIn, time Time)
     if(IsGameKeyPressed(SHOW_HOTBAR, &State->GameInput))
     {
         State->DisplayPlayerHotbar = !State->DisplayPlayerHotbar;
+    }
+    if(IsGameKeyPressed(BUILD_MENU, &State->GameInput))
+    {
+        if(State->GameUIState == UI_State_Building)
+        {
+            State->GameUIState = UI_State_Nil;
+            return;
+        }
+        State->GameUIState = UI_State_Building;
     }
     if(IsGameKeyPressed(HOTBAR_01, &State->GameInput))
     {
@@ -805,6 +815,30 @@ GetSpriteFromPair(game_state *State, item_id ID)
     return(SPRITE_Nil);
 }
 
+internal bool
+IsItemCraftable(int *ItemCounts, item *Craft)
+{
+    if(Craft->CraftingFormula)
+    {
+        for(uint32 FormulaIndex = 0;
+            FormulaIndex < Craft->UniqueMaterialCount;
+            FormulaIndex++)
+        {
+            int ItemCount = ItemCounts[FormulaIndex];
+            if(ItemCount >= Craft->CraftingFormula[FormulaIndex].RequiredCount)
+            {
+                continue;
+            }
+            else
+            {
+                return(false);
+            }
+        }
+        return(true);
+    }
+    return(false);
+}
+
 extern
 GAME_ON_AWAKE(GameOnAwake)
 {
@@ -944,7 +978,6 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
         EntityIndex <= State->World.EntityCounter;
         ++EntityIndex)
     {
-        // TODO(Sleepster): Fix this, Sorting breaky :( 
         entity *Temp = &State->World.Entities[EntityIndex];
         if((Temp->Flags & IS_VALID))
         {
@@ -952,19 +985,18 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             real32 PlayerToObjectDistance = fabsf(v2Distance(Temp->Position, Player->Position));
             if(Distance <= SelectionDistance && PlayerToObjectDistance <= MaxHitRange)
             {
-                if(!State->World.WorldFrame.SelectedEntity || (Distance < MinimumDistance))
+                if(!State->World.WorldFrame.SelectedEntity || (Distance < MinimumDistance) || (Temp->EntityID != State->World.WorldFrame.SelectedEntity->EntityID))
                 {
                     State->World.WorldFrame.SelectedEntity = Temp;
                     MinimumDistance = Distance;
                 }
                 
                 entity *SelectedEntity = State->World.WorldFrame.SelectedEntity;
-                
                 if(IsGameKeyPressed(ATTACK, &State->GameInput) && 
                    (Temp->Flags & IS_DESTRUCTABLE) && 
                    !(Temp->Flags & IS_UI) && 
                    PlayerToObjectDistance <= MaxHitRange &&
-                   !State->DisplayCraftingMenu)
+                   State->GameUIState == UI_State_Nil)
                 {
                     --Temp->Health;
                     if(Temp->Health <= 0)
@@ -1093,7 +1125,6 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                                 }
                             }
                         }
-                        // TODO(Sleepster): Investigate a lambda, even though this is simple as shit, it's kinda grody to some people
                         Deletion:
                         DeleteEntity(Temp);
                     }
@@ -1101,7 +1132,6 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             }
         }
     }
-    
     
     // NOTE(Sleepster): Draw the Tiles
     ivec2  PlayerOffset = WorldToTilePos(Player->Position);
@@ -1505,7 +1535,187 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
     
     // NOTE(Sleepster): Building
     {
-        // TODO(Sleepster): BUILD MENU
+        if(State->GameUIState == UI_State_Building)
+        {
+            const real32 IconSize = 12;
+            const real32 Padding = 2;
+            const real32 BoxWidth  = (IconSize * 5) + ((5 - 1) * Padding);
+            
+            real32 BoxHeight = 50;
+            
+            const vec4 BoxColor = {0.0, 0.0, 0.0, 0.6};
+            const real32 StartingXOffset = -IconSize * 2;
+            
+            int IconCount = 0;
+            mat4 XForm = mat4Identity(1.0f);
+            for(uint32 Element = 0;
+                Element < ITEM_IDCount;
+                Element++)
+            {
+                item *Item = &State->GameData.GameItems[Element];
+                if(Item && Item->Flags & IS_BUILDABLE)
+                {
+                    real32 NewXOffset = StartingXOffset + ((IconSize + Padding) * IconCount);
+                    XForm = mat4Identity(1.0f);
+                    XForm = mat4Translation(XForm, vec3{NewXOffset, 10, 0});
+                    
+                    vec2 SpriteSize = {IconSize, IconSize};
+                    if(State->ActiveBlueprint && Item->ItemID == State->ActiveBlueprint->ItemID)
+                    {
+                        SpriteSize = {14, 14};
+                    }
+                    XForm = mat4Scale(XForm, v2Expand(SpriteSize, 1));
+                    CloverUISpriteElement(&State->UIContext, {0, 0}, {0, 0}, XForm, GetSprite(State, Item->Sprite), WHITE);
+                    vec2 Position = XForm.Columns[3].XY;
+                    
+                    CloverUIPushLayer(&State->UIContext, 1);
+                    ui_element_state Button = CloverUIButton(&State->UIContext, STR("Element"), Position, SpriteSize, GetSprite(State, SPRITE_Outline), WHITE);
+                    CloverUIPushLayer(&State->UIContext, 0);
+                    
+                    IconCount++;
+                    if((Button.IsPressed && !State->ActiveBlueprint) || (Button.IsPressed && Item->ItemID != State->ActiveBlueprint->ItemID))
+                    {
+                        State->ActiveBlueprint = Item;
+                    }
+                    else if(Button.IsPressed && State->ActiveBlueprint)
+                    {
+                        State->ActiveBlueprint = {};
+                    }
+                }
+            }
+            
+            vec2 BoxPosition = {0, 0};
+            if(State->ActiveBlueprint)
+            {
+                item *Item = State->ActiveBlueprint;
+                BoxHeight = 115;
+                BoxPosition = {0, -20};
+                
+                XForm = mat4Identity(1.0f);
+                XForm = mat4Multiply(XForm, mat4Translate(v2Expand({BoxPosition.X, BoxPosition.Y + 20}, 0)));
+                XForm = mat4Multiply(XForm, mat4MakeScale(vec3{BoxWidth, 2, 1}));
+                
+                CloverUIPushLayer(&State->UIContext, 1);
+                DrawUISpriteXForm(RenderData, XForm, GetSprite(State, SPRITE_Nil), 0, vec4{0.0, 0.0, 0.0, 0.8f});
+                CloverUIPushLayer(&State->UIContext, 0);
+                
+                int InventoryCount[MAX_CRAFTING_ELEMENTS] = {};
+                for(uint32 InventorySlotIndex = 0;
+                    InventorySlotIndex < TOTAL_INVENTORY_SIZE;
+                    InventorySlotIndex++)
+                {
+                    item *InventoryItem = &Player->Inventory.Items[InventorySlotIndex];
+                    for(uint32 FormulaIndex = 0;
+                        FormulaIndex < State->ActiveBlueprint->UniqueMaterialCount;
+                        ++FormulaIndex)
+                    {
+                        crafting_material *FormulaItem = &State->ActiveBlueprint->CraftingFormula[FormulaIndex];
+                        if(InventoryItem->ItemID == FormulaItem->CraftingMaterial)
+                        {
+                            InventoryCount[FormulaIndex] = InventoryItem->CurrentStack;
+                        }
+                    }
+                }
+                const real32 InitialYOffset = -20;
+                for(uint32 MaterialIndex = 0;
+                    MaterialIndex < Item->UniqueMaterialCount;
+                    MaterialIndex++)
+                {
+                    crafting_material *Material = &Item->CraftingFormula[MaterialIndex];
+                    real32 NewYOffset = InitialYOffset - ((14 + Padding) * MaterialIndex);
+                    
+                    XForm = mat4Identity(1.0f);
+                    XForm = mat4Translation(XForm, vec3{0, NewYOffset + 10, 0});
+                    XForm = mat4Scale(XForm, vec3{30, 12, 1});
+                    CloverUISpriteElement(&State->UIContext, {0, 0}, {0, 0}, XForm, GetSprite(State, SPRITE_Nil), {0.4, 0.4, 0.4, 0.3});
+                    
+                    XForm = mat4Identity(1.0f);
+                    XForm = mat4Translation(XForm, vec3{-10, NewYOffset + 10, 0});
+                    XForm = mat4Scale(XForm, vec3{8, 8, 1});
+                    
+                    static_sprite_data Sprite = GetSprite(State, GetSpriteFromPair(State, Material->CraftingMaterial));
+                    
+                    CloverUIPushLayer(&State->UIContext, 2);
+                    CloverUISpriteElement(&State->UIContext, {0, 0}, {0, 0}, XForm, Sprite, WHITE);
+                    CloverUIMakeTextElement(&State->UIContext, sprints(&Memory->TemporaryStorage, STR("%d/%d"), InventoryCount[MaterialIndex], Material->RequiredCount), {10, NewYOffset + 5}, 10, TEXT_ALIGNMENT_Center, BLACK);
+                    CloverUIPushLayer(&State->UIContext, 0);
+                }
+                
+                vec4 ButtonColor = {0.2, 0.2, 0.2, 0.4};
+                CloverUIPushLayer(&State->UIContext, 4);
+                ui_element_state Button = CloverUIButton(&State->UIContext, STR("Element"), {0, -65}, {40, 12}, GetSprite(State, SPRITE_Nil), ButtonColor);
+                CloverUIMakeTextElement(&State->UIContext, STR("BUILD!"), {5, -70}, 10, TEXT_ALIGNMENT_Center, WHITE);
+                CloverUIPushLayer(&State->UIContext, 0);
+                
+                ui_element *ButtonId = &State->UIContext.UIElements[Button.UIID.ID];
+                if(Button.IsHot)
+                {
+                    ButtonId->DrawColor = {0.6, 0.2, 0.2, 0.4};
+                    if(IsGameKeyDown(ATTACK, &State->GameInput))
+                    {
+                        ButtonId->Size = ButtonId->Size * 1.1;
+                    }
+                }
+                
+                if(Button.IsPressed)
+                {
+                    if(IsItemCraftable(InventoryCount, State->ActiveBlueprint))
+                    {
+                        for(uint32 InventorySlotIndex = 0;
+                            InventorySlotIndex < TOTAL_INVENTORY_SIZE;
+                            InventorySlotIndex++)
+                        {
+                            item *InventoryItem = &Player->Inventory.Items[InventorySlotIndex];
+                            for(uint32 FormulaIndex = 0;
+                                FormulaIndex < State->ActiveBlueprint->UniqueMaterialCount;
+                                ++FormulaIndex)
+                            {
+                                crafting_material *FormulaItem = &State->ActiveBlueprint->CraftingFormula[FormulaIndex];
+                                if(InventoryItem->ItemID == FormulaItem->CraftingMaterial)
+                                {
+                                    InventoryItem->CurrentStack -= FormulaItem->RequiredCount;
+                                    if(InventoryItem->CurrentStack <= 0)
+                                    {
+                                        ResetItemSlotState(InventoryItem);
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // NOTE(Sleepster): Simply Drop the item in the player's inventory
+                        switch(State->ActiveBlueprint->ItemID)
+                        {
+                            case ITEM_Workbench:
+                            {
+                                entity *Workbench = CreateEntity(State);
+                                SetupItemWorkbench(Workbench);
+                                Workbench->Position = Player->Position;
+                                Workbench->Target   = Player->Position;
+                            }break;
+                            case ITEM_Furnace:
+                            {
+                                entity *Furnace = CreateEntity(State);
+                                SetupItemFurnace(Furnace);
+                                Furnace->Position = Player->Position;
+                                Furnace->Target   = Player->Position;
+                            }break;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                BoxPosition = {0, 12.5};
+            }
+            XForm = mat4Identity(1.0f);
+            XForm = mat4Multiply(XForm, mat4Translate(v2Expand(BoxPosition, 0)));
+            XForm = mat4Multiply(XForm, mat4MakeScale(vec3{BoxWidth, BoxHeight, 1}));
+            
+            DrawUISpriteXForm(RenderData, XForm, GetSprite(State, SPRITE_Nil), 0, vec4{0.0, 0.0, 0.0, 0.8f});
+            DrawUIText(RenderData, STR("Building..."), {-IconSize, 20}, 15, UBUNTU_MONO, WHITE);
+        }
+        
+        // NOTE(Sleepster): Building From Inventory/Hotbar
         if((Player->Inventory.SelectedHotbarItem || Player->Inventory.SelectedInventoryItem) && (Player->Inventory.CurrentInventorySlot != NULLSLOT))
         {
             item *InventoryItem = {};
@@ -1583,7 +1793,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
         // NOTE(Sleepster): Can the crafting dialogue be displayed?
         if(IsGameKeyPressed(CRAFTING, &State->GameInput))
         {
-            if(!State->ActiveCraftingStation)
+            if(!State->ActiveCraftingStation && State->GameUIState != UI_State_Crafting)
             {
                 for(uint32 EntityIndex = 0;
                     EntityIndex <= State->World.EntityCounter;
@@ -1596,7 +1806,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                         if(Distance <= ItemPickupDist && State->World.WorldFrame.SelectedEntity && 
                            Temp->ItemID == State->World.WorldFrame.SelectedEntity->ItemID)
                         {
-                            State->DisplayCraftingMenu = !State->DisplayCraftingMenu;
+                            State->GameUIState = UI_State_Crafting;
                             State->ActiveCraftingStation = Temp;
                             break;
                         }
@@ -1605,13 +1815,13 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             }
             else
             {
-                State->DisplayCraftingMenu = !State->DisplayCraftingMenu;
+                State->GameUIState = UI_State_Nil;
                 State->ActiveCraftingStation = {};
             }
         }
         
         // NOTE(Sleepster): If it can, display it
-        if(State->DisplayCraftingMenu)
+        if(State->GameUIState == UI_State_Crafting)
         {
             const real32 IconSize = 12;
             const real32 Padding = 2;
@@ -1639,13 +1849,12 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             CloverUISpriteElement(&State->UIContext, {0, 0}, {0, 0}, XForm, GetSprite(State, SPRITE_Nil), BoxColor);
             
             DrawUIText(RenderData, STR("Crafting"), {-55, 40}, 15, UBUNTU_MONO, WHITE);
-            
             for(uint32 Element = 0;
                 Element < ITEM_IDCount;
                 Element++)
             {
                 item *Item = &State->GameData.GameItems[Element];
-                if(Item && Item->Craftable)
+                if((Item && Item->Craftable) && Item && !(Item->Flags & IS_BUILDABLE))
                 {
                     real32 NewXOffset = StartingXOffset + ((IconSize + Padding) * IconCount);
                     real32 NewYOffset = StartingYOffset - ((IconSize + Padding) * RowCount);
@@ -1748,33 +1957,10 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                         ButtonId->Size = ButtonId->Size * 1.1;
                     }
                 }
+                
                 if(Button.IsPressed)
                 {
-                    auto Craftable = [ItemCountTotal = &InventoryCount[0], Recipe = State->ActiveRecipe](int *ItemCounts, item *Craft) -> bool
-                    {
-                        if(Craft->CraftingFormula)
-                        {
-                            for(uint32 FormulaIndex = 0;
-                                FormulaIndex < Craft->UniqueMaterialCount;
-                                FormulaIndex++)
-                            {
-                                int ItemCount = ItemCounts[FormulaIndex];
-                                if(ItemCount >= Craft->CraftingFormula[FormulaIndex].RequiredCount)
-                                {
-                                    continue;
-                                }
-                                else
-                                {
-                                    return(false);
-                                }
-                            }
-                            return(true);
-                        }
-                        return(false);
-                    };
-                    
-                    bool CanBeCrafted = Craftable(&InventoryCount[0], State->ActiveRecipe);
-                    if(CanBeCrafted)
+                    if(IsItemCraftable(&InventoryCount[0], State->ActiveRecipe))
                     {
                         for(uint32 Index = 0;
                             Index < State->ActiveRecipe->FormulaResultCount;
@@ -1819,7 +2005,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             real32 Distance = v2Distance(Player->Position, State->ActiveCraftingStation->Position);
             if(Distance > ItemPickupDist)
             {
-                State->DisplayCraftingMenu = !State->DisplayCraftingMenu;
+                State->GameUIState = UI_State_Nil;
                 State->ActiveCraftingStation = {};
             }
         }
@@ -1839,7 +2025,27 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
     
     // NOTE(Sleepster): Sorting, off for now. Breaks too much 
     {
-        //        qsort(State->World.Entities, State->World.EntityCounter, sizeof(struct entity), CompareEntityYAxis); 
+        qsort(State->World.Entities, State->World.EntityCounter, sizeof(struct entity), CompareEntityYAxis); 
+    }
+    
+    for(uint32 EntityIndex = 0;
+        EntityIndex <= State->World.EntityCounter;
+        ++EntityIndex)
+    {
+        entity *Temp = &State->World.Entities[EntityIndex];
+        if((Temp->Flags & IS_VALID))
+        {
+            real32 Distance = fabsf(v2Distance(Temp->Position, MouseToWorld));
+            real32 PlayerToObjectDistance = fabsf(v2Distance(Temp->Position, Player->Position));
+            if(Distance <= SelectionDistance && PlayerToObjectDistance <= MaxHitRange)
+            {
+                if(!State->World.WorldFrame.SelectedEntity || (Distance < MinimumDistance))
+                {
+                    State->World.WorldFrame.SelectedEntity = Temp;
+                    MinimumDistance = Distance;
+                }
+            }
+        }
     }
     
     vec2 SelectionBoxDrawSize = {16, 16};
@@ -1904,6 +2110,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             }
         }
     }
+    
     // NOTE(Sleepster): World Text and Quad at {0,0}
     DrawGameText(RenderData, sprints(&Memory->TemporaryStorage, STR("%f, %f"), MouseToWorld.X, MouseToWorld.Y), {-100, 0}, 15.0f, UBUNTU_MONO, GREEN);
     DrawGameText(RenderData, sprints(&Memory->TemporaryStorage, STR("%f, %f"), MouseToScreen.X, MouseToScreen.Y), {-100, 100}, 15.0f, UBUNTU_MONO, BLUE);
