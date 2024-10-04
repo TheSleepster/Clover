@@ -67,16 +67,6 @@ LoadSpriteData(game_state *State)
 {
     State->GameData.Sprites[SPRITE_Nil]                   = {.AtlasOffset = {  0,  0}, .SpriteSize = {16, 16}};
     State->GameData.Sprites[SPRITE_Player]                = {.AtlasOffset = { 17,  0}, .SpriteSize = {12, 11}};
-    State->GameData.Sprites[SPRITE_Rock]                  = {.AtlasOffset = { 32,  0}, .SpriteSize = {12,  8}};
-    State->GameData.Sprites[SPRITE_Pebbles]               = {.AtlasOffset = { 32, 16}, .SpriteSize = { 6,  5}};
-    State->GameData.Sprites[SPRITE_Tree00]                = {.AtlasOffset = { 48,  0}, .SpriteSize = {11, 14}};
-    State->GameData.Sprites[SPRITE_Branches]              = {.AtlasOffset = { 48, 16}, .SpriteSize = { 7,  7}};
-    State->GameData.Sprites[SPRITE_Tree01]                = {.AtlasOffset = { 64,  0}, .SpriteSize = { 9, 12}};
-    State->GameData.Sprites[SPRITE_Trunk]                 = {.AtlasOffset = { 64, 16}, .SpriteSize = { 6,  6}};
-    State->GameData.Sprites[SPRITE_RubyOre]               = {.AtlasOffset = { 80,  0}, .SpriteSize = {14, 11}};
-    State->GameData.Sprites[SPRITE_RubyChunk]             = {.AtlasOffset = { 80, 16}, .SpriteSize = { 8,  6}};
-    State->GameData.Sprites[SPRITE_SaphireOre]            = {.AtlasOffset = { 96,  0}, .SpriteSize = {11, 11}};
-    State->GameData.Sprites[SPRITE_SapphireChunk]         = {.AtlasOffset = { 96, 16}, .SpriteSize = { 8,  6}};
     State->GameData.Sprites[SPRITE_UIItemBox]             = {.AtlasOffset = {112,  0}, .SpriteSize = {16, 16}};
     State->GameData.Sprites[SPRITE_ToolPickaxe]           = {.AtlasOffset = {  0, 48}, .SpriteSize = {11, 13}};
     State->GameData.Sprites[SPRITE_ToolWoodAxe]           = {.AtlasOffset = { 16, 48}, .SpriteSize = {11, 13}};
@@ -88,6 +78,30 @@ LoadSpriteData(game_state *State)
     State->GameData.Sprites[SPRITE_Workbench]             = {.AtlasOffset = { 16, 80}, .SpriteSize = {16, 16}};
     State->GameData.Sprites[SPRITE_Furnace]               = {.AtlasOffset = {  0, 80}, .SpriteSize = {16, 16}};
     State->GameData.Sprites[SPRITE_Outline]               = {.AtlasOffset = {128,  0}, .SpriteSize = {16, 16}};
+    State->GameData.Sprites[SPRITE_Outline]               = {.AtlasOffset = {128,  0}, .SpriteSize = {16, 16}};
+    State->GameData.Sprites[SPRITE_TestTree]              = {.AtlasOffset = { 64, 80}, .SpriteSize = {32, 64}};
+
+    /* State->GameData.Sprites[SPRITE_Rock]                  = {.AtlasOffset = { 32,  0}, .SpriteSize = {12,  8}}; */
+    /* State->GameData.Sprites[SPRITE_Pebbles]               = {.AtlasOffset = { 32, 16}, .SpriteSize = { 6,  5}}; */
+    /* State->GameData.Sprites[SPRITE_Tree00]                = {.AtlasOffset = { 48,  0}, .SpriteSize = {11, 14}}; */
+    /* State->GameData.Sprites[SPRITE_Branches]              = {.AtlasOffset = { 48, 16}, .SpriteSize = { 7,  7}}; */
+    /* State->GameData.Sprites[SPRITE_Tree01]                = {.AtlasOffset = { 64,  0}, .SpriteSize = { 9, 12}}; */
+    /* State->GameData.Sprites[SPRITE_Trunk]                 = {.AtlasOffset = { 64, 16}, .SpriteSize = { 6,  6}}; */
+    /* State->GameData.Sprites[SPRITE_RubyOre]               = {.AtlasOffset = { 80,  0}, .SpriteSize = {14, 11}}; */
+    /* State->GameData.Sprites[SPRITE_RubyChunk]             = {.AtlasOffset = { 80, 16}, .SpriteSize = { 8,  6}}; */
+    /* State->GameData.Sprites[SPRITE_SaphireOre]            = {.AtlasOffset = { 96,  0}, .SpriteSize = {11, 11}}; */
+    /* State->GameData.Sprites[SPRITE_SapphireChunk]         = {.AtlasOffset = { 96, 16}, .SpriteSize = { 8,  6}}; */
+
+    State->GameData.Sprites[SPRITE_Rock]                  = {.AtlasOffset = {170,  80}, .SpriteSize = {38, 32}};
+    State->GameData.Sprites[SPRITE_Pebbles]               = {.AtlasOffset = {128, 160}, .SpriteSize = {34, 32}};
+    State->GameData.Sprites[SPRITE_Tree00]                = {.AtlasOffset = { 32, 112}, .SpriteSize = {32, 32}};
+    State->GameData.Sprites[SPRITE_Branches]              = {.AtlasOffset = { 48, 144}, .SpriteSize = {16, 16}};
+    State->GameData.Sprites[SPRITE_Tree01]                = {.AtlasOffset = { 64, 80 }, .SpriteSize = {32, 64}};
+    State->GameData.Sprites[SPRITE_Trunk]                 = {.AtlasOffset = { 64, 144}, .SpriteSize = {16, 16}};
+    State->GameData.Sprites[SPRITE_RubyOre]               = {.AtlasOffset = {133, 112}, .SpriteSize = {32, 32}};
+    State->GameData.Sprites[SPRITE_RubyChunk]             = {.AtlasOffset = {112, 144}, .SpriteSize = {16, 16}};
+    State->GameData.Sprites[SPRITE_SaphireOre]            = {.AtlasOffset = { 96, 120}, .SpriteSize = {34, 32}};
+    State->GameData.Sprites[SPRITE_SapphireChunk]         = {.AtlasOffset = { 96, 144}, .SpriteSize = {16, 16}};
 }
 
 internal inline void
@@ -1803,8 +1817,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     if((Temp->Flags & IS_PLACED) && (Temp->Archetype == BUILDING))
                     {
                         real32 Distance = v2Distance(Player->Position, Temp->Position);
-                        if(Distance <= ItemPickupDist && State->World.WorldFrame.SelectedEntity && 
-                           Temp->ItemID == State->World.WorldFrame.SelectedEntity->ItemID)
+                        if(Distance <= ItemPickupDist && State->World.WorldFrame.SelectedEntity) 
                         {
                             State->GameUIState = UI_State_Crafting;
                             State->ActiveCraftingStation = Temp;
@@ -2025,7 +2038,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
     
     // NOTE(Sleepster): Sorting, off for now. Breaks too much 
     {
-        qsort(State->World.Entities, State->World.EntityCounter, sizeof(struct entity), CompareEntityYAxis); 
+        //qsort(State->World.Entities, State->World.EntityCounter, sizeof(struct entity), CompareEntityYAxis); 
     }
     
     for(uint32 EntityIndex = 0;
@@ -2047,6 +2060,8 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             }
         }
     }
+
+    DrawSprite(RenderData, GetSprite(State, SPRITE_TestTree), {0, -0}, {32, 64}, WHITE, 0, 1);
     
     vec2 SelectionBoxDrawSize = {16, 16};
     // NOTE(Sleepster): DRAW ENTITIES

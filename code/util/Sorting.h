@@ -1,9 +1,12 @@
-/* date = October 3rd 2024 0:39 pm */
+#if !defined(SORTING_H)
+/* ========================================================================
+   $File: Sorting.h $
+   $Date: October 03 2024 06:24 pm $
+   $Revision: $
+   $Creator: Justin Lewis $
+   ======================================================================== */
 
-#ifndef _SORTING_H
-#define _SORTING_H
+#define SORTING_H
 
-#include "../Intrinsics.h"
-#include "MemoryArena.h"
+#endif // SORTING_H
 
-#endif //_SORTING_H

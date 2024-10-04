@@ -71,6 +71,16 @@ enum sprite_type
     SPRITE_Workbench           = 20, 
     SPRITE_Furnace             = 21, 
     SPRITE_Outline             = 22,
+    SPRITE_TestTree            = 23,
+    SPRITE_TestOak             = 24,
+    SPRITE_TestSapphireNode    = 25,
+    SPRITE_TestRubyNode        = 26,
+    SPRITE_TestEmeraldNode     = 27,
+    SPRITE_TestCopperNode      = 28,
+    SPRITE_TestStoneNode       = 29,
+    SPRITE_AmethestNode        = 30,
+    SPRITE_TestBranchDrop      = 31,
+    SPRITE_TestTrunkDrop       = 32,
     SPRITE_Count
 };
 

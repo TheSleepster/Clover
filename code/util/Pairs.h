@@ -1,7 +1,12 @@
-/* date = October 2nd 2024 1:43 pm */
+#if !defined(PAIRS_H)
+/* ========================================================================
+   $File: Pairs.h $
+   $Date: October 03 2024 06:24 pm $
+   $Revision: $
+   $Creator: Justin Lewis $
+   ======================================================================== */
 
-#ifndef _PAIRS_H
-#define _PAIRS_H
+#define PAIRS_H
 
 template <typename Type1, typename Type2>
 struct pair
@@ -33,4 +38,5 @@ MakePair(const Type1 &A, const Type2 &B)
     return(pair<Type1, Type2>(A, B));
 }
 
-#endif //_PAIRS_H
+#endif // PAIRS_H
+
