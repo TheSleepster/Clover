@@ -81,27 +81,33 @@ LoadSpriteData(game_state *State)
     State->GameData.Sprites[SPRITE_Outline]               = {.AtlasOffset = {128,  0}, .SpriteSize = {16, 16}};
     State->GameData.Sprites[SPRITE_TestTree]              = {.AtlasOffset = { 64, 80}, .SpriteSize = {32, 64}};
 
-    /* State->GameData.Sprites[SPRITE_Rock]                  = {.AtlasOffset = { 32,  0}, .SpriteSize = {12,  8}}; */
-    /* State->GameData.Sprites[SPRITE_Pebbles]               = {.AtlasOffset = { 32, 16}, .SpriteSize = { 6,  5}}; */
-    /* State->GameData.Sprites[SPRITE_Tree00]                = {.AtlasOffset = { 48,  0}, .SpriteSize = {11, 14}}; */
-    /* State->GameData.Sprites[SPRITE_Branches]              = {.AtlasOffset = { 48, 16}, .SpriteSize = { 7,  7}}; */
-    /* State->GameData.Sprites[SPRITE_Tree01]                = {.AtlasOffset = { 64,  0}, .SpriteSize = { 9, 12}}; */
-    /* State->GameData.Sprites[SPRITE_Trunk]                 = {.AtlasOffset = { 64, 16}, .SpriteSize = { 6,  6}}; */
-    /* State->GameData.Sprites[SPRITE_RubyOre]               = {.AtlasOffset = { 80,  0}, .SpriteSize = {14, 11}}; */
-    /* State->GameData.Sprites[SPRITE_RubyChunk]             = {.AtlasOffset = { 80, 16}, .SpriteSize = { 8,  6}}; */
-    /* State->GameData.Sprites[SPRITE_SaphireOre]            = {.AtlasOffset = { 96,  0}, .SpriteSize = {11, 11}}; */
-    /* State->GameData.Sprites[SPRITE_SapphireChunk]         = {.AtlasOffset = { 96, 16}, .SpriteSize = { 8,  6}}; */
+    State->GameData.Sprites[SPRITE_Rock]                  = {.AtlasOffset = { 32,  0}, .SpriteSize = {12,  8}};
+    State->GameData.Sprites[SPRITE_Pebbles]               = {.AtlasOffset = { 32, 16}, .SpriteSize = { 6,  5}};
+    State->GameData.Sprites[SPRITE_Tree00]                = {.AtlasOffset = { 48,  0}, .SpriteSize = {11, 14}};
+    State->GameData.Sprites[SPRITE_Branches]              = {.AtlasOffset = { 48, 16}, .SpriteSize = { 7,  7}};
+    State->GameData.Sprites[SPRITE_Tree01]                = {.AtlasOffset = { 64,  0}, .SpriteSize = { 9, 12}};
+    State->GameData.Sprites[SPRITE_Trunk]                 = {.AtlasOffset = { 64, 16}, .SpriteSize = { 6,  6}};
+    State->GameData.Sprites[SPRITE_RubyOre]               = {.AtlasOffset = { 80,  0}, .SpriteSize = {14, 11}};
+    State->GameData.Sprites[SPRITE_RubyChunk]             = {.AtlasOffset = { 80, 16}, .SpriteSize = { 8,  6}};
+    State->GameData.Sprites[SPRITE_SaphireOre]            = {.AtlasOffset = { 96,  0}, .SpriteSize = {11, 11}};
+    State->GameData.Sprites[SPRITE_SapphireChunk]         = {.AtlasOffset = { 96, 16}, .SpriteSize = { 8,  6}};
 
-    State->GameData.Sprites[SPRITE_Rock]                  = {.AtlasOffset = {170,  80}, .SpriteSize = {38, 32}};
-    State->GameData.Sprites[SPRITE_Pebbles]               = {.AtlasOffset = {128, 160}, .SpriteSize = {34, 32}};
-    State->GameData.Sprites[SPRITE_Tree00]                = {.AtlasOffset = { 32, 112}, .SpriteSize = {32, 32}};
-    State->GameData.Sprites[SPRITE_Branches]              = {.AtlasOffset = { 48, 144}, .SpriteSize = {16, 16}};
-    State->GameData.Sprites[SPRITE_Tree01]                = {.AtlasOffset = { 64, 80 }, .SpriteSize = {32, 64}};
-    State->GameData.Sprites[SPRITE_Trunk]                 = {.AtlasOffset = { 64, 144}, .SpriteSize = {16, 16}};
-    State->GameData.Sprites[SPRITE_RubyOre]               = {.AtlasOffset = {133, 112}, .SpriteSize = {32, 32}};
-    State->GameData.Sprites[SPRITE_RubyChunk]             = {.AtlasOffset = {112, 144}, .SpriteSize = {16, 16}};
-    State->GameData.Sprites[SPRITE_SaphireOre]            = {.AtlasOffset = { 96, 120}, .SpriteSize = {34, 32}};
-    State->GameData.Sprites[SPRITE_SapphireChunk]         = {.AtlasOffset = { 96, 144}, .SpriteSize = {16, 16}};
+    State->GameData.Sprites[SPRITE_TestCopperNode]        = {.AtlasOffset = {168, 112},.SpriteSize = {38, 32}};
+    State->GameData.Sprites[SPRITE_TestCopperOreChunk]    = {.AtlasOffset = {128, 144},.SpriteSize = {16, 16}};
+
+    State->GameData.Sprites[SPRITE_GrassPatch]            = {.AtlasOffset = {32, 32},.SpriteSize = {16, 16}};
+    State->GameData.Sprites[SPRITE_Resin]                 = {.AtlasOffset = {32, 48},.SpriteSize = {5, 4}};
+
+    /* State->GameData.Sprites[SPRITE_Rock]                  = {.AtlasOffset = {170,  80}, .SpriteSize = {38, 32}}; */
+    /* State->GameData.Sprites[SPRITE_Pebbles]               = {.AtlasOffset = {128, 160}, .SpriteSize = {34, 32}}; */
+    /* State->GameData.Sprites[SPRITE_Tree00]                = {.AtlasOffset = { 32, 112}, .SpriteSize = {32, 32}}; */
+    /* State->GameData.Sprites[SPRITE_Branches]              = {.AtlasOffset = { 48, 144}, .SpriteSize = {16, 16}}; */
+    /* State->GameData.Sprites[SPRITE_Tree01]                = {.AtlasOffset = { 64, 80 }, .SpriteSize = {32, 64}}; */
+    /* State->GameData.Sprites[SPRITE_Trunk]                 = {.AtlasOffset = { 64, 144}, .SpriteSize = {16, 16}}; */
+    /* State->GameData.Sprites[SPRITE_RubyOre]               = {.AtlasOffset = {133, 112}, .SpriteSize = {32, 32}}; */
+    /* State->GameData.Sprites[SPRITE_RubyChunk]             = {.AtlasOffset = {112, 144}, .SpriteSize = {16, 16}}; */
+    /* State->GameData.Sprites[SPRITE_SaphireOre]            = {.AtlasOffset = { 96, 120}, .SpriteSize = {34, 32}}; */
+    /* State->GameData.Sprites[SPRITE_SapphireChunk]         = {.AtlasOffset = { 96, 144}, .SpriteSize = {16, 16}}; */
 }
 
 internal inline void
@@ -183,6 +189,18 @@ LoadItemData(game_state *State)
         .MaxStackCount = 64, 
         .ItemName = STR("Sapphire Chunks"), 
         .ItemDesc = STR("These are some chunks of Sapphire Rock!"),
+        .Craftable = false,
+    };
+
+    State->GameData.GameItems[ITEM_CopperOreChunk] = 
+    {
+        .Archetype = ITEM,      
+        .Flags = IS_VALID|IS_ITEM|IS_IN_INVENTORY, 
+        .Sprite = SPRITE_TestCopperOreChunk, 
+        .ItemID = ITEM_CopperOreChunk, 
+        .MaxStackCount = 64, 
+        .ItemName = STR("Copper Chunks"), 
+        .ItemDesc = STR("These are some chunks of Copper ore!"),
         .Craftable = false,
     };
     
@@ -272,6 +290,7 @@ LoadItemData(game_state *State)
     State->GameData.ItemSprites[ITEM_ToolWoodAxe]      = MakePair(ITEM_ToolWoodAxe,      SPRITE_ToolWoodAxe);
     State->GameData.ItemSprites[ITEM_Workbench]        = MakePair(ITEM_Workbench,        SPRITE_Workbench);
     State->GameData.ItemSprites[ITEM_Furnace]          = MakePair(ITEM_Furnace,          SPRITE_Furnace);
+    State->GameData.ItemSprites[ITEM_CopperOreChunk]   = MakePair(ITEM_CopperOreChunk,   SPRITE_TestCopperOreChunk);
 }
 
 internal entity *
@@ -521,6 +540,22 @@ SetupSaphireNode(entity *Entity)
 }
 
 internal void
+SetupCopperNode(entity *Entity)
+{
+    Entity->Archetype   = NODE;
+    Entity->Sprite      = SPRITE_TestCopperNode; 
+    Entity->Flags      += IS_ACTIVE|IS_SOLID|IS_DESTRUCTABLE;
+    Entity->Size        = {38, 32};
+    Entity->Health      = NodeHealth;
+    Entity->Position    = {};
+    Entity->Rotation    = 0;
+    Entity->Speed       = 1.0f;
+    Entity->BoxCollider = {};
+    
+    Entity->ItemID      = ITEM_CopperOreChunk;
+}
+
+internal void
 SetupItemPebbles(entity *Entity)
 {
     Entity->Archetype = ITEM;
@@ -568,6 +603,16 @@ SetupItemSaphireChunk(entity *Entity)
     Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP;
     Entity->Size      = {6, 5};
     Entity->ItemID    = ITEM_SapphireOreChunk;
+}
+
+internal void
+SetupItemCopperChunk(entity *Entity)
+{
+    Entity->Archetype = ITEM;
+    Entity->Sprite    = SPRITE_TestCopperOreChunk;
+    Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP;
+    Entity->Size      = {8, 8};
+    Entity->ItemID    = ITEM_CopperOreChunk;
 }
 
 internal void
@@ -753,6 +798,10 @@ SetupDroppedEntity(gl_render_data *RenderData, game_state *State, item *Selectio
             {
                 SetupItemSaphireChunk(SpawnedItem);
             }break;
+            case SPRITE_TestCopperOreChunk:
+            {
+                SetupItemCopperChunk(SpawnedItem);
+            }break;
             case SPRITE_ToolPickaxe:
             {
                 SetupItemToolPickaxe(SpawnedItem);
@@ -893,7 +942,6 @@ GAME_ON_AWAKE(GameOnAwake)
         SetupRubyNode(En4);
         En4->Position = vec2{GetRandomReal32_Range(-SizeScaler, SizeScaler), GetRandomReal32_Range(-SizeScaler, SizeScaler)};
         En4->Position = TileToWorldPos(WorldToTilePos(En4->Position));
-        
         
         entity *En5 = CreateEntity(State);
         SetupSaphireNode(En5);
@@ -1065,6 +1113,14 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                                         SetupItemRubyChunk(RubyChunk);
                                         RubyChunk->Position = SelectedEntity->Position;
                                         RubyChunk->Target = SelectedEntity->Position;
+                                    }break;
+                                    
+                                    case SPRITE_TestCopperNode:
+                                    {
+                                        entity *CopperChunk = CreateEntity(State);
+                                        SetupItemCopperChunk(CopperChunk);
+                                        CopperChunk->Position = SelectedEntity->Position;
+                                        CopperChunk->Target = SelectedEntity->Position;
                                     }break;
                                 }
                             }

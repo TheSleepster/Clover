@@ -81,6 +81,9 @@ enum sprite_type
     SPRITE_AmethestNode        = 30,
     SPRITE_TestBranchDrop      = 31,
     SPRITE_TestTrunkDrop       = 32,
+    SPRITE_TestCopperOreChunk  = 33,
+    SPRITE_GrassPatch          = 34,
+    SPRITE_Resin               = 35,
     SPRITE_Count
 };
 
@@ -100,6 +103,8 @@ enum item_id
     // NON-CRAFTABLE
     ITEM_RubyOreChunk      = 8,
     ITEM_SapphireOreChunk  = 9,
+    ITEM_CopperOreChunk    = 10,
+    ITEM_Resin             = 11,
     ITEM_IDCount
 };
 
@@ -131,6 +136,30 @@ enum entity_arch
     NODE      = 5,
     ITEM      = 6,
     ARCH_MAX,
+};
+
+enum entity_arch_id
+{
+    ARCH_Nil           = 0,
+    ARCH_Player        = 1,
+    ARCH_Rock          = 2,
+    ARCH_Tree00        = 3,
+    ARCH_Tree01        = 4,
+    ARCH_SapphireNode  = 5,
+    ARCH_RubyNode      = 6,
+    ARCH_SimplePickaxe = 12,
+    ARCH_SimpleAxe     = 13,
+    ARCH_Furnace       = 14,
+    ARCH_Workbench     = 15,
+
+    // ITEMS
+    ARCH_Pebbles       = 7,
+    ARCH_Branches      = 8,
+    ARCH_Trunk         = 9,
+    ARCH_SapphireChunk = 10,
+    ARCH_RubyChunk     = 11,
+
+    ARCH_ID_MAX
 };
 
 enum game_ui_state
@@ -185,7 +214,7 @@ struct entity_item_inventory
 
 struct entity
 {
-    int32 EntityID;
+    int32       EntityID;
     sprite_type Sprite;
     
     uint32      Archetype;
@@ -205,6 +234,7 @@ struct entity
     entity_item_inventory Inventory;
     uint32      UsedInventorySlots;
     
+    // DROPPING FROM INVENTORY
     item_id     ItemID;
     int32       DroppedItemCount;
 };
