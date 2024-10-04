@@ -92,19 +92,19 @@ enum item_id
     ITEM_Nil = 0,
     
     // CRAFTABLE
-    ITEM_Pebbles           = 1,
-    ITEM_Branches          = 2,
-    ITEM_Trunk             = 3,
-    ITEM_ToolPickaxe       = 4,
-    ITEM_ToolWoodAxe       = 5,
-    ITEM_Workbench         = 6,
-    ITEM_Furnace           = 7,
+    ITEM_Pebbles,
+    ITEM_Branches,
+    ITEM_Trunk,
+    ITEM_ToolPickaxe,
+    ITEM_ToolWoodAxe,
+    ITEM_Workbench,
+    ITEM_Furnace,
     
     // NON-CRAFTABLE
-    ITEM_RubyOreChunk      = 8,
-    ITEM_SapphireOreChunk  = 9,
-    ITEM_CopperOreChunk    = 10,
-    ITEM_Resin             = 11,
+    ITEM_RubyOreChunk,
+    ITEM_SapphireOreChunk,
+    ITEM_CopperOreChunk,
+    ITEM_Resin,
     ITEM_IDCount
 };
 
@@ -126,40 +126,28 @@ enum entity_flags
     ENTITY_FLAGS_COUNT
 };
 
-enum entity_arch
-{
-    NIL       = 0,
-    PLAYER    = 1,
-    BUILDING  = 2,
-    ROCK      = 3,
-    TREE      = 4,
-    NODE      = 5,
-    ITEM      = 6,
-    ARCH_MAX,
-};
-
 enum entity_arch_id
 {
-    ARCH_Nil           = 0,
-    ARCH_Player        = 1,
-    ARCH_Rock          = 2,
-    ARCH_Tree00        = 3,
-    ARCH_Tree01        = 4,
-    ARCH_SapphireNode  = 5,
-    ARCH_RubyNode      = 6,
-    ARCH_SimplePickaxe = 12,
-    ARCH_SimpleAxe     = 13,
-    ARCH_Furnace       = 14,
-    ARCH_Workbench     = 15,
-
+    ARCH_Nil = 0,
+    ARCH_Player,
+    ARCH_Rock,
+    ARCH_Tree00,
+    ARCH_Tree01,
+    ARCH_SapphireNode,
+    ARCH_RubyNode,
+    ARCH_SimplePickaxe,
+    ARCH_SimpleAxe,
+    ARCH_Furnace,
+    ARCH_Workbench,
+    
     // ITEMS
-    ARCH_Pebbles       = 7,
-    ARCH_Branches      = 8,
-    ARCH_Trunk         = 9,
-    ARCH_SapphireChunk = 10,
-    ARCH_RubyChunk     = 11,
-
-    ARCH_ID_MAX
+    ARCH_Pebbles,
+    ARCH_Branches,
+    ARCH_Trunk,
+    ARCH_SapphireChunk,
+    ARCH_RubyChunk,
+    
+    ARCH_ID_Max
 };
 
 enum game_ui_state
@@ -212,12 +200,18 @@ struct entity_item_inventory
     uint32 CurrentInventorySlot;
 };
 
+struct entity_item_drop
+{
+    item_id DroppedItem;
+    int32   DropAmount;
+};
+
 struct entity
 {
     int32       EntityID;
-    sprite_type Sprite;
+    uint32      EntityArchetype;
     
-    uint32      Archetype;
+    sprite_type Sprite;
     uint32      Flags;
     uint32      Health;
     
@@ -233,10 +227,9 @@ struct entity
     
     entity_item_inventory Inventory;
     uint32      UsedInventorySlots;
-    
-    // DROPPING FROM INVENTORY
-    item_id     ItemID;
-    int32       DroppedItemCount;
+
+    entity_item_drop EntityItemDrops[MAX_ENTITY_DROPS];
+    int32   UniqueDropCount;
 };
 
 struct game_state
@@ -288,6 +281,8 @@ struct game_state
     { 
         static_sprite_data          Sprites[SPRITE_Count];
         item                        GameItems[ITEM_IDCount];
+        entity                      GameEntityDefaults[ARCH_ID_Max];
+        
         pair <item_id, sprite_type> ItemSprites[ITEM_IDCount];
     }GameData;
 };

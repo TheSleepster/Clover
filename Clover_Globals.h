@@ -64,6 +64,7 @@ constexpr real32 MaxDropDistance = 60.0f;
 constexpr uint32 PLAYER_HOTBAR_COUNT = 7;
 constexpr uint32 PLAYER_INVENTORY_SIZE = 15;
 constexpr uint32 MAX_CRAFTING_ELEMENTS = 9;
+constexpr uint32 MAX_ENTITY_DROPS      = 4;
 constexpr uint32 TOTAL_INVENTORY_SIZE = PLAYER_HOTBAR_COUNT + PLAYER_INVENTORY_SIZE;
 
 constexpr real32 PickupEpsilon = 5.0f;

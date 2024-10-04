@@ -26,6 +26,7 @@
 #include "Clover_Draw.cpp"
 #include "Clover_UI.cpp"
 
+
 global_variable entity *Player = {};
 
 
@@ -80,7 +81,7 @@ LoadSpriteData(game_state *State)
     State->GameData.Sprites[SPRITE_Outline]               = {.AtlasOffset = {128,  0}, .SpriteSize = {16, 16}};
     State->GameData.Sprites[SPRITE_Outline]               = {.AtlasOffset = {128,  0}, .SpriteSize = {16, 16}};
     State->GameData.Sprites[SPRITE_TestTree]              = {.AtlasOffset = { 64, 80}, .SpriteSize = {32, 64}};
-
+    
     State->GameData.Sprites[SPRITE_Rock]                  = {.AtlasOffset = { 32,  0}, .SpriteSize = {12,  8}};
     State->GameData.Sprites[SPRITE_Pebbles]               = {.AtlasOffset = { 32, 16}, .SpriteSize = { 6,  5}};
     State->GameData.Sprites[SPRITE_Tree00]                = {.AtlasOffset = { 48,  0}, .SpriteSize = {11, 14}};
@@ -91,13 +92,13 @@ LoadSpriteData(game_state *State)
     State->GameData.Sprites[SPRITE_RubyChunk]             = {.AtlasOffset = { 80, 16}, .SpriteSize = { 8,  6}};
     State->GameData.Sprites[SPRITE_SaphireOre]            = {.AtlasOffset = { 96,  0}, .SpriteSize = {11, 11}};
     State->GameData.Sprites[SPRITE_SapphireChunk]         = {.AtlasOffset = { 96, 16}, .SpriteSize = { 8,  6}};
-
+    
     State->GameData.Sprites[SPRITE_TestCopperNode]        = {.AtlasOffset = {168, 112},.SpriteSize = {38, 32}};
     State->GameData.Sprites[SPRITE_TestCopperOreChunk]    = {.AtlasOffset = {128, 144},.SpriteSize = {16, 16}};
-
+    
     State->GameData.Sprites[SPRITE_GrassPatch]            = {.AtlasOffset = {32, 32},.SpriteSize = {16, 16}};
     State->GameData.Sprites[SPRITE_Resin]                 = {.AtlasOffset = {32, 48},.SpriteSize = {5, 4}};
-
+    
     /* State->GameData.Sprites[SPRITE_Rock]                  = {.AtlasOffset = {170,  80}, .SpriteSize = {38, 32}}; */
     /* State->GameData.Sprites[SPRITE_Pebbles]               = {.AtlasOffset = {128, 160}, .SpriteSize = {34, 32}}; */
     /* State->GameData.Sprites[SPRITE_Tree00]                = {.AtlasOffset = { 32, 112}, .SpriteSize = {32, 32}}; */
@@ -116,7 +117,7 @@ LoadItemData(game_state *State)
     State->GameData.GameItems[ITEM_Nil] = {};
     State->GameData.GameItems[ITEM_Pebbles] = 
     {
-        .Archetype = ITEM,      
+        .EntityArchetype = ARCH_Pebbles,      
         .Flags = IS_VALID|IS_ITEM|IS_IN_INVENTORY, 
         .Sprite = SPRITE_Pebbles,       
         .ItemID = ITEM_Pebbles,          
@@ -134,7 +135,7 @@ LoadItemData(game_state *State)
     
     State->GameData.GameItems[ITEM_Branches] = 
     {
-        .Archetype = ITEM,     
+        .EntityArchetype = ARCH_Branches,     
         .Flags = IS_VALID|IS_ITEM|IS_IN_INVENTORY, 
         .Sprite = SPRITE_Branches,      
         .ItemID = ITEM_Branches,         
@@ -152,7 +153,7 @@ LoadItemData(game_state *State)
     
     State->GameData.GameItems[ITEM_Trunk] = 
     {
-        .Archetype = ITEM,      
+        .EntityArchetype = ARCH_Trunk,      
         .Flags = IS_VALID|IS_ITEM|IS_IN_INVENTORY, 
         .Sprite = SPRITE_Trunk,         
         .ItemID = ITEM_Trunk,            
@@ -170,7 +171,7 @@ LoadItemData(game_state *State)
     
     State->GameData.GameItems[ITEM_RubyOreChunk] = 
     {
-        .Archetype = ITEM,      
+        .EntityArchetype = ARCH_RubyChunk,      
         .Flags = IS_VALID|IS_ITEM|IS_IN_INVENTORY, 
         .Sprite = SPRITE_RubyChunk,     
         .ItemID = ITEM_RubyOreChunk,     
@@ -182,7 +183,7 @@ LoadItemData(game_state *State)
     
     State->GameData.GameItems[ITEM_SapphireOreChunk] = 
     {
-        .Archetype = ITEM,      
+        .EntityArchetype = ARCH_SapphireChunk,      
         .Flags = IS_VALID|IS_ITEM|IS_IN_INVENTORY, 
         .Sprite = SPRITE_SapphireChunk, 
         .ItemID = ITEM_SapphireOreChunk, 
@@ -192,21 +193,9 @@ LoadItemData(game_state *State)
         .Craftable = false,
     };
 
-    State->GameData.GameItems[ITEM_CopperOreChunk] = 
-    {
-        .Archetype = ITEM,      
-        .Flags = IS_VALID|IS_ITEM|IS_IN_INVENTORY, 
-        .Sprite = SPRITE_TestCopperOreChunk, 
-        .ItemID = ITEM_CopperOreChunk, 
-        .MaxStackCount = 64, 
-        .ItemName = STR("Copper Chunks"), 
-        .ItemDesc = STR("These are some chunks of Copper ore!"),
-        .Craftable = false,
-    };
-    
     State->GameData.GameItems[ITEM_ToolPickaxe] = 
     {
-        .Archetype = ITEM,      
+        .EntityArchetype = ARCH_SimplePickaxe, 
         .Flags = IS_VALID|IS_ITEM|IS_IN_INVENTORY, 
         .Sprite = SPRITE_ToolPickaxe,   
         .ItemID = ITEM_ToolPickaxe,      
@@ -225,7 +214,7 @@ LoadItemData(game_state *State)
     
     State->GameData.GameItems[ITEM_ToolWoodAxe] = 
     {
-        .Archetype = ITEM,      
+        .EntityArchetype = ARCH_SimpleAxe,      
         .Flags = IS_VALID|IS_ITEM|IS_IN_INVENTORY, 
         .Sprite = SPRITE_ToolWoodAxe,   
         .ItemID = ITEM_ToolWoodAxe,      
@@ -244,7 +233,7 @@ LoadItemData(game_state *State)
     
     State->GameData.GameItems[ITEM_Workbench] = 
     {
-        .Archetype = BUILDING,  
+        .EntityArchetype = ARCH_Workbench,  
         .Flags = IS_VALID|IS_BUILDABLE,            
         .Sprite = SPRITE_Workbench,   
         .ItemID = ITEM_Workbench,      
@@ -264,7 +253,7 @@ LoadItemData(game_state *State)
     
     State->GameData.GameItems[ITEM_Furnace] = 
     {
-        .Archetype = BUILDING,  
+        .EntityArchetype = ARCH_Furnace,  
         .Flags = IS_VALID|IS_BUILDABLE,            
         .Sprite = SPRITE_Furnace,   
         .ItemID = ITEM_Furnace,      
@@ -447,7 +436,7 @@ HandleInput(game_state *State, entity *PlayerIn, time Time)
 internal void
 SetupPlayer(entity *Entity)
 {
-    Entity->Archetype   = PLAYER;
+    Entity->EntityArchetype   = PLAYER;
     Entity->Sprite      = SPRITE_Player; 
     Entity->Flags      += IS_ACTIVE|IS_ACTOR;
     Entity->Size        = {12, 11};
@@ -462,7 +451,7 @@ SetupPlayer(entity *Entity)
 internal void
 SetupRock(entity *Entity)
 {
-    Entity->Archetype   = ROCK;
+    Entity->EntityArchetype   = ROCK;
     Entity->Sprite      = SPRITE_Rock; 
     Entity->Flags      += IS_ACTIVE|IS_SOLID|IS_DESTRUCTABLE;
     Entity->Size        = {12, 8};
@@ -478,7 +467,7 @@ SetupRock(entity *Entity)
 internal void
 SetupTree00(entity *Entity)
 {
-    Entity->Archetype   = TREE;
+    Entity->EntityArchetype   = TREE;
     Entity->Sprite      = SPRITE_Tree00; 
     Entity->Flags      += IS_ACTIVE|IS_SOLID|IS_DESTRUCTABLE;
     Entity->Size        = {11, 14};
@@ -494,7 +483,7 @@ SetupTree00(entity *Entity)
 internal void
 SetupTree01(entity *Entity)
 {
-    Entity->Archetype   = TREE;
+    Entity->EntityArchetype   = TREE;
     Entity->Sprite      = SPRITE_Tree01; 
     Entity->Flags      += IS_ACTIVE|IS_SOLID|IS_DESTRUCTABLE;
     Entity->Size        = {9, 12};
@@ -510,7 +499,7 @@ SetupTree01(entity *Entity)
 internal void
 SetupRubyNode(entity *Entity)
 {
-    Entity->Archetype   = NODE;
+    Entity->EntityArchetype   = NODE;
     Entity->Sprite      = SPRITE_RubyOre; 
     Entity->Flags      += IS_ACTIVE|IS_SOLID|IS_DESTRUCTABLE;
     Entity->Size        = {14, 11};
@@ -526,7 +515,7 @@ SetupRubyNode(entity *Entity)
 internal void
 SetupSaphireNode(entity *Entity)
 {
-    Entity->Archetype   = NODE;
+    Entity->EntityArchetype   = NODE;
     Entity->Sprite      = SPRITE_SaphireOre; 
     Entity->Flags      += IS_ACTIVE|IS_SOLID|IS_DESTRUCTABLE;
     Entity->Size        = {11, 11};
@@ -542,7 +531,7 @@ SetupSaphireNode(entity *Entity)
 internal void
 SetupCopperNode(entity *Entity)
 {
-    Entity->Archetype   = NODE;
+    Entity->EntityArchetype   = NODE;
     Entity->Sprite      = SPRITE_TestCopperNode; 
     Entity->Flags      += IS_ACTIVE|IS_SOLID|IS_DESTRUCTABLE;
     Entity->Size        = {38, 32};
@@ -558,7 +547,7 @@ SetupCopperNode(entity *Entity)
 internal void
 SetupItemPebbles(entity *Entity)
 {
-    Entity->Archetype = ITEM;
+    Entity->EntityArchetype = ITEM;
     Entity->Sprite    = SPRITE_Pebbles;
     Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP;
     Entity->Size      = {6, 5};
@@ -568,7 +557,7 @@ SetupItemPebbles(entity *Entity)
 internal void
 SetupItemBranches(entity *Entity)
 {
-    Entity->Archetype = ITEM;
+    Entity->EntityArchetype = ITEM;
     Entity->Sprite    = SPRITE_Branches;
     Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP;
     Entity->Size      = {7, 7};
@@ -578,7 +567,7 @@ SetupItemBranches(entity *Entity)
 internal void
 SetupItemTrunk(entity *Entity)
 {
-    Entity->Archetype = ITEM;
+    Entity->EntityArchetype = ITEM;
     Entity->Sprite    = SPRITE_Trunk;
     Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP;
     Entity->Size      = {6, 6};
@@ -588,7 +577,7 @@ SetupItemTrunk(entity *Entity)
 internal void
 SetupItemRubyChunk(entity *Entity)
 {
-    Entity->Archetype = ITEM;
+    Entity->EntityArchetype = ITEM;
     Entity->Sprite    = SPRITE_RubyChunk;
     Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP;
     Entity->Size      = {6, 5};
@@ -598,7 +587,7 @@ SetupItemRubyChunk(entity *Entity)
 internal void
 SetupItemSaphireChunk(entity *Entity)
 {
-    Entity->Archetype = ITEM;
+    Entity->EntityArchetype = ITEM;
     Entity->Sprite    = SPRITE_SapphireChunk;
     Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP;
     Entity->Size      = {6, 5};
@@ -608,7 +597,7 @@ SetupItemSaphireChunk(entity *Entity)
 internal void
 SetupItemCopperChunk(entity *Entity)
 {
-    Entity->Archetype = ITEM;
+    Entity->EntityArchetype = ITEM;
     Entity->Sprite    = SPRITE_TestCopperOreChunk;
     Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP;
     Entity->Size      = {8, 8};
@@ -618,7 +607,7 @@ SetupItemCopperChunk(entity *Entity)
 internal void
 SetupItemToolPickaxe(entity *Entity)
 {
-    Entity->Archetype = ITEM;
+    Entity->EntityArchetype = ITEM;
     Entity->Sprite    = SPRITE_ToolPickaxe;
     Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP;
     Entity->Size      = {11, 13};
@@ -628,7 +617,7 @@ SetupItemToolPickaxe(entity *Entity)
 internal void
 SetupItemWorkbench(entity *Entity)
 {
-    Entity->Archetype = ITEM;
+    Entity->EntityArchetype = ITEM;
     Entity->Sprite    = SPRITE_Workbench;
     Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP|IS_BUILDABLE;
     Entity->Size      = {8, 8};
@@ -638,7 +627,7 @@ SetupItemWorkbench(entity *Entity)
 internal void
 SetupItemFurnace(entity *Entity)
 {
-    Entity->Archetype = ITEM;
+    Entity->EntityArchetype = ITEM;
     Entity->Sprite    = SPRITE_Furnace;
     Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP|IS_BUILDABLE;
     Entity->Size      = {8, 8};
@@ -648,7 +637,7 @@ SetupItemFurnace(entity *Entity)
 internal void
 SetupBuildingWorkbench(entity *Entity)
 {
-    Entity->Archetype = BUILDING;
+    Entity->EntityArchetype = BUILDING;
     Entity->Sprite    = SPRITE_Workbench;
     Entity->Flags    += IS_ACTIVE|IS_BUILDABLE|IS_PLACED|IS_DESTRUCTABLE;
     Entity->Size      = {16, 16}; 
@@ -663,7 +652,7 @@ SetupBuildingWorkbench(entity *Entity)
 internal void
 SetupBuildingFurnace(entity *Entity)
 {
-    Entity->Archetype = BUILDING;
+    Entity->EntityArchetype = BUILDING;
     Entity->Sprite    = SPRITE_Furnace;
     Entity->Flags    += IS_ACTIVE|IS_BUILDABLE|IS_PLACED|IS_DESTRUCTABLE;
     Entity->Size      = {16, 16};
@@ -902,12 +891,56 @@ IsItemCraftable(int *ItemCounts, item *Craft)
     return(false);
 }
 
+internal void
+LoadDefaultEntityData(game_state *State)
+{
+    State->GameData.GameEntityDefaults[ARCH_Nil]          = {};
+    State->GameData.GameEntityDefaults[ARCH_Player]       = 
+    {
+        .Sprite      = SPRITE_Player, 
+        .EntityArchetype   = PLAYER,
+        .Flags       = IS_VALID|IS_ACTIVE|IS_ACTOR,
+        .Health      = PlayerHealth,
+        .Position    = {},
+        .Size        = {12, 11},
+        .Speed       = 100.0f,              // PIXELS PER SECOND
+        .Rotation    = 0,
+        .BoxCollider = {},
+        .ItemID      = ITEM_Nil,            // DROPS
+    };
+    State->GameData.GameEntityDefaults[ARCH_Rock]         = 
+    {
+    };
+    State->GameData.GameEntityDefaults[ARCH_Tree00]       = 
+    {
+    };
+    State->GameData.GameEntityDefaults[ARCH_Tree01]       = 
+    {
+    };
+    State->GameData.GameEntityDefaults[ARCH_SapphireNode] = 
+    {
+    };
+    State->GameData.GameEntityDefaults[ARCH_RubyNode]     = 
+    {
+    };
+    State->GameData.GameEntityDefaults[ARCH_RubyNode]     = 
+    {
+    };
+    State->GameData.GameEntityDefaults[ARCH_RubyNode]     = 
+    {
+    };
+    State->GameData.GameEntityDefaults[ARCH_RubyNode]     = 
+    {
+    };
+}
+
 extern
 GAME_ON_AWAKE(GameOnAwake)
 {
     ResetGame(RenderData, State);
     LoadSpriteData(State);
     LoadItemData(State);
+    LoadDefaultEntityData(State);
     
     // TODO(Sleepster): Write a proper implementation of Mini Audio's low level API so that 
     //                  hotreloading the engine doesn't just crash the program
@@ -1063,7 +1096,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     --Temp->Health;
                     if(Temp->Health <= 0)
                     {
-                        switch(SelectedEntity->Archetype)
+                        switch(SelectedEntity->EntityArchetype)
                         {
                             case ROCK:
                             {
@@ -1153,7 +1186,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             }
             
             // NOTE(Sleepster): Inventory
-            if(Temp->Flags & IS_ITEM && Temp->Archetype == ITEM)
+            if(Temp->Flags & IS_ITEM && Temp->EntityArchetype == ITEM)
             {
                 real32 ItemDistance = fabsf(v2Distance(Temp->Position, Player->Position));
                 if(ItemDistance <= ItemPickupDist)
@@ -1223,7 +1256,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             }
         }
     }
-    
+
     // NOTE(Sleepster): New Hotbar UI 
     if(State->DisplayPlayerHotbar)
     {
@@ -1870,7 +1903,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     EntityIndex++)
                 {
                     entity *Temp = &State->World.Entities[EntityIndex];
-                    if((Temp->Flags & IS_PLACED) && (Temp->Archetype == BUILDING))
+                    if((Temp->Flags & IS_PLACED) && (Temp->EntityArchetype == BUILDING))
                     {
                         real32 Distance = v2Distance(Player->Position, Temp->Position);
                         if(Distance <= ItemPickupDist && State->World.WorldFrame.SelectedEntity) 
@@ -2079,7 +2112,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             }
         }
     }
-    
+#endif
     
     // TRANSPARENCY TEST
     {
@@ -2116,7 +2149,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             }
         }
     }
-
+    
     DrawSprite(RenderData, GetSprite(State, SPRITE_TestTree), {0, -0}, {32, 64}, WHITE, 0, 1);
     
     vec2 SelectionBoxDrawSize = {16, 16};
@@ -2131,9 +2164,9 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
         
         if(Temp->Flags & IS_VALID)
         {
-            switch(Temp->Archetype)
+            switch(Temp->EntityArchetype)
             {
-                case PLAYER:
+                case ARCH_PLAYER:
                 {
                     Player = Temp;
                     HandleInput(State, Temp, Time);
@@ -2181,10 +2214,6 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             }
         }
     }
-    
-    // NOTE(Sleepster): World Text and Quad at {0,0}
-    DrawGameText(RenderData, sprints(&Memory->TemporaryStorage, STR("%f, %f"), MouseToWorld.X, MouseToWorld.Y), {-100, 0}, 15.0f, UBUNTU_MONO, GREEN);
-    DrawGameText(RenderData, sprints(&Memory->TemporaryStorage, STR("%f, %f"), MouseToScreen.X, MouseToScreen.Y), {-100, 100}, 15.0f, UBUNTU_MONO, BLUE);
 }
 
 extern
