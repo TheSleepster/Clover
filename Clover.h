@@ -81,9 +81,6 @@ enum sprite_type
     SPRITE_AmethestNode        = 30,
     SPRITE_TestBranchDrop      = 31,
     SPRITE_TestTrunkDrop       = 32,
-    SPRITE_TestCopperOreChunk  = 33,
-    SPRITE_GrassPatch          = 34,
-    SPRITE_Resin               = 35,
     SPRITE_Count
 };
 
@@ -92,19 +89,17 @@ enum item_id
     ITEM_Nil = 0,
     
     // CRAFTABLE
-    ITEM_Pebbles,
-    ITEM_Branches,
-    ITEM_Trunk,
-    ITEM_ToolPickaxe,
-    ITEM_ToolWoodAxe,
-    ITEM_Workbench,
-    ITEM_Furnace,
+    ITEM_Pebbles           = 1,
+    ITEM_Branches          = 2,
+    ITEM_Trunk             = 3,
+    ITEM_ToolPickaxe       = 4,
+    ITEM_ToolWoodAxe       = 5,
+    ITEM_Workbench         = 6,
+    ITEM_Furnace           = 7,
     
     // NON-CRAFTABLE
-    ITEM_RubyOreChunk,
-    ITEM_SapphireOreChunk,
-    ITEM_CopperOreChunk,
-    ITEM_Resin,
+    ITEM_RubyOreChunk      = 8,
+    ITEM_SapphireOreChunk  = 9,
     ITEM_IDCount
 };
 
@@ -126,28 +121,16 @@ enum entity_flags
     ENTITY_FLAGS_COUNT
 };
 
-enum entity_arch_id
+enum entity_arch
 {
-    ARCH_Nil = 0,
-    ARCH_Player,
-    ARCH_Rock,
-    ARCH_Tree00,
-    ARCH_Tree01,
-    ARCH_SapphireNode,
-    ARCH_RubyNode,
-    ARCH_SimplePickaxe,
-    ARCH_SimpleAxe,
-    ARCH_Furnace,
-    ARCH_Workbench,
-    
-    // ITEMS
-    ARCH_Pebbles,
-    ARCH_Branches,
-    ARCH_Trunk,
-    ARCH_SapphireChunk,
-    ARCH_RubyChunk,
-    
-    ARCH_ID_Max
+    NIL       = 0,
+    PLAYER    = 1,
+    BUILDING  = 2,
+    ROCK      = 3,
+    TREE      = 4,
+    NODE      = 5,
+    ITEM      = 6,
+    ARCH_MAX,
 };
 
 enum game_ui_state
@@ -200,18 +183,12 @@ struct entity_item_inventory
     uint32 CurrentInventorySlot;
 };
 
-struct entity_item_drop
-{
-    item_id DroppedItem;
-    int32   DropAmount;
-};
-
 struct entity
 {
-    int32       EntityID;
-    uint32      EntityArchetype;
-    
+    int32 EntityID;
     sprite_type Sprite;
+    
+    uint32      Archetype;
     uint32      Flags;
     uint32      Health;
     
@@ -227,9 +204,9 @@ struct entity
     
     entity_item_inventory Inventory;
     uint32      UsedInventorySlots;
-
-    entity_item_drop EntityItemDrops[MAX_ENTITY_DROPS];
-    int32   UniqueDropCount;
+    
+    item_id     ItemID;
+    int32       DroppedItemCount;
 };
 
 struct game_state
@@ -281,8 +258,6 @@ struct game_state
     { 
         static_sprite_data          Sprites[SPRITE_Count];
         item                        GameItems[ITEM_IDCount];
-        entity                      GameEntityDefaults[ARCH_ID_Max];
-        
         pair <item_id, sprite_type> ItemSprites[ITEM_IDCount];
     }GameData;
 };
