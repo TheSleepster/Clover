@@ -71,16 +71,6 @@ enum sprite_type
     SPRITE_Workbench           = 20, 
     SPRITE_Furnace             = 21, 
     SPRITE_Outline             = 22,
-    SPRITE_TestTree            = 23,
-    SPRITE_TestOak             = 24,
-    SPRITE_TestSapphireNode    = 25,
-    SPRITE_TestRubyNode        = 26,
-    SPRITE_TestEmeraldNode     = 27,
-    SPRITE_TestCopperNode      = 28,
-    SPRITE_TestStoneNode       = 29,
-    SPRITE_AmethestNode        = 30,
-    SPRITE_TestBranchDrop      = 31,
-    SPRITE_TestTrunkDrop       = 32,
     SPRITE_Count
 };
 
@@ -123,13 +113,25 @@ enum entity_flags
 
 enum entity_arch
 {
-    NIL       = 0,
-    PLAYER    = 1,
-    BUILDING  = 2,
-    ROCK      = 3,
-    TREE      = 4,
-    NODE      = 5,
-    ITEM      = 6,
+    ARCH_Nil = 0,
+    ARCH_Player,
+    ARCH_Rock,
+    ARCH_Tree00,
+    ARCH_Tree01,
+    ARCH_SapphireNode,
+    ARCH_RubyNode,
+    ARCH_Workbench,
+    ARCH_Furnace,
+
+    // ITEMS
+    ARCH_Pebbles,
+    ARCH_Branches,
+    ARCH_Trunk,
+    ARCH_SapphireOreChunk,
+    ARCH_RubyOreChunk,
+    ARCH_SimplePickaxe,
+    ARCH_SimpleWoodAxe,
+
     ARCH_MAX,
 };
 
