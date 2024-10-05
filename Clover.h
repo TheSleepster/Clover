@@ -185,6 +185,12 @@ struct entity_item_inventory
     uint32 CurrentInventorySlot;
 };
 
+struct entity_item_drop
+{
+    item_id DroppedItem;
+    int32 DropAmount;
+};
+
 struct entity
 {
     int32 EntityID;
@@ -205,10 +211,13 @@ struct entity
     range_v2    BoxCollider;
     
     entity_item_inventory Inventory;
-    uint32      UsedInventorySlots;
     
-    item_id     ItemID;
-    int32       DroppedItemCount;
+    item_id     DroppedFromInventoryItemID;
+    int32       DroppedFromInventoryItemCount;
+
+    // DROPS ON DEATH
+    entity_item_drop EntityDrops[MAX_ENTITY_DROPS];
+    int32 UniqueDropCount;
 };
 
 struct game_state

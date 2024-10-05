@@ -424,7 +424,7 @@ SetupPlayer(entity *Entity)
     Entity->Rotation    = 0;
     Entity->Speed       = 100.0f;              // PIXELS PER SECOND
     Entity->BoxCollider = {};
-    Entity->ItemID      = ITEM_Nil;            // DROPS
+    Entity->DroppedFromInventoryItemID  = ITEM_Nil;            // DROPS
 }
 
 internal void
@@ -439,8 +439,12 @@ SetupRock(entity *Entity)
     Entity->Rotation    = 0;
     Entity->Speed       = 1.0f;
     Entity->BoxCollider = {};
-    
-    Entity->ItemID      = ITEM_Pebbles;
+
+    Entity->UniqueDropCount = 1;
+    Entity->EntityDrops[0] = 
+    {
+        entity_item_drop{ITEM_Pebbles, 1},
+    };
 }
 
 internal void
@@ -455,8 +459,12 @@ SetupTree00(entity *Entity)
     Entity->Rotation    = 0;
     Entity->Speed       = 1.0f;
     Entity->BoxCollider = {};
-    
-    Entity->ItemID      = ITEM_Branches;
+
+    Entity->UniqueDropCount = 1;
+    Entity->EntityDrops[0] = 
+    {
+        entity_item_drop{ITEM_Branches, 1},
+    };
 }
 
 internal void
@@ -471,8 +479,12 @@ SetupTree01(entity *Entity)
     Entity->Rotation    = 0;
     Entity->Speed       = 1.0f;
     Entity->BoxCollider = {};
-    
-    Entity->ItemID      = ITEM_Trunk;
+
+    Entity->UniqueDropCount = 1;
+    Entity->EntityDrops[0] = 
+    {
+        entity_item_drop{ITEM_Trunk, 1},
+    };
 }
 
 internal void
@@ -487,8 +499,12 @@ SetupRubyNode(entity *Entity)
     Entity->Rotation    = 0;
     Entity->Speed       = 1.0f;
     Entity->BoxCollider = {};
-    
-    Entity->ItemID      = ITEM_RubyOreChunk;
+
+    Entity->UniqueDropCount = 1;
+    Entity->EntityDrops[0] = 
+    {
+        entity_item_drop{ITEM_RubyOreChunk, 1},
+    };
 }
 
 internal void
@@ -504,7 +520,11 @@ SetupSaphireNode(entity *Entity)
     Entity->Speed       = 1.0f;
     Entity->BoxCollider = {};
     
-    Entity->ItemID      = ITEM_SapphireOreChunk;
+    Entity->UniqueDropCount = 1;
+    Entity->EntityDrops[0] = 
+    {
+        entity_item_drop{ITEM_SapphireOreChunk, 1},
+    };
 }
 
 internal void
@@ -514,7 +534,7 @@ SetupItemPebbles(entity *Entity)
     Entity->Sprite    = SPRITE_Pebbles;
     Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP;
     Entity->Size      = {6, 5};
-    Entity->ItemID    = ITEM_Pebbles;
+    Entity->DroppedFromInventoryItemID    = ITEM_Pebbles;
 }
 
 internal void
@@ -524,7 +544,7 @@ SetupItemBranches(entity *Entity)
     Entity->Sprite    = SPRITE_Branches;
     Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP;
     Entity->Size      = {7, 7};
-    Entity->ItemID    = ITEM_Branches;
+    Entity->DroppedFromInventoryItemID    = ITEM_Branches;
 }
 
 internal void
@@ -534,7 +554,7 @@ SetupItemTrunk(entity *Entity)
     Entity->Sprite    = SPRITE_Trunk;
     Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP;
     Entity->Size      = {6, 6};
-    Entity->ItemID    = ITEM_Trunk;
+    Entity->DroppedFromInventoryItemID    = ITEM_Trunk;
 }
 
 internal void
@@ -544,7 +564,7 @@ SetupItemRubyChunk(entity *Entity)
     Entity->Sprite    = SPRITE_RubyChunk;
     Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP;
     Entity->Size      = {6, 5};
-    Entity->ItemID    = ITEM_RubyOreChunk;
+    Entity->DroppedFromInventoryItemID    = ITEM_RubyOreChunk;
 }
 
 internal void
@@ -554,7 +574,7 @@ SetupItemSaphireChunk(entity *Entity)
     Entity->Sprite    = SPRITE_SapphireChunk;
     Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP;
     Entity->Size      = {6, 5};
-    Entity->ItemID    = ITEM_SapphireOreChunk;
+    Entity->DroppedFromInventoryItemID    = ITEM_SapphireOreChunk;
 }
 
 internal void
@@ -564,7 +584,7 @@ SetupItemToolPickaxe(entity *Entity)
     Entity->Sprite    = SPRITE_ToolPickaxe;
     Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP;
     Entity->Size      = {11, 13};
-    Entity->ItemID    = ITEM_ToolPickaxe;
+    Entity->DroppedFromInventoryItemID    = ITEM_ToolPickaxe;
 }
 
 internal void
@@ -574,7 +594,7 @@ SetupItemToolWoodAxe(entity *Entity)
     Entity->Sprite    = SPRITE_ToolWoodAxe;
     Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP;
     Entity->Size      = {11, 13};
-    Entity->ItemID    = ITEM_ToolWoodAxe;
+    Entity->DroppedFromInventoryItemID    = ITEM_ToolWoodAxe;
 }
 
 internal void
@@ -584,7 +604,7 @@ SetupItemWorkbench(entity *Entity)
     Entity->Sprite    = SPRITE_Workbench;
     Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP|IS_BUILDABLE;
     Entity->Size      = {8, 8};
-    Entity->ItemID    = ITEM_Workbench;
+    Entity->DroppedFromInventoryItemID    = ITEM_Workbench;
 }
 
 internal void
@@ -594,7 +614,7 @@ SetupItemFurnace(entity *Entity)
     Entity->Sprite    = SPRITE_Furnace;
     Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP|IS_BUILDABLE;
     Entity->Size      = {8, 8};
-    Entity->ItemID    = ITEM_Furnace;
+    Entity->DroppedFromInventoryItemID    = ITEM_Furnace;
 }
 
 internal void
@@ -609,7 +629,11 @@ SetupBuildingWorkbench(entity *Entity)
     Entity->Speed       = 1.0f;
     Entity->BoxCollider = {};
     
-    Entity->ItemID      = ITEM_Workbench;
+    Entity->UniqueDropCount = 1;
+    Entity->EntityDrops[0] = 
+    {
+        entity_item_drop{ITEM_Workbench, 1},
+    };
 }
 
 internal void
@@ -625,7 +649,11 @@ SetupBuildingFurnace(entity *Entity)
     Entity->Speed       = 1.0f;
     Entity->BoxCollider = {};
     
-    Entity->ItemID      = ITEM_Furnace;
+    Entity->UniqueDropCount = 1;
+    Entity->EntityDrops[0] = 
+    {
+        entity_item_drop{ITEM_Furnace, 1},
+    };
 }
 
 internal inline void
@@ -767,7 +795,7 @@ SetupDroppedEntity(gl_render_data *RenderData, game_state *State, item *Selectio
     }
     
     SpawnedItem->Flags -= CAN_BE_PICKED_UP;
-    SpawnedItem->DroppedItemCount = SelectionItem->CurrentStack;
+    SpawnedItem->DroppedFromInventoryItemCount = SelectionItem->CurrentStack;
     
     vec2 WorldMouseCoords = TransformMouseCoords(RenderData->GameCamera.ViewMatrix, RenderData->GameCamera.ProjectionMatrix, State->GameInput.Keyboard.CurrentMouse, SizeData);
     real32 Distance = fabsf(v2Distance(Player->Position, WorldMouseCoords));
@@ -861,6 +889,52 @@ IsItemCraftable(int *ItemCounts, item *Craft)
         return(true);
     }
     return(false);
+}
+
+internal void
+AddItemToPlayerInventory(game_state *State, entity *Player, entity *Temp)
+{
+    if((Temp->Flags & IS_ITEM) && (Temp->Flags & CAN_BE_PICKED_UP))
+    {
+        real32 ItemDistance = fabsf(v2Distance(Temp->Position, Player->Position));
+        if(ItemDistance <= ItemPickupDist)
+        {
+            for(int32 InventoryIndex = 0;
+                InventoryIndex < TOTAL_INVENTORY_SIZE;
+                ++InventoryIndex)
+            {
+                item NewItem = State->GameData.GameItems[Temp->DroppedFromInventoryItemID];
+                if(Player->Inventory.Items[InventoryIndex].ItemID == NewItem.ItemID && 
+                   Player->Inventory.Items[InventoryIndex].CurrentStack < 
+                   Player->Inventory.Items[InventoryIndex].MaxStackCount)
+                {
+                    Player->Inventory.Items[InventoryIndex].CurrentStack++;
+                    // NOTE(Sleepster): If two matching IDs are found, skip to the deletion 
+                    DeleteEntity(Temp);
+                    return;
+                }
+            }
+            
+            for(int32 InventoryIndex = 0;
+                InventoryIndex < TOTAL_INVENTORY_SIZE;
+                ++InventoryIndex)
+            {
+                item NewItem = State->GameData.GameItems[Temp->DroppedFromInventoryItemID];
+                if(Player->Inventory.Items[InventoryIndex].ItemID == 0)
+                {
+                    NewItem.CurrentStack = Temp->DroppedFromInventoryItemCount;
+                    if(NewItem.CurrentStack == 0)
+                    {
+                        NewItem.CurrentStack = 1;
+                    }
+                    Player->Inventory.Items[InventoryIndex] = NewItem;
+                    Player->Inventory.Items[InventoryIndex].OccupiedInventorySlot = InventoryIndex;
+                    DeleteEntity(Temp);
+                    break;
+                }
+            }
+        }
+    }
 }
 
 extern
@@ -1014,6 +1088,8 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     State->World.WorldFrame.SelectedEntity = Temp;
                     MinimumDistance = Distance;
                 }
+
+                // NOTE(Sleepster): Handle Entity Destruction 
                 if(IsGameKeyPressed(ATTACK, &State->GameInput) && 
                    (Temp->Flags & IS_DESTRUCTABLE) && 
                    !(Temp->Flags & IS_UI) && 
@@ -1024,11 +1100,21 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     if(Temp->Health <= 0)
                     {
                         entity *CreatedEntity = CreateEntity(State);
-                        item   *SelectionItem = &State->GameData.GameItems[Temp->ItemID]; 
 
-                        SetupDroppedEntity(RenderData, State, SelectionItem, CreatedEntity);
-                        CreatedEntity->Position = Temp->Position;
-                        CreatedEntity->Target   = Temp->Position;
+                        for(uint32 DropIndex = 0;
+                            DropIndex < Temp->UniqueDropCount;
+                            DropIndex++)
+                        {
+                            for(uint32 DropCount = 0;
+                                DropCount < Temp->EntityDrops[DropIndex].DropAmount;
+                                DropCount++)
+                            {
+                                item DroppedItem = State->GameData.GameItems[Temp->EntityDrops[DropCount].DroppedItem];
+                                SetupDroppedEntity(RenderData, State, &DroppedItem, CreatedEntity);
+                                CreatedEntity->Position = Temp->Position;
+                                CreatedEntity->Target   = Temp->Position;
+                            }
+                        }
 
                         //PlaySound(&Memory->TemporaryStorage, State, STR("boop.wav"), 1);
                         State->World.WorldFrame.SelectedEntity = {};
@@ -1036,52 +1122,8 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     }
                 }
             }
-            
-            // NOTE(Sleepster): Inventory
-            if((Temp->Flags & IS_ITEM) && (Temp->Flags & CAN_BE_PICKED_UP))
-            {
-                real32 ItemDistance = fabsf(v2Distance(Temp->Position, Player->Position));
-                if(ItemDistance <= ItemPickupDist)
-                {
-                    item NewItem = State->GameData.GameItems[Temp->ItemID];
-                    for(int32 InventoryIndex = 0;
-                        InventoryIndex < TOTAL_INVENTORY_SIZE;
-                        ++InventoryIndex)
-                    {
-                        if(Player->Inventory.Items[InventoryIndex].ItemID == NewItem.ItemID && 
-                           Player->Inventory.Items[InventoryIndex].CurrentStack < 
-                           Player->Inventory.Items[InventoryIndex].MaxStackCount)
-                        {
-                            Player->Inventory.Items[InventoryIndex].CurrentStack++;
-                            // NOTE(Sleepster): If two matching IDs are found, skip to the deletion 
-                            goto Deletion;
-                        }
-                    }
-                    
-                    if(Player->UsedInventorySlots < TOTAL_INVENTORY_SIZE)
-                    {
-                        for(int32 InventoryIndex = 0;
-                            InventoryIndex < TOTAL_INVENTORY_SIZE;
-                            ++InventoryIndex)
-                        {
-                            if(Player->Inventory.Items[InventoryIndex].ItemID == 0)
-                            {
-                                NewItem.CurrentStack = Temp->DroppedItemCount;
-                                if(NewItem.CurrentStack == 0)
-                                {
-                                    NewItem.CurrentStack = 1;
-                                }
-                                Player->Inventory.Items[InventoryIndex] = NewItem;
-                                Player->Inventory.Items[InventoryIndex].OccupiedInventorySlot = InventoryIndex;
-                                Player->UsedInventorySlots++;
-                                break;
-                            }
-                        }
-                    }
-                    Deletion:
-                    DeleteEntity(Temp);
-                }
-            }
+            // NOTE(Sleepster): Add Item to Inventory
+            AddItemToPlayerInventory(State, Player, Temp);
         }
     }
     
@@ -1471,12 +1513,8 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     --HotbarItem->CurrentStack;
                     entity *DroppedEntity = CreateEntity(State);
                     SetupDroppedEntity(RenderData, State, HotbarItem, DroppedEntity);
-                    DroppedEntity->DroppedItemCount = 1;
+                    DroppedEntity->DroppedFromInventoryItemCount = 1;
                 }
-            }
-            else
-            {
-                Player->Inventory.SelectedHotbarItem = {};
             }
         }
     }
