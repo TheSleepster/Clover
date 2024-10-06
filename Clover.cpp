@@ -680,7 +680,7 @@ ResetGame(gl_render_data *RenderData, game_state *State)
 internal int32
 WorldToTilei32(real32 WorldPosition)
 {
-    return(floorf(WorldPosition / (real32)TILE_SIZE));
+    return(int32(floorf(WorldPosition / (real32)TILE_SIZE)));
 }
 
 internal real32
