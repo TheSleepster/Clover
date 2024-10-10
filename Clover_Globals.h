@@ -35,10 +35,13 @@ constexpr vec4 DARK_GRAY = {0.05f, 0.05f, 0.05f, 1.0f};
 
 // RENDERER STUFF
 constexpr real32 SIMRATE = (1.0f/90.0f);
-constexpr uint32 MAX_QUADS    = 80000;
+constexpr uint32 MAX_QUADS    = 10000;
 constexpr uint32 MAX_VERTICES = MAX_QUADS * 4;
 constexpr uint32 MAX_INDICES  = MAX_QUADS * 6;
+constexpr uint32 TRUE_MAX_VERTICES = MAX_VERTICES * 2;
 
+constexpr uint32 MAX_POINT_LIGHTS = 1000;
+constexpr uint32 MAX_SPOT_LIGHTS  = 1000;
 
 // GAME GLOBALS
 constexpr uint32 MAX_SOUNDS      = 128;

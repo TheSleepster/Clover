@@ -374,8 +374,8 @@ WinMain(HINSTANCE hInstance,
             Memory.TemporaryStorage = ArenaCreate(Megabytes(512));
             Memory.PermanentStorage = ArenaCreate(Megabytes(512));
             
-            RenderData.DrawFrame.Vertices = (vertex *)ArenaAlloc(&Memory.PermanentStorage, sizeof(vertex) * MAX_VERTICES);
-            RenderData.DrawFrame.UIVertices = (vertex *)ArenaAlloc(&Memory.PermanentStorage, sizeof(vertex) * MAX_VERTICES);
+            RenderData.DrawFrame.Vertices = (vertex *)ArenaAlloc(&Memory.PermanentStorage, sizeof(vertex) * TRUE_MAX_VERTICES);
+            RenderData.DrawFrame.UIVertices = (vertex *)ArenaAlloc(&Memory.PermanentStorage, sizeof(vertex) * TRUE_MAX_VERTICES);
             CloverResetRendererState(&RenderData);
             
             Win32LoadKeyData(&State);
@@ -454,6 +454,7 @@ WinMain(HINSTANCE hInstance,
             /* Assert(ma_engine_set_volume(&State.SFXData.AudioEngine, 0.1f) == MA_SUCCESS); */
             
             Game.OnAwake(&Memory, &RenderData, &State);
+            RenderData.CloverRender = CloverRender;
             
             Running = 1;
             LARGE_INTEGER LastCounter;
@@ -477,6 +478,25 @@ WinMain(HINSTANCE hInstance,
                     Time.CurrentTimeInSeconds = 0.0f;
                     Game.OnAwake(&Memory, &RenderData, &State);
                 }
+
+                // NOTE(Sleepster: Shader Reloading  
+                FILETIME NewTextureWriteTime        = Win32GetLastWriteTime(RenderData.GameAtlas.Filepath);    
+                FILETIME NewVertexShaderWriteTime   = Win32GetLastWriteTime(RenderData.BasicShader.VertexShader.Filepath);
+                FILETIME NewFragmentShaderWriteTime = Win32GetLastWriteTime(RenderData.BasicShader.FragmentShader.Filepath);
+
+                if(CompareFileTime(&NewTextureWriteTime, &RenderData.GameAtlas.LastWriteTime) != 0)
+                {
+                    CloverReloadTexture(&RenderData, &RenderData.GameAtlas, 0);
+                    Sleep(100);
+                }
+
+                if(CompareFileTime(&NewVertexShaderWriteTime,   &RenderData.BasicShader.VertexShader.LastWriteTime) != 0 ||
+                CompareFileTime(&NewFragmentShaderWriteTime, &RenderData.BasicShader.FragmentShader.LastWriteTime) != 0)
+                {
+                    glDeleteProgram(RenderData.BasicShader.ShaderID);
+                    CloverCreateShader(&Memory.TemporaryStorage, RenderData.BasicShader.VertexShader.Filepath, RenderData.BasicShader.FragmentShader.Filepath);
+                    Sleep(100);
+                }
 #endif
                 real64 NewTime     = GetLastTime();
                 CurrentTime = NewTime;
@@ -492,6 +512,11 @@ WinMain(HINSTANCE hInstance,
                 }
                 
                 Accumulator += Time.Delta;
+
+                glClearColor(RenderData.ClearColor.R, RenderData.ClearColor.G, RenderData.ClearColor.B, RenderData.ClearColor.A);
+                glClearDepth(0.0f);
+                glViewport(0, 0, SizeData.Width, SizeData.Height);
+                glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
                 
                 // Start the Dear ImGui frame
                 ImGui_ImplOpenGL3_NewFrame();
@@ -502,12 +527,12 @@ WinMain(HINSTANCE hInstance,
                 Game.UpdateAndDraw(&Memory, &RenderData, &State, Time, SizeData);
                 
                 ImGui::Render();
-                CloverRender(&Memory.TemporaryStorage, &RenderData);
+
+                CloverRender(&RenderData);
                 ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
                 SwapBuffers(WindowDC);
                 
                 ArenaReset(&Memory.TemporaryStorage);
-                CloverResetRendererState(&RenderData);
                 
                 // DELTA
                 LARGE_INTEGER EndCounter;

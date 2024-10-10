@@ -57,7 +57,7 @@ enum sprite_type
     SPRITE_Branches            = 6,
     SPRITE_Trunk               = 7,
     SPRITE_RubyOre             = 8,
-    SPRITE_SaphireOre          = 9,
+    SPRITE_SapphireOre          = 9,
     SPRITE_RubyChunk           = 10,
     SPRITE_SapphireChunk       = 11,
     SPRITE_UIItemBox           = 12,
@@ -111,7 +111,7 @@ enum entity_flags
     ENTITY_FLAGS_COUNT
 };
 
-enum entity_arch
+enum entity_arch_id
 {
     ARCH_Nil = 0,
     ARCH_Player,
@@ -132,7 +132,7 @@ enum entity_arch
     ARCH_SimplePickaxe,
     ARCH_SimpleWoodAxe,
 
-    ARCH_MAX,
+    ARCH_ID_MAX,
 };
 
 enum game_ui_state
@@ -270,6 +270,8 @@ struct game_state
         static_sprite_data          Sprites[SPRITE_Count];
         item                        GameItems[ITEM_IDCount];
         pair <item_id, sprite_type> ItemSprites[ITEM_IDCount];
+
+        void (*EntitySetupFunctions[ARCH_ID_MAX])(game_state*, entity*);
     }GameData;
 };
 

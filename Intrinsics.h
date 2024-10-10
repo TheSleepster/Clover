@@ -10,8 +10,8 @@
 #define Assert(Expression) if(!(Expression)) {DebugBreak();}
 #define InvalidCodePath DebugBreak()
 #define Trace(Message) {OutputDebugStringA(Message);}
-#define printm(Message, ...)  {char BUFFER[128] = {};  if(strlen(Message) > sizeof(BUFFER)) {Check(0, "stwing to warge >w<\n")}; sprintf(BUFFER, Message, __VA_ARGS__); OutputDebugStringA(BUFFER);}
-#define printlm(Message, ...) {char BUFFER[1024] = {}; if(strlen(Message) > sizeof(BUFFER)) {Check(0, "stwing to warge >w<\n")}; sprintf(BUFFER, Message, __VA_ARGS__); OutputDebugStringA(BUFFER);}
+#define printm(Message, ...)  {char BUFFER[128] = {};  if(strlen(Message) > sizeof(BUFFER)) {Check(0, "stwing to warge >w<\n")}; sprintf(BUFFER, Message, __VA_ARGS__); OutputDebugStringA(BUFFER); printf("%s\n", BUFFER);}
+#define printlm(Message, ...) {char BUFFER[5192] = {}; if(strlen(Message) > sizeof(BUFFER)) {Check(0, "stwing to warge >w<\n")}; sprintf(BUFFER, Message, __VA_ARGS__); OutputDebugStringA(BUFFER); printf("%s\n", BUFFER);}
 
 #else
 

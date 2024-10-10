@@ -25,7 +25,7 @@
 #include "../data/deps/stb/stb_image_write.h"
 #endif
 
-#include "shader/ShaderHeader.h"
+#include "shader/CommonShader.glh"
 #include "Clover_Globals.h"
 #include "Win32_Clover.h"
 
@@ -125,9 +125,9 @@ CreateDrawRect(gl_render_data *RenderData, vec2 Size, real32 Rotation, vec4 Colo
 internal quad *
 DrawQuadXForm(gl_render_data *RenderData, quad *Quad, mat4 *Transform, bool IsFont)
 {
-    if(RenderData->DrawFrame.TotalQuadCount >= MAX_QUADS / 0.5f)
+    if(RenderData->DrawFrame.TotalQuadCount >= MAX_QUADS * 0.5f)
     {
-        Check(0, "Max Quads Reached");
+        RenderData->CloverRender(RenderData);
     }
     
     Quad->Elements[0].Position = vec4{-0.5f,  0.5f, 0.0f, 1.0f};
@@ -192,9 +192,9 @@ DrawQuadXForm(gl_render_data *RenderData, quad *Quad, mat4 *Transform, bool IsFo
 internal quad *
 DrawUIQuadXForm(gl_render_data *RenderData, quad *Quad, mat4 *Transform, bool IsFont)
 {
-    if(RenderData->DrawFrame.TotalUIElementCount >= MAX_QUADS)
+    if(RenderData->DrawFrame.TotalUIElementCount >= MAX_QUADS * 0.5f)
     {
-        Check(0, "Max Quads Reached");
+        RenderData->CloverRender(RenderData);
     }
     
     Quad->Elements[0].Position = vec4{-0.5f,  0.5f, 0.0f, 1.0f};

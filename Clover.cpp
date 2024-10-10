@@ -14,7 +14,7 @@
 #include "Clover_Audio.h"
 #include "Clover_Input.h" 
 #include "Clover_Renderer.h"
-#include "shader/ShaderHeader.h"
+#include "shader/CommonShader.glh"
 
 // IMGUI IMPl
 #include "../data/deps/ImGui/imgui.h"
@@ -25,6 +25,7 @@
 #include "Clover_Audio.cpp"
 #include "Clover_Draw.cpp"
 #include "Clover_UI.cpp"
+
 
 global_variable entity *Player = {};
 
@@ -79,16 +80,16 @@ LoadSpriteData(game_state *State)
     State->GameData.Sprites[SPRITE_Furnace]               = {.AtlasOffset = {  0, 80}, .SpriteSize = {16, 16}};
     State->GameData.Sprites[SPRITE_Outline]               = {.AtlasOffset = {128,  0}, .SpriteSize = {16, 16}};
 
-    State->GameData.Sprites[SPRITE_Rock]                  = {.AtlasOffset = { 32,  0}, .SpriteSize = {12,  8}};
-    State->GameData.Sprites[SPRITE_Pebbles]               = {.AtlasOffset = { 32, 16}, .SpriteSize = { 6,  5}};
-    State->GameData.Sprites[SPRITE_Tree00]                = {.AtlasOffset = { 48,  0}, .SpriteSize = {11, 14}};
-    State->GameData.Sprites[SPRITE_Branches]              = {.AtlasOffset = { 48, 16}, .SpriteSize = { 7,  7}};
-    State->GameData.Sprites[SPRITE_Tree01]                = {.AtlasOffset = { 64,  0}, .SpriteSize = { 9, 12}};
-    State->GameData.Sprites[SPRITE_Trunk]                 = {.AtlasOffset = { 64, 16}, .SpriteSize = { 6,  6}};
-    State->GameData.Sprites[SPRITE_RubyOre]               = {.AtlasOffset = { 80,  0}, .SpriteSize = {14, 11}};
-    State->GameData.Sprites[SPRITE_RubyChunk]             = {.AtlasOffset = { 80, 16}, .SpriteSize = { 8,  6}};
-    State->GameData.Sprites[SPRITE_SaphireOre]            = {.AtlasOffset = { 96,  0}, .SpriteSize = {11, 11}};
-    State->GameData.Sprites[SPRITE_SapphireChunk]         = {.AtlasOffset = { 96, 16}, .SpriteSize = { 8,  6}};
+    State->GameData.Sprites[SPRITE_Rock]                  = {.AtlasOffset = { 48, 35}, .SpriteSize = {16, 13}};
+    State->GameData.Sprites[SPRITE_Pebbles]               = {.AtlasOffset = { 48, 48}, .SpriteSize = {13, 12}};
+    State->GameData.Sprites[SPRITE_Tree00]                = {.AtlasOffset = { 96, 31}, .SpriteSize = {16, 17}};
+    State->GameData.Sprites[SPRITE_Branches]              = {.AtlasOffset = { 96, 48}, .SpriteSize = {12, 12}};
+    State->GameData.Sprites[SPRITE_Tree01]                = {.AtlasOffset = {130, 27}, .SpriteSize = {18, 21}};
+    State->GameData.Sprites[SPRITE_Trunk]                 = {.AtlasOffset = {128, 48}, .SpriteSize = {11, 11}};
+    State->GameData.Sprites[SPRITE_RubyOre]               = {.AtlasOffset = { 64, 35}, .SpriteSize = {16, 13}};
+    State->GameData.Sprites[SPRITE_RubyChunk]             = {.AtlasOffset = { 64, 48}, .SpriteSize = {13, 12}};
+    State->GameData.Sprites[SPRITE_SapphireOre]           = {.AtlasOffset = { 80, 35}, .SpriteSize = {16, 13}};
+    State->GameData.Sprites[SPRITE_SapphireChunk]         = {.AtlasOffset = { 80, 48}, .SpriteSize = {16, 13}};
 }
 
 internal inline void
@@ -321,6 +322,7 @@ HandleInput(game_state *State, entity *PlayerIn, time Time)
     PlayerIn->Position = v2Lerp(NextPos, Time.Delta, OldPlayerP);
     
     // NOTE(Sleepster): Game Update Stuff 
+
     if(IsKeyPressed(KEY_ESCAPE, &State->GameInput))
     {
         Player->Inventory.SelectedInventoryItem = {};
@@ -413,12 +415,12 @@ HandleInput(game_state *State, entity *PlayerIn, time Time)
 }
 
 internal void
-SetupPlayer(entity *Entity)
+SetupPlayer(game_state *State, entity *Entity)
 {
     Entity->Archetype   = ARCH_Player;
     Entity->Sprite      = SPRITE_Player; 
     Entity->Flags      += IS_ACTIVE|IS_ACTOR;
-    Entity->Size        = {12, 11};
+    Entity->Size        = v2Cast(State->GameData.Sprites[SPRITE_Player].SpriteSize); 
     Entity->Health      = PlayerHealth;
     Entity->Position    = {};
     Entity->Rotation    = 0;
@@ -428,12 +430,12 @@ SetupPlayer(entity *Entity)
 }
 
 internal void
-SetupRock(entity *Entity)
+SetupRock(game_state *State, entity *Entity)
 {
     Entity->Archetype   = ARCH_Rock;
     Entity->Sprite      = SPRITE_Rock; 
     Entity->Flags      += IS_ACTIVE|IS_SOLID|IS_DESTRUCTABLE;
-    Entity->Size        = {12, 8};
+    Entity->Size        = v2Cast(State->GameData.Sprites[SPRITE_Rock].SpriteSize);
     Entity->Health      = RockHealth;
     Entity->Position    = {};
     Entity->Rotation    = 0;
@@ -448,12 +450,12 @@ SetupRock(entity *Entity)
 }
 
 internal void
-SetupTree00(entity *Entity)
+SetupTree00(game_state *State, entity *Entity)
 {
     Entity->Archetype   = ARCH_Tree00;
     Entity->Sprite      = SPRITE_Tree00; 
     Entity->Flags      += IS_ACTIVE|IS_SOLID|IS_DESTRUCTABLE;
-    Entity->Size        = {11, 14};
+    Entity->Size        = v2Cast(State->GameData.Sprites[SPRITE_Tree00].SpriteSize);
     Entity->Health      = TreeHealth;
     Entity->Position    = {};
     Entity->Rotation    = 0;
@@ -468,12 +470,12 @@ SetupTree00(entity *Entity)
 }
 
 internal void
-SetupTree01(entity *Entity)
+SetupTree01(game_state *State, entity *Entity)
 {
     Entity->Archetype   = ARCH_Tree01;
     Entity->Sprite      = SPRITE_Tree01; 
     Entity->Flags      += IS_ACTIVE|IS_SOLID|IS_DESTRUCTABLE;
-    Entity->Size        = {9, 12};
+    Entity->Size        = v2Cast(State->GameData.Sprites[SPRITE_Tree01].SpriteSize);
     Entity->Health      = TreeHealth;
     Entity->Position    = {};
     Entity->Rotation    = 0;
@@ -488,12 +490,12 @@ SetupTree01(entity *Entity)
 }
 
 internal void
-SetupRubyNode(entity *Entity)
+SetupRubyNode(game_state *State, entity *Entity)
 {
     Entity->Archetype   = ARCH_RubyNode;
     Entity->Sprite      = SPRITE_RubyOre; 
     Entity->Flags      += IS_ACTIVE|IS_SOLID|IS_DESTRUCTABLE;
-    Entity->Size        = {14, 11};
+    Entity->Size        = v2Cast(State->GameData.Sprites[SPRITE_RubyOre].SpriteSize);
     Entity->Health      = NodeHealth;
     Entity->Position    = {};
     Entity->Rotation    = 0;
@@ -508,12 +510,12 @@ SetupRubyNode(entity *Entity)
 }
 
 internal void
-SetupSaphireNode(entity *Entity)
+SetupSapphireNode(game_state *State, entity *Entity)
 {
     Entity->Archetype   = ARCH_SapphireNode;
-    Entity->Sprite      = SPRITE_SaphireOre; 
+    Entity->Sprite      = SPRITE_SapphireOre; 
     Entity->Flags      += IS_ACTIVE|IS_SOLID|IS_DESTRUCTABLE;
-    Entity->Size        = {11, 11};
+    Entity->Size        = v2Cast(State->GameData.Sprites[SPRITE_SapphireOre].SpriteSize);
     Entity->Health      = NodeHealth;
     Entity->Position    = {};
     Entity->Rotation    = 0;
@@ -528,102 +530,102 @@ SetupSaphireNode(entity *Entity)
 }
 
 internal void
-SetupItemPebbles(entity *Entity)
+SetupItemPebbles(game_state *State, entity *Entity)
 {
     Entity->Archetype = ARCH_Pebbles;
     Entity->Sprite    = SPRITE_Pebbles;
     Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP;
-    Entity->Size      = {6, 5};
+    Entity->Size        = v2Cast(State->GameData.Sprites[SPRITE_Pebbles].SpriteSize) * 0.8f;
     Entity->DroppedFromInventoryItemID    = ITEM_Pebbles;
 }
 
 internal void
-SetupItemBranches(entity *Entity)
+SetupItemBranches(game_state *State, entity *Entity)
 {
     Entity->Archetype = ARCH_Branches;
     Entity->Sprite    = SPRITE_Branches;
     Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP;
-    Entity->Size      = {7, 7};
+    Entity->Size        = v2Cast(State->GameData.Sprites[SPRITE_Branches].SpriteSize) * 0.8f;
     Entity->DroppedFromInventoryItemID    = ITEM_Branches;
 }
 
 internal void
-SetupItemTrunk(entity *Entity)
+SetupItemTrunk(game_state *State, entity *Entity)
 {
     Entity->Archetype = ARCH_Trunk;
     Entity->Sprite    = SPRITE_Trunk;
     Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP;
-    Entity->Size      = {6, 6};
+    Entity->Size        = v2Cast(State->GameData.Sprites[SPRITE_Trunk].SpriteSize) * 0.8f;
     Entity->DroppedFromInventoryItemID    = ITEM_Trunk;
 }
 
 internal void
-SetupItemRubyChunk(entity *Entity)
+SetupItemRubyChunk(game_state *State, entity *Entity)
 {
     Entity->Archetype = ARCH_RubyOreChunk;
     Entity->Sprite    = SPRITE_RubyChunk;
     Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP;
-    Entity->Size      = {6, 5};
+    Entity->Size        = v2Cast(State->GameData.Sprites[SPRITE_RubyChunk].SpriteSize) * 0.8f;
     Entity->DroppedFromInventoryItemID    = ITEM_RubyOreChunk;
 }
 
 internal void
-SetupItemSaphireChunk(entity *Entity)
+SetupItemSapphireChunk(game_state *State, entity *Entity)
 {
     Entity->Archetype = ARCH_SapphireOreChunk;
     Entity->Sprite    = SPRITE_SapphireChunk;
     Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP;
-    Entity->Size      = {6, 5};
+    Entity->Size        = v2Cast(State->GameData.Sprites[SPRITE_SapphireChunk].SpriteSize) * 0.8f;
     Entity->DroppedFromInventoryItemID    = ITEM_SapphireOreChunk;
 }
 
 internal void
-SetupItemToolPickaxe(entity *Entity)
+SetupItemToolPickaxe(game_state *State, entity *Entity)
 {
     Entity->Archetype = ARCH_SimplePickaxe;
     Entity->Sprite    = SPRITE_ToolPickaxe;
     Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP;
-    Entity->Size      = {11, 13};
+    Entity->Size        = v2Cast(State->GameData.Sprites[SPRITE_ToolPickaxe].SpriteSize);
     Entity->DroppedFromInventoryItemID    = ITEM_ToolPickaxe;
 }
 
 internal void
-SetupItemToolWoodAxe(entity *Entity)
+SetupItemToolWoodAxe(game_state *State, entity *Entity)
 {
     Entity->Archetype = ARCH_SimpleWoodAxe;
     Entity->Sprite    = SPRITE_ToolWoodAxe;
     Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP;
-    Entity->Size      = {11, 13};
+    Entity->Size        = v2Cast(State->GameData.Sprites[SPRITE_ToolWoodAxe].SpriteSize);
     Entity->DroppedFromInventoryItemID    = ITEM_ToolWoodAxe;
 }
 
 internal void
-SetupItemWorkbench(entity *Entity)
+SetupItemWorkbench(game_state *State, entity *Entity)
 {
     Entity->Archetype = ARCH_Workbench;
     Entity->Sprite    = SPRITE_Workbench;
     Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP|IS_BUILDABLE;
-    Entity->Size      = {8, 8};
+    Entity->Size        = v2Cast(State->GameData.Sprites[SPRITE_Workbench].SpriteSize) * 0.5f;
     Entity->DroppedFromInventoryItemID    = ITEM_Workbench;
 }
 
 internal void
-SetupItemFurnace(entity *Entity)
+SetupItemFurnace(game_state *State, entity *Entity)
 {
     Entity->Archetype = ARCH_Furnace,
     Entity->Sprite    = SPRITE_Furnace;
     Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP|IS_BUILDABLE;
-    Entity->Size      = {8, 8};
+    Entity->Size        = v2Cast(State->GameData.Sprites[SPRITE_Furnace].SpriteSize) * 0.5f;
     Entity->DroppedFromInventoryItemID    = ITEM_Furnace;
 }
 
 internal void
-SetupBuildingWorkbench(entity *Entity)
+SetupBuildingWorkbench(game_state *State, entity *Entity)
 {
     Entity->Archetype = ARCH_Workbench;
     Entity->Sprite    = SPRITE_Workbench;
     Entity->Flags    += IS_ACTIVE|IS_BUILDABLE|IS_PLACED|IS_DESTRUCTABLE;
-    Entity->Size      = {16, 16}; 
+    Entity->Size        = v2Cast(State->GameData.Sprites[SPRITE_Workbench].SpriteSize);
     Entity->Health      = NodeHealth;
     Entity->Rotation    = 0;
     Entity->Speed       = 1.0f;
@@ -637,12 +639,12 @@ SetupBuildingWorkbench(entity *Entity)
 }
 
 internal void
-SetupBuildingFurnace(entity *Entity)
+SetupBuildingFurnace(game_state *State, entity *Entity)
 {
     Entity->Archetype = ARCH_Workbench;
     Entity->Sprite    = SPRITE_Furnace;
     Entity->Flags    += IS_ACTIVE|IS_BUILDABLE|IS_PLACED|IS_DESTRUCTABLE;
-    Entity->Size      = {16, 16};
+    Entity->Size        = v2Cast(State->GameData.Sprites[SPRITE_Furnace].SpriteSize);
     
     Entity->Health      = NodeHealth;
     Entity->Rotation    = 0;
@@ -657,7 +659,7 @@ SetupBuildingFurnace(entity *Entity)
 }
 
 internal inline void
-ResetGame(gl_render_data *RenderData, game_state *State)
+ResetGame(gl_render_data *RenderData, game_state *State, game_memory *Memory)
 {
     for(uint32 i = 0; i < MAX_ENTITIES; i++)
     {
@@ -737,8 +739,8 @@ CompareEntityYAxis(const void *A, const void *B)
     const entity *EntityA = (const entity*)A;
     const entity *EntityB = (const entity*)B;
     
-    return((EntityA->Position.Y > EntityB->Position.Y) ? -1 :
-           (EntityA->Position.Y < EntityB->Position.Y) ?  1 : 0);
+    return((EntityA->Position.Y > EntityB->Position.Y) ?  1 :
+           (EntityA->Position.Y < EntityB->Position.Y) ? -1 : 0);
 }
 
 internal bool
@@ -758,39 +760,39 @@ SetupDroppedEntity(gl_render_data *RenderData, game_state *State, item *Selectio
     {
         case ARCH_Pebbles:
         {
-            SetupItemPebbles(SpawnedItem);
+            SetupItemPebbles(State, SpawnedItem);
         }break;
         case ARCH_Trunk:
         {
-            SetupItemTrunk(SpawnedItem);
+            SetupItemTrunk(State, SpawnedItem);
         }break;
         case ARCH_Branches:
         {
-            SetupItemBranches(SpawnedItem);
+            SetupItemBranches(State, SpawnedItem);
         }break;
         case ARCH_RubyOreChunk:
         {
-            SetupItemRubyChunk(SpawnedItem);
+            SetupItemRubyChunk(State, SpawnedItem);
         }break;
         case ARCH_SapphireOreChunk:
         {
-            SetupItemSaphireChunk(SpawnedItem);
+            SetupItemSapphireChunk(State, SpawnedItem);
         }break;
         case ARCH_SimplePickaxe:
         {
-            SetupItemToolPickaxe(SpawnedItem);
+            SetupItemToolPickaxe(State, SpawnedItem);
         }break;
         case ARCH_SimpleWoodAxe:
         {
-            SetupItemToolWoodAxe(SpawnedItem);
+            SetupItemToolWoodAxe(State, SpawnedItem);
         }break;
         case ARCH_Workbench:
         {
-            SetupItemWorkbench(SpawnedItem);
+            SetupItemWorkbench(State, SpawnedItem);
         }break;
         case ARCH_Furnace:
         {
-            SetupItemFurnace(SpawnedItem);
+            SetupItemFurnace(State, SpawnedItem);
         }break;
     }
     
@@ -856,7 +858,7 @@ GetSpriteFromPair(game_state *State, item_id ID)
 }
 
 internal inline item_id
-GetItemIDFromSprite(game_state *State, sprite_type Sprite)
+GetItemIDFromPair(game_state *State, sprite_type Sprite)
 {
     for(const auto &ItemData : State->GameData.ItemSprites)
     {
@@ -940,10 +942,10 @@ AddItemToPlayerInventory(game_state *State, entity *Player, entity *Temp)
 extern
 GAME_ON_AWAKE(GameOnAwake)
 {
-    ResetGame(RenderData, State);
+    ResetGame(RenderData, State, Memory);
     LoadSpriteData(State);
     LoadItemData(State);
-    
+
     // TODO(Sleepster): Write a proper implementation of Mini Audio's low level API so that 
     //                  hotreloading the engine doesn't just crash the program
     
@@ -956,75 +958,75 @@ GAME_ON_AWAKE(GameOnAwake)
         ++EntityIndex)
     {
         entity *En = CreateEntity(State);
-        SetupRock(En);
+        SetupRock(State, En);
         En->Position = vec2{GetRandomReal32_Range(-SizeScaler, SizeScaler), GetRandomReal32_Range(-SizeScaler, SizeScaler)};
         En->Position = TileToWorldPos(WorldToTilePos(En->Position));
         
         
         entity *En2 = CreateEntity(State);
-        SetupTree00(En2);
+        SetupTree00(State, En2);
         En2->Position = vec2{GetRandomReal32_Range(-SizeScaler, SizeScaler), GetRandomReal32_Range(-SizeScaler, SizeScaler)};
         En2->Position = TileToWorldPos(WorldToTilePos(En2->Position));
         
         
         entity *En3 = CreateEntity(State);
-        SetupTree01(En3);
+        SetupTree01(State, En3);
         En3->Position = vec2{GetRandomReal32_Range(-SizeScaler, SizeScaler), GetRandomReal32_Range(-SizeScaler, SizeScaler)};
         En3->Position = TileToWorldPos(WorldToTilePos(En3->Position));
         
         
         entity *En4 = CreateEntity(State);
-        SetupRubyNode(En4);
+        SetupRubyNode(State, En4);
         En4->Position = vec2{GetRandomReal32_Range(-SizeScaler, SizeScaler), GetRandomReal32_Range(-SizeScaler, SizeScaler)};
         En4->Position = TileToWorldPos(WorldToTilePos(En4->Position));
         
         
         entity *En5 = CreateEntity(State);
-        SetupSaphireNode(En5);
+        SetupSapphireNode(State, En5);
         En5->Position = vec2{GetRandomReal32_Range(-SizeScaler, SizeScaler), GetRandomReal32_Range(-SizeScaler, SizeScaler)};
         En5->Position = TileToWorldPos(WorldToTilePos(En5->Position));
     }
     
     entity *WorkbenchTest = CreateEntity(State);
-    SetupBuildingWorkbench(WorkbenchTest);
+    SetupBuildingWorkbench(State, WorkbenchTest);
     WorkbenchTest->Position = {0, -80};
     WorkbenchTest->Position = TileToWorldPos(WorldToTilePos(WorkbenchTest->Position));
     WorkbenchTest->BoxCollider = CreateRange(vec2{WorkbenchTest->Position.X - (TILE_SIZE * 0.5f), WorkbenchTest->Position.Y}, 
                                              vec2{WorkbenchTest->Position.X - (TILE_SIZE * 0.5f), WorkbenchTest->Position.Y} + WorkbenchTest->Size);
     
     entity *FurnaceTest = CreateEntity(State);
-    SetupBuildingFurnace(FurnaceTest);
+    SetupBuildingFurnace(State, FurnaceTest);
     FurnaceTest->Position = {20, -80};
     FurnaceTest->Position = TileToWorldPos(WorldToTilePos(FurnaceTest->Position));
     FurnaceTest->BoxCollider = CreateRange(vec2{FurnaceTest->Position.X - (TILE_SIZE * 0.5f), FurnaceTest->Position.Y}, 
                                            vec2{FurnaceTest->Position.X - (TILE_SIZE * 0.5f), FurnaceTest->Position.Y} + FurnaceTest->Size);
     
     entity *GroundWorkbench = CreateEntity(State);
-    SetupItemWorkbench(GroundWorkbench);
+    SetupItemWorkbench(State, GroundWorkbench);
     GroundWorkbench->Position = {0, -100};
     GroundWorkbench->Target   = {0, -100};
     GroundWorkbench->BoxCollider = CreateRange(vec2{GroundWorkbench->Position.X - (TILE_SIZE * 0.5f), GroundWorkbench->Position.Y}, 
                                                vec2{GroundWorkbench->Position.X - (TILE_SIZE * 0.5f), GroundWorkbench->Position.Y} + GroundWorkbench->Size);
-    
+
     entity *GroundFurnace = CreateEntity(State);
-    SetupItemFurnace(GroundFurnace);
+    SetupItemFurnace(State, GroundFurnace);
     GroundFurnace->Position = {20, -100};
     GroundFurnace->Target   = {20, -100};
     
     entity *Pickaxe = CreateEntity(State);
-    SetupItemToolPickaxe(Pickaxe);
+    SetupItemToolPickaxe(State, Pickaxe);
     Pickaxe->Position = {0, 150};
     Pickaxe->Target  = {0, 150};
     
     
     entity *Pickaxe2 = CreateEntity(State);
-    SetupItemToolPickaxe(Pickaxe2);
+    SetupItemToolPickaxe(State, Pickaxe2);
     Pickaxe2->Position = {32, 150};
     Pickaxe2->Target = {32, 150};
     
     
     Player = CreateEntity(State);
-    SetupPlayer(Player);
+    SetupPlayer(State, Player);
     
     State->DisplayPlayerHotbar = true;
 }
@@ -1099,8 +1101,6 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     --Temp->Health;
                     if(Temp->Health <= 0)
                     {
-                        entity *CreatedEntity = CreateEntity(State);
-
                         for(uint32 DropIndex = 0;
                             DropIndex < Temp->UniqueDropCount;
                             DropIndex++)
@@ -1109,7 +1109,9 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                                 DropCount < Temp->EntityDrops[DropIndex].DropAmount;
                                 DropCount++)
                             {
+                                entity *CreatedEntity = CreateEntity(State);
                                 item DroppedItem = State->GameData.GameItems[Temp->EntityDrops[DropCount].DroppedItem];
+
                                 SetupDroppedEntity(RenderData, State, &DroppedItem, CreatedEntity);
                                 CreatedEntity->Position = Temp->Position;
                                 CreatedEntity->Target   = Temp->Position;
@@ -1124,27 +1126,6 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             }
             // NOTE(Sleepster): Add Item to Inventory
             AddItemToPlayerInventory(State, Player, Temp);
-        }
-    }
-    
-    // NOTE(Sleepster): Draw the Tiles
-    ivec2  PlayerOffset = WorldToTilePos(Player->Position);
-    ivec2  TileRadius   = {14, 14};
-    
-    for(int32 TileX = PlayerOffset.X - TileRadius.X;
-        TileX < PlayerOffset.X + TileRadius.Y;
-        ++TileX)
-    {
-        for(int32 TileY = PlayerOffset.Y - TileRadius.Y;
-            TileY < PlayerOffset.Y + TileRadius.Y;
-            ++TileY)
-        {
-            if((TileX + (TileY % 2 == 0)) % 2 == 0)
-            {
-                real32 X = TileX * TILE_SIZE;
-                real32 Y = TileY * TILE_SIZE;
-                DrawQuad(RenderData, {X, Y - (TILE_SIZE)}, {TILE_SIZE, TILE_SIZE}, 0, DARK_GRAY, 0);
-            }
         }
     }
     
@@ -1483,8 +1464,8 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             if(Player->Inventory.SwapItem && Player->Inventory.SelectedInventoryItem)
             {
                 SwapInventoryItems(&Player->Inventory, Player->Inventory.SelectedInventoryItem, Player->Inventory.SwapItem); 
-                Player->Inventory.SwapItem = NULL;
-                Player->Inventory.SelectedInventoryItem = NULL;
+                Player->Inventory.SwapItem = {};
+                Player->Inventory.SelectedInventoryItem = {};
             }
         }
     }
@@ -1522,7 +1503,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
     // NOTE(Sleepster): UI Rendering 
     CloverUIDrawWidgets(RenderData, &State->UIContext);
     CloverUIResetState(&State->UIContext); 
-    
+
     // NOTE(Sleepster): Building
     {
         if(State->GameUIState == UI_State_Building)
@@ -1678,14 +1659,14 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                             case ARCH_Workbench:
                             {
                                 entity *Workbench = CreateEntity(State);
-                                SetupItemWorkbench(Workbench);
+                                SetupItemWorkbench(State, Workbench);
                                 Workbench->Position = Player->Position;
                                 Workbench->Target   = Player->Position;
                             }break;
                             case ARCH_Furnace:
                             {
                                 entity *Furnace = CreateEntity(State);
-                                SetupItemFurnace(Furnace);
+                                SetupItemFurnace(State, Furnace);
                                 Furnace->Position = Player->Position;
                                 Furnace->Target   = Player->Position;
                             }break;
@@ -1759,11 +1740,11 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                         {
                             case ITEM_Workbench:
                             {
-                                SetupBuildingWorkbench(Building);
+                                SetupBuildingWorkbench(State, Building);
                             }break;
                             case ITEM_Furnace:
                             {
-                                SetupBuildingFurnace(Building);
+                                SetupBuildingFurnace(State, Building);
                             }break;
                         }
                         Building->Position = MousePosition;
@@ -2092,6 +2073,29 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             }
         }
     }
+
+    // NOTE(Sleepster): Draw the Tiles
+    ivec2  PlayerOffset = WorldToTilePos(Player->Position);
+    ivec2  TileRadius   = {14, 14};
+    
+    for(int32 TileX = PlayerOffset.X - TileRadius.X;
+        TileX < PlayerOffset.X + TileRadius.Y;
+        ++TileX)
+    {
+        for(int32 TileY = PlayerOffset.Y - TileRadius.Y;
+            TileY < PlayerOffset.Y + TileRadius.Y;
+            ++TileY)
+        {
+            if((TileX + (TileY % 2 == 0)) % 2 == 0)
+            {
+                real32 X = TileX * TILE_SIZE;
+                real32 Y = TileY * TILE_SIZE;
+                DrawQuad(RenderData, {X, Y - (TILE_SIZE)}, {TILE_SIZE, TILE_SIZE}, 0, DARK_GRAY, 0);
+            }
+        }
+    }
+    
+    
 }
 
 extern

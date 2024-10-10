@@ -5,6 +5,19 @@
 #include "/../code/shader/CommonShader.glh"
 #line 1
 
+layout(std430, binding = 0) buffer PointLightSBO 
+{
+    point_light PointLights[];    
+};
+
+layout(std430, binding = 1) buffer SpotLightSBO
+{
+    spot_light SpotLights[];    
+};
+
+uniform int PointLightCount;
+uniform int SpotLightCount;
+
 // IN FROM VERTEX SHADER
 in vec2  vTextureUVs;
 in vec4  vMatColor;
@@ -19,29 +32,6 @@ out vec4 FragColor;
 
 void main()
 {
-    // NULL TEXTURE, TEXTURELESS QUADS
-    if(int(vTextureIndex) == 0)
-    {
-        vec4 TextureColor = vMatColor;    
-        if(TextureColor.a <= 0.1)
-        {
-            discard;
-        }
-        FragColor = TextureColor;
-    }
-
-    // GAME TEXTURES
-    if(int(vTextureIndex) == 1)
-    {
-        vec4 TextureColor = texelFetch(GameAtlas, ivec2(vTextureUVs), 0);
-        if(TextureColor.a <= 0.1)
-        {
-            discard;    
-        }
-        FragColor = TextureColor * vMatColor; 
-    }
-
-    // FONT RENDERERING
     if(int(vTextureIndex) == 2)
     {
         // NOTE(Sleepster): 512 is the size of the game texture, if you change the size of the game of the texture, change this to that size 

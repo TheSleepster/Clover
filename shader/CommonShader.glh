@@ -1,0 +1,53 @@
+#if !defined(COMMONSHADER_H)
+/* ========================================================================
+   $File: CommonShader.h $
+   $Date: October 08 2024 09:47 am $
+   $Revision: $
+   $Creator: Justin Lewis $
+   ======================================================================== */
+
+#define COMMONSHADER_H
+
+#ifdef ENGINE // ENGINE ONLY
+#include "Intrinsics.h"
+#include "../code/Clover_Renderer.h"
+
+#else // SHADER ONLY
+
+const unsigned int RENDERING_OPTION_FLIP_X = 0x00000001u;
+const unsigned int RENDERING_OPTION_FLIP_Y = 0x00000002u;
+
+#define real32 float
+#define real64 double
+#define int32  int
+#define uint   unsigned int
+
+#endif
+// SHARED
+
+struct point_light
+{
+    vec3 Position;
+    vec2 Direction;
+
+    vec4 LightColor;
+
+    float AmbientStrength;
+    float DiffuseIntensity;
+    float Attenuation;
+};
+
+struct spot_light
+{
+    vec4   Color;
+
+    vec3   Position;
+    vec3   Direction;
+
+    float Diffuse;
+    float Ambient;
+    float Strength;
+};
+
+#endif // COMMONSHADER_H
+

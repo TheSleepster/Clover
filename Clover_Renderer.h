@@ -31,7 +31,7 @@
 #include "../data/deps/ImGUI/imgui_impl_opengl3.h"
 
 #include "Clover.h"
-#include "shader/ShaderHeader.h"
+#include "shader/CommonShader.glh"
 #include "Clover_Globals.h"
 
 enum bound_texture_index
@@ -107,7 +107,7 @@ struct shader
 {
     gl_shader_source VertexShader;
     gl_shader_source FragmentShader;
-    GLuint           Shader;
+    GLuint           ShaderID;
 };
 
 struct orthocamera2d
@@ -119,6 +119,13 @@ struct orthocamera2d
     mat4   ViewMatrix;
     mat4   ProjectionMatrix;
     mat4   ProjectionViewMatrix;
+};
+
+struct material_data
+{
+    real32 Specular;
+    real32 Albedo;
+    real32 Normals;
 };
 
 struct vertex
@@ -144,11 +151,12 @@ struct quad
         vertex Elements[4];
     };
     
+    material_data Material;
     vec4   DrawColor;
-    real32 TextureIndex;
     
     vec2 Position;
     vec2 Size;
+    real32 TextureIndex;
     
     real32 Rotation;
 };
@@ -164,11 +172,28 @@ struct gl_render_data
     GLuint GameUIVBOID;
     GLuint GameUIEBOID;
     
+    // MATRICES
     GLuint ProjectionViewMatrixUID;
     GLuint BackgroundColorUID;
+
+    // FRAMEBUFFERS
+    GLuint GameFBOID;
+    GLuint GameFBTextureID;
+
+    GLuint LightingFBOID;
+    GLuint LightingFBTextureID;
+
+    // SSBO
+    GLuint PointLightSBOID;
+    GLuint SpotLightSBOID;
+
+    // OTHER UNIFORMS
+    GLuint PointLightCountUID;
+    GLuint SpotLightCountUID;
     
     // SHADERS
     shader    BasicShader;
+    shader    LightingShader;
     
     // CAMERAS
     orthocamera2d GameCamera;
@@ -182,7 +207,9 @@ struct gl_render_data
     font_data     LoadedFonts[2];
     uint32        TextureCount;
     real32        AspectRatio;
-    
+
+    void(*CloverRender)(gl_render_data *RenderData);
+
     // IMGUI STUFF
     ImGuiContext *CurrentImGuiContext;
     
@@ -205,6 +232,12 @@ struct gl_render_data
 
         uint32  TotalQuadCount;
         uint32  TotalUIElementCount;
+
+        point_light PointLights[MAX_POINT_LIGHTS];
+        spot_light  SpotLights [MAX_SPOT_LIGHTS];
+
+        int32 PointLightCount;
+        int32 SpotLightCount;
     }DrawFrame;
 };
 
@@ -228,4 +261,5 @@ HexToRGBA(int64 hex)
     
     return(Result);
 }
+
 #endif // _CLOVER_RENDERER_H

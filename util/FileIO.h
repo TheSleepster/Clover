@@ -47,6 +47,7 @@ ReadEntireFileMA(memory_arena *ArenaAllocator, string Filepath, uint32 *FileSize
     
     char *Buffer = (char *)ArenaAlloc(ArenaAllocator, uint64(FileSize2 + 1));
     File.Data = (uint8 *)ReadEntireFile(Filepath, FileSize, Buffer);
+    File.Length = FileSize2;
     
     return(File);
 }
