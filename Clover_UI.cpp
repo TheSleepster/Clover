@@ -274,7 +274,7 @@ internal void
 CloverUIDrawWidgets(gl_render_data *RenderData, clover_ui_context *Context)
 {
     qsort(Context->UIElements, Context->CreatedElementCounter, sizeof(struct ui_element), CloverUISortElementsByLayer);
-    for(uint32 WidgetIndex = 0;
+    for(int32 WidgetIndex = 0;
         WidgetIndex <= Context->CreatedElementCounter;
         WidgetIndex++)
     {

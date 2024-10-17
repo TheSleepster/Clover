@@ -80,13 +80,13 @@ CreateDrawQuad(gl_render_data *RenderData,
     Quad.TopRight.TextureCoords    = {RightUV, TopUV};
     Quad.BottomRight.TextureCoords = {RightUV, BottomUV};
     Quad.BottomLeft.TextureCoords  = {LeftUV, BottomUV};
-    
+
     for(int32 Index = 0;
         Index < 4;
         ++Index)
     {
-        Quad.Elements[Index].DrawColor    = Color;
-        Quad.Elements[Index].TextureIndex = TextureIndex;
+        Quad.Elements[Index].DrawColor     = Color;
+        Quad.Elements[Index].TextureIndex  = TextureIndex;
     }
     
     return(Quad);
@@ -139,6 +139,13 @@ DrawQuadXForm(gl_render_data *RenderData, quad *Quad, mat4 *Transform, bool IsFo
     Quad->Elements[1].Position = mat4Transform(*Transform, Quad->Elements[1].Position);
     Quad->Elements[2].Position = mat4Transform(*Transform, Quad->Elements[2].Position);
     Quad->Elements[3].Position = mat4Transform(*Transform, Quad->Elements[3].Position);
+
+    vec3 Normals = {0, 0, 1};
+
+    Quad->TopLeft.VertexNormals     = mat4Transform(*Transform, v3Expand(Normals, 1.0)).XYZ; 
+    Quad->TopRight.VertexNormals    = mat4Transform(*Transform, v3Expand(Normals, 1.0)).XYZ;
+    Quad->BottomLeft.VertexNormals  = mat4Transform(*Transform, v3Expand(Normals, 1.0)).XYZ;
+    Quad->BottomRight.VertexNormals = mat4Transform(*Transform, v3Expand(Normals, 1.0)).XYZ;
     
     vertex **VertexBufferptr;
     uint32  *ElementCounter;
@@ -206,6 +213,14 @@ DrawUIQuadXForm(gl_render_data *RenderData, quad *Quad, mat4 *Transform, bool Is
     Quad->Elements[1].Position = mat4Transform(*Transform, Quad->Elements[1].Position);
     Quad->Elements[2].Position = mat4Transform(*Transform, Quad->Elements[2].Position);
     Quad->Elements[3].Position = mat4Transform(*Transform, Quad->Elements[3].Position);
+
+    vec3 Normals = {0, 0, 1};
+
+    Quad->TopLeft.VertexNormals     = v4Normalize(mat4Transform(*Transform, v3Expand(Normals, 1.0))).XYZ; 
+    Quad->TopRight.VertexNormals    = v4Normalize(mat4Transform(*Transform, v3Expand(Normals, 1.0))).XYZ;
+    Quad->BottomLeft.VertexNormals  = v4Normalize(mat4Transform(*Transform, v3Expand(Normals, 1.0))).XYZ;
+    Quad->BottomRight.VertexNormals = v4Normalize(mat4Transform(*Transform, v3Expand(Normals, 1.0))).XYZ;
+
     
     vertex **UIVertexBufferptr;
     uint32  *ElementCounter;
@@ -465,8 +480,7 @@ DrawGameText(gl_render_data *RenderData,
         char C = (Text.Data[StringIndex]);
         font_glyph Glyph = RenderData->LoadedFonts[Font].Glyphs[C];
         
-        vec2 WorldPosition = {(Position.X + Glyph.GlyphOffset.X) * TrueScale, (Position.Y - Glyph.GlyphOffset.Y) * TrueScale};
-        vec2 RenderScale   = {Glyph.GlyphSize.X * TrueScale, (real32)Glyph.GlyphSize.Y * (TrueScale * 2)};
+        vec2  RenderScale   = {Glyph.GlyphSize.X * TrueScale, (real32)Glyph.GlyphSize.Y * (TrueScale * 2)};
         ivec2 AtlasOffset   = Glyph.GlyphUVs;
         ivec2 GlyphSize     = Glyph.GlyphSize;
         
@@ -500,12 +514,36 @@ DrawUIText(gl_render_data *RenderData,
         char C = (Text.Data[StringIndex]);
         font_glyph Glyph = RenderData->LoadedFonts[Font].Glyphs[C];
         
-        vec2 WorldPosition = {(Position.X + Glyph.GlyphOffset.X) * TrueScale, (Position.Y - Glyph.GlyphOffset.Y) * TrueScale};
-        vec2 RenderScale   = {Glyph.GlyphSize.X * TrueScale, (real32)Glyph.GlyphSize.Y * (TrueScale * 2)};
+        vec2 RenderScale    = {Glyph.GlyphSize.X * TrueScale, (real32)Glyph.GlyphSize.Y * (TrueScale * 2)};
         ivec2 AtlasOffset   = Glyph.GlyphUVs;
         ivec2 GlyphSize     = Glyph.GlyphSize;
         
         DrawUIQuadTextured(RenderData, Position, RenderScale, AtlasOffset, GlyphSize, 0.0f, Color, 2, 1);
         Position.X += Glyph.GlyphAdvance.X * TrueScale;
     }
+}
+
+internal point_light*
+CreatePointLight(gl_render_data   *RenderData,
+                 vec2              Position, // THIS IS IN WORLDSPACE POSITION
+                 real32            Strength,
+                 real32            Radius, 
+                 attenuation_data *Attenuation,
+                 vec4              Color)
+{   
+    point_light *Light    = &RenderData->DrawFrame.PointLights[RenderData->DrawFrame.PointLightCount++];
+    
+    mat4 Translation  = mat4Identity(1.0);
+         Translation  = mat4Multiply(Translation, RenderData->GameCamera.ProjectionMatrix);
+         Translation  = mat4Multiply(Translation, RenderData->GameCamera.ViewMatrix);
+         Translation  = mat4Translation(Translation, v2Expand(Position, 0.0));
+    vec3 TruePosition = Translation.Columns[3].XYZ;
+    
+    Light->Position    = TruePosition;
+    Light->Radius      = Radius;
+    Light->Strength    = Strength;
+    Light->LightColor  = Color;
+    Light->Attenuation = *Attenuation;
+
+    return(Light);
 }

@@ -866,7 +866,8 @@ GetItemIDFromPair(game_state *State, sprite_type Sprite)
         {
             return(ItemData.First);
         }
-    }
+    }   
+    return(ITEM_Nil);
 }
 
 internal bool
@@ -874,7 +875,7 @@ IsItemCraftable(int *ItemCounts, item *Craft)
 {
     if(Craft->CraftingFormula)
     {
-        for(uint32 FormulaIndex = 0;
+        for(int32 FormulaIndex = 0;
             FormulaIndex < Craft->UniqueMaterialCount;
             FormulaIndex++)
         {
@@ -901,7 +902,7 @@ AddItemToPlayerInventory(game_state *State, entity *Player, entity *Temp)
         real32 ItemDistance = fabsf(v2Distance(Temp->Position, Player->Position));
         if(ItemDistance <= ItemPickupDist)
         {
-            for(int32 InventoryIndex = 0;
+            for(uint32 InventoryIndex = 0;
                 InventoryIndex < TOTAL_INVENTORY_SIZE;
                 ++InventoryIndex)
             {
@@ -917,7 +918,7 @@ AddItemToPlayerInventory(game_state *State, entity *Player, entity *Temp)
                 }
             }
             
-            for(int32 InventoryIndex = 0;
+            for(uint32 InventoryIndex = 0;
                 InventoryIndex < TOTAL_INVENTORY_SIZE;
                 ++InventoryIndex)
             {
@@ -1066,10 +1067,10 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                                               State->GameInput.Keyboard.CurrentMouse, 
                                               SizeData);
     
-    vec2 MouseToScreen = TransformMouseCoords(RenderData->GameUICamera.ViewMatrix,
-                                              RenderData->GameUICamera.ProjectionMatrix, 
-                                              State->GameInput.Keyboard.CurrentMouse, 
-                                              SizeData);
+    /* vec2 MouseToScreen = TransformMouseCoords(RenderData->GameUICamera.ViewMatrix, */
+    /*                                           RenderData->GameUICamera.ProjectionMatrix, */ 
+    /*                                           State->GameInput.Keyboard.CurrentMouse, */ 
+    /*                                           SizeData); */
     
     // NOTE(Sleepster): SELECTED ENTITY
     real32 SelectionDistance = 32.0f;
@@ -1101,11 +1102,11 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     --Temp->Health;
                     if(Temp->Health <= 0)
                     {
-                        for(uint32 DropIndex = 0;
+                        for(int32 DropIndex = 0;
                             DropIndex < Temp->UniqueDropCount;
                             DropIndex++)
                         {
-                            for(uint32 DropCount = 0;
+                            for(int32 DropCount = 0;
                                 DropCount < Temp->EntityDrops[DropIndex].DropAmount;
                                 DropCount++)
                             {
@@ -1145,7 +1146,6 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
         const real32 StartingX = (Width / 2.0f) - (TotalWidth / 2.0f);
         
         real32 YOffset = -90.0f;
-        
         for(uint32 InventorySlot = 0;
             InventorySlot < PLAYER_HOTBAR_COUNT;
             ++InventorySlot)
@@ -1222,7 +1222,6 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     vec2 Position = vec2{UIMatrixPosition.X, UIMatrixPosition.Y};
                     
                     static_sprite_data SpriteData = GetSprite(State, Item->Sprite);
-                    vec2 SpriteSize = v2Cast(SpriteData.SpriteSize);
                     
                     ui_element *ItemDescData = CloverUIMakeTextElement(&State->UIContext, Item->ItemDesc, {Position.X, Position.Y + NewUIYDescOffset}, 10, TEXT_ALIGNMENT_Center, GREEN);
                     CloverUIMakeTextElement(&State->UIContext, Item->ItemName, {Position.X + 4, Position.Y + NewUIYOffset}, 10, TEXT_ALIGNMENT_Center, GREEN);
@@ -1354,7 +1353,6 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     vec2 Position = vec2{UIMatrixPosition.X, UIMatrixPosition.Y};
                     
                     static_sprite_data SpriteData = GetSprite(State, Item->Sprite);
-                    vec2 SpriteSize = v2Cast(SpriteData.SpriteSize);
                     
                     ui_element *ItemDescData = CloverUIMakeTextElement(&State->UIContext, Item->ItemDesc, {Position.X, Position.Y + NewUIYDescOffset}, 10, TEXT_ALIGNMENT_Center, GREEN);
                     CloverUIMakeTextElement(&State->UIContext, Item->ItemName, {Position.X + 4, Position.Y + NewUIYOffset}, 10, TEXT_ALIGNMENT_Center, GREEN);
@@ -1480,7 +1478,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             {
                 if(IsKeyDown(KEY_CONTROL, &State->GameInput))
                 {
-                    for(uint32 ItemCount = 0;
+                    for(int32 ItemCount = 0;
                         ItemCount < HotbarItem->CurrentStack;
                         ItemCount++)
                     {
@@ -1514,7 +1512,6 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             
             real32 BoxHeight = 50;
             
-            const vec4 BoxColor = {0.0, 0.0, 0.0, 0.6};
             const real32 StartingXOffset = -IconSize * 2;
             
             int IconCount = 0;
@@ -1576,7 +1573,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     InventorySlotIndex++)
                 {
                     item *InventoryItem = &Player->Inventory.Items[InventorySlotIndex];
-                    for(uint32 FormulaIndex = 0;
+                    for(int32 FormulaIndex = 0;
                         FormulaIndex < State->ActiveBlueprint->UniqueMaterialCount;
                         ++FormulaIndex)
                     {
@@ -1588,7 +1585,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     }
                 }
                 const real32 InitialYOffset = -20;
-                for(uint32 MaterialIndex = 0;
+                for(int32 MaterialIndex = 0;
                     MaterialIndex < Item->UniqueMaterialCount;
                     MaterialIndex++)
                 {
@@ -1637,7 +1634,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                             InventorySlotIndex++)
                         {
                             item *InventoryItem = &Player->Inventory.Items[InventorySlotIndex];
-                            for(uint32 FormulaIndex = 0;
+                            for(int32 FormulaIndex = 0;
                                 FormulaIndex < State->ActiveBlueprint->UniqueMaterialCount;
                                 ++FormulaIndex)
                             {
@@ -1709,7 +1706,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                 };
             }
             
-            if(HotbarItem && (HotbarItem->Flags & IS_BUILDABLE) || (InventoryItem && (InventoryItem->Flags & IS_BUILDABLE)))
+            if((HotbarItem && (HotbarItem->Flags & IS_BUILDABLE)) || (InventoryItem && (InventoryItem->Flags & IS_BUILDABLE)))
             {
                 vec2 MousePosition = RoundToTile(vec2{MouseToWorld.X + (TILE_SIZE * 0.5f), MouseToWorld.Y});
                 static_sprite_data HotbarSprite = GetSprite(State, HotbarItem->Sprite);
@@ -1879,7 +1876,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     InventorySlotIndex++)
                 {
                     item *InventoryItem = &Player->Inventory.Items[InventorySlotIndex];
-                    for(uint32 FormulaIndex = 0;
+                    for(int32 FormulaIndex = 0;
                         FormulaIndex < State->ActiveRecipe->UniqueMaterialCount;
                         ++FormulaIndex)
                     {
@@ -1892,7 +1889,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                 }
                 
                 const real32 InitialYOffset = 10;
-                for(uint32 MaterialIndex = 0;
+                for(int32 MaterialIndex = 0;
                     MaterialIndex < Item->UniqueMaterialCount;
                     MaterialIndex++)
                 {
@@ -1932,7 +1929,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                 {
                     if(IsItemCraftable(&InventoryCount[0], State->ActiveRecipe))
                     {
-                        for(uint32 Index = 0;
+                        for(int32 Index = 0;
                             Index < State->ActiveRecipe->FormulaResultCount;
                             Index++)
                         {
@@ -1947,7 +1944,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                             InventorySlotIndex++)
                         {
                             item *InventoryItem = &Player->Inventory.Items[InventorySlotIndex];
-                            for(uint32 FormulaIndex = 0;
+                            for(int32 FormulaIndex = 0;
                                 FormulaIndex < State->ActiveRecipe->UniqueMaterialCount;
                                 ++FormulaIndex)
                             {
@@ -1984,12 +1981,12 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
     
     // TRANSPARENCY TEST
     {
-        mat4 Identity  = mat4Identity(1.0f);
-        mat4 Translate = mat4Multiply(Identity, mat4Translate(vec3{10.0f, 10.0f, 0.0f}));
-        mat4 Scale     = mat4Multiply(Identity, mat4MakeScale(vec3{100.0f, 100.0f, 1.0f}));
+        /* mat4 Identity  = mat4Identity(1.0f); */
+        /* mat4 Translate = mat4Multiply(Identity, mat4Translate(vec3{10.0f, 10.0f, 0.0f})); */
+        /* mat4 Scale     = mat4Multiply(Identity, mat4MakeScale(vec3{100.0f, 100.0f, 1.0f})); */
         
-        mat4 Total = Translate * Scale;
-        DrawRectXForm(RenderData, Total, {16, 16}, 0, vec4{1.0f, 0.0f, 1.0f, 0.3f});
+        /* mat4 Total = Translate * Scale; */
+        /* DrawRectXForm(RenderData, Total, {16, 16}, 0, vec4{1.0f, 0.0f, 1.0f, 0.3f}); */
     }
     
     
@@ -2076,7 +2073,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
 
     // NOTE(Sleepster): Draw the Tiles
     ivec2  PlayerOffset = WorldToTilePos(Player->Position);
-    ivec2  TileRadius   = {14, 14};
+    ivec2  TileRadius   = {14, 16};
     
     for(int32 TileX = PlayerOffset.X - TileRadius.X;
         TileX < PlayerOffset.X + TileRadius.Y;
@@ -2094,8 +2091,10 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             }
         }
     }
-    
-    
+
+    attenuation_data TestLightData = {.Constant = 0.3, .Linear = 0.009, .Quadratic = 100};
+    CreatePointLight(RenderData, vec2{0, 0}, 1.0, 10, &TestLightData, WHITE);
+    CreatePointLight(RenderData, vec2{100, 0}, 2.0, 10, &TestLightData, RED);
 }
 
 extern

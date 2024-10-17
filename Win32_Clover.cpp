@@ -54,6 +54,7 @@
 #include "Clover_Renderer.cpp"
 #include "Clover_Input.cpp"
 
+
 // NOTE(Sleepster): ImGui WNDPROC. It uses this for input
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -461,7 +462,6 @@ WinMain(HINSTANCE hInstance,
             QueryPerformanceCounter(&LastCounter);
             
             real64 CurrentTime = GetLastTime();
-            real64 T = 0.0;
             while(Running)
             {
                 MSG Message = {};
@@ -507,15 +507,14 @@ WinMain(HINSTANCE hInstance,
                 {
                     Game.FixedUpdate(&Memory, &RenderData, &State, Time);
                     Accumulator -= Time.Delta;
-                    T += Time.Delta;
                     Time.CurrentTimeInSeconds = real32(GetCurrentTimeInSeconds());
                 }
                 
                 Accumulator += Time.Delta;
 
+                glViewport(0, 0, SizeData.Width, SizeData.Height);
                 glClearColor(RenderData.ClearColor.R, RenderData.ClearColor.G, RenderData.ClearColor.B, RenderData.ClearColor.A);
                 glClearDepth(0.0f);
-                glViewport(0, 0, SizeData.Width, SizeData.Height);
                 glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
                 
                 // Start the Dear ImGui frame
@@ -529,6 +528,8 @@ WinMain(HINSTANCE hInstance,
                 ImGui::Render();
 
                 CloverRender(&RenderData);
+                //CloverRenderTestGBuffer(&RenderData);
+
                 ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
                 SwapBuffers(WindowDC);
                 

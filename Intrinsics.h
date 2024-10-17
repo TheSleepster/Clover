@@ -6,7 +6,7 @@
 #define CLOVER_SLOW 1
 #if CLOVER_SLOW 
 
-#define Check(Expression, Message) if(!(Expression)) {OutputDebugStringA(Message); DebugBreak();}
+#define Check(Expression, Message, ...) if(!(Expression)) {char CHECKBUFFER[1024] = {}; sprintf(CHECKBUFFER, Message, __VA_ARGS__); OutputDebugStringA(CHECKBUFFER); DebugBreak();}
 #define Assert(Expression) if(!(Expression)) {DebugBreak();}
 #define InvalidCodePath DebugBreak()
 #define Trace(Message) {OutputDebugStringA(Message);}
@@ -65,7 +65,9 @@ typedef double   real64;
 #define FIRST_ARG(arg1, ...) arg1
 #define SECOND_ARG(arg1, arg2, ...) arg2
 
+#ifdef MSVC
 #define alignas(x) __declspec(align(x))
+#endif
 
 #include "util/CustomStrings.h"
 

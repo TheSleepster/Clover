@@ -171,7 +171,7 @@ IsGameKeyPressed(KeyBindings InputType, Input *GameInput)
 {
     Key InputKey    = GameInput->Keyboard.Keys[GameInput->Keyboard.Bindings[InputType].MainKey];
     Key AltInputKey = GameInput->Keyboard.Keys[GameInput->Keyboard.Bindings[InputType].AltKey];
-    return(InputKey.IsDown && InputKey.HalfTransitionCount >= 1 || AltInputKey.IsDown && AltInputKey.HalfTransitionCount >= 1);
+    return((InputKey.IsDown && InputKey.HalfTransitionCount >= 1) || (AltInputKey.IsDown && AltInputKey.HalfTransitionCount >= 1));
 }
 
 
@@ -180,7 +180,7 @@ IsGameKeyReleased(KeyBindings InputType, Input *GameInput)
 {
     Key InputKey    = GameInput->Keyboard.Keys[GameInput->Keyboard.Bindings[InputType].MainKey];
     Key AltInputKey = GameInput->Keyboard.Keys[GameInput->Keyboard.Bindings[InputType].AltKey];
-    return(!InputKey.IsDown && InputKey.HalfTransitionCount >= 1 || !AltInputKey.IsDown && AltInputKey.HalfTransitionCount >= 1);
+    return((!InputKey.IsDown && InputKey.HalfTransitionCount >= 1) || (!AltInputKey.IsDown && AltInputKey.HalfTransitionCount >= 1));
 }
 
 internal inline void

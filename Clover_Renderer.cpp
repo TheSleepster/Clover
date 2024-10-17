@@ -381,6 +381,9 @@ CloverResetRendererState(gl_render_data *RenderData)
     RenderData->DrawFrame.OpaqueUIElementCount = 0;
     RenderData->DrawFrame.TransparentUIElementCount = 0;
     RenderData->DrawFrame.TotalUIElementCount = 0;
+
+    RenderData->DrawFrame.PointLightCount = 0;
+    RenderData->DrawFrame.SpotLightCount = 0;
 }
 
 internal int32
@@ -448,13 +451,15 @@ CloverSetupRenderer(memory_arena *Memory, gl_render_data *RenderData)
         
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (void *)offsetof(vertex, Position));
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vertex), (void *)offsetof(vertex, TextureCoords));
-        glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(vertex), (void *)offsetof(vertex, DrawColor));
-        glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(vertex), (void *)offsetof(vertex, TextureIndex));
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (void *)offsetof(vertex, VertexNormals));
+        glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(vertex), (void *)offsetof(vertex, DrawColor));
+        glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(vertex), (void *)offsetof(vertex, TextureIndex));
         
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
         glEnableVertexAttribArray(2);
         glEnableVertexAttribArray(3);
+        glEnableVertexAttribArray(4);
     }
     
     // GAME UI BUFFER SETUP
@@ -472,51 +477,46 @@ CloverSetupRenderer(memory_arena *Memory, gl_render_data *RenderData)
         
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (void *)offsetof(vertex, Position));
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vertex), (void *)offsetof(vertex, TextureCoords));
-        glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(vertex), (void *)offsetof(vertex, DrawColor));
-        glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(vertex), (void *)offsetof(vertex, TextureIndex));
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (void *)offsetof(vertex, VertexNormals));
+        glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(vertex), (void *)offsetof(vertex, DrawColor));
+        glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(vertex), (void *)offsetof(vertex, TextureIndex));
         
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
         glEnableVertexAttribArray(2);
         glEnableVertexAttribArray(3);
+        glEnableVertexAttribArray(4);
     }
 
-    // LIGHTING FRAMEBUFFER SETUP
+    // TEXTURE/FONT LOADING
     {
-        glGenFramebuffers(1, &RenderData->LightingFBOID); 
-        glBindFramebuffer(GL_FRAMEBUFFER, RenderData->LightingFBOID);
-
-        glGenTextures(1, &RenderData->LightingFBTextureID);
-        glBindTexture(GL_TEXTURE_2D, RenderData->LightingFBTextureID);
-
-        // TODO(Sleepster): Handle Window Resizing 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, SizeData.Width, SizeData.Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, RenderData->LightingFBTextureID, 0);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        // NOTE(Sleepster): The order is important, whatever you gen first will end up in the GL_TEXTUREX slot 
+        CloverLoadTexture(RenderData, &RenderData->GameAtlas, STR("../data/res/textures/TextureAtlas.png"));
+        CloverLoadSDFFont(Memory, RenderData, STR("../data/res/fonts/UbuntuMono-B.ttf"), 48, UBUNTU_MONO);
     }
 
-    // GAME FRAMEBUFFER SETUP
+    // SHADER SETUP
     {
-        glGenFramebuffers(1, &RenderData->GameFBOID); 
-        glBindFramebuffer(GL_FRAMEBUFFER, RenderData->GameFBOID);
+        // NOTE(Sleepster): This is for the common shader includes 
+        uint32 Size = {};
+        string CommonGLHeader = ReadEntireFileMA(Memory, STR("../code/shader/CommonShader.glh"), &Size);
+        glNamedStringARB(GL_SHADER_INCLUDE_ARB, -1, "/../code/shader/CommonShader.glh", int32(CommonGLHeader.Length), CSTR(CommonGLHeader));
 
-        glGenTextures(1, &RenderData->GameFBTextureID);
-        glBindTexture(GL_TEXTURE_2D, RenderData->GameFBTextureID);
-
-        // TODO(Sleepster): Handle Window Resizing 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, SizeData.Width, SizeData.Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, RenderData->GameFBTextureID, 0);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        RenderData->BasicShader = 
+            CloverCreateShader(Memory, STR("../code/shader/Basic.vert"), STR("../code/shader/Basic.frag"));
     }
 
-    // LIGHTING DATA STUFF
+    // SHADER UNIFORM / STORAGE BUFFER SETUP
     {
+        RenderData->GameCamera.ViewMatrix   = mat4Identity(1.0f);
+        RenderData->GameUICamera.ViewMatrix = mat4Identity(1.0f);
+
+        RenderData->ProjectionMatrixUID     = glGetUniformLocation(RenderData->BasicShader.ShaderID,    "ProjectionMatrix");
+        RenderData->ViewMatrixUID           = glGetUniformLocation(RenderData->BasicShader.ShaderID,    "ViewMatrix");
+
+        RenderData->PointLightSBOID         = glGetUniformLocation(RenderData->BasicShader.ShaderID,    "PointLightSBO");
+        RenderData->PointLightCountUID      = glGetUniformLocation(RenderData->BasicShader.ShaderID,    "PointLightCount");
+
         // NOTE(Sleepster): Point Light Shader Buffer
         uint64 MaxBufferSize = sizeof(struct point_light) * MAX_POINT_LIGHTS;
         glGenBuffers(1, &RenderData->PointLightSBOID);
@@ -530,37 +530,6 @@ CloverSetupRenderer(memory_arena *Memory, gl_render_data *RenderData)
         glBufferData(GL_SHADER_STORAGE_BUFFER, MaxBufferSize, 0, GL_DYNAMIC_DRAW);
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-    }
-    
-    // SHADER SETUP
-    {
-        // NOTE(Sleepster): This is for the common shader includes 
-        uint32 Size = {};
-        string CommonGLHeader        = ReadEntireFileMA(Memory, STR("../code/shader/CommonShader.glh"), &Size);
-        glNamedStringARB(GL_SHADER_INCLUDE_ARB, -1, "/../code/shader/CommonShader.glh", int32(CommonGLHeader.Length), CSTR(CommonGLHeader));
-
-        RenderData->BasicShader = 
-            CloverCreateShader(Memory, STR("../code/shader/Basic_vert.vs"), STR("../code/shader/Basic_frag.fs"));
-        RenderData->LightingShader = 
-            CloverCreateShader(Memory, STR("../code/shader/Lighting_vert.vs"), STR("../code/shader/Lighting_frag.fs"));
-    }
-
-    // SHADER UNIFORM / STORAGE BUFFER SETUP
-    {
-        RenderData->GameCamera.ViewMatrix   = mat4Identity(1.0f);
-        RenderData->GameUICamera.ViewMatrix = mat4Identity(1.0f);
-
-        RenderData->PointLightCountUID      = glGetUniformLocation(RenderData->LightingShader.ShaderID, "PointLightCount");
-        RenderData->SpotLightCountUID       = glGetUniformLocation(RenderData->LightingShader.ShaderID, "SpotLightCount");
-        RenderData->ProjectionViewMatrixUID = glGetUniformLocation(RenderData->BasicShader.ShaderID,    "ProjectionViewMatrix");
-    }
-
-    // TEXTURE/FONT LOADING
-    {
-        // NOTE(Sleepster): The order is important, whatever you gen first will end up in the GL_TEXTUREX slot 
-        CloverLoadTexture(RenderData, &RenderData->GameAtlas, STR("../data/res/textures/TextureAtlas.png"));
-        //CloverLoadFont(Memory, RenderData, STR("../data/res/fonts/UbuntuMono-B.ttf"), 24, UBUNTU_MONO);
-        CloverLoadSDFFont(Memory, RenderData, STR("../data/res/fonts/UbuntuMono-B.ttf"), 48, UBUNTU_MONO);
     }
 }
 
@@ -580,7 +549,12 @@ CloverRender(gl_render_data *RenderData)
                             (RenderData->DrawFrame.OpaqueQuadCount * 4) * sizeof(vertex), 
                             RenderData->DrawFrame.Vertices);
 
-            glUniformMatrix4fv(RenderData->ProjectionViewMatrixUID, 1, GL_FALSE, &RenderData->GameCamera.ProjectionViewMatrix.Elements[0][0]);
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, RenderData->PointLightSBOID);
+            glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(struct point_light) * RenderData->DrawFrame.PointLightCount, RenderData->DrawFrame.PointLights);
+
+            glUniform1i(RenderData->PointLightCountUID, RenderData->DrawFrame.PointLightCount);
+            glUniformMatrix4fv(RenderData->ProjectionMatrixUID, 1, GL_FALSE, &RenderData->GameCamera.ProjectionMatrix.Elements[0][0]);
+            glUniformMatrix4fv(RenderData->ViewMatrixUID, 1, GL_FALSE, &RenderData->GameCamera.ViewMatrix.Elements[0][0]);
 
             glActiveTexture(GL_TEXTURE1);
             glBindTexture(GL_TEXTURE_2D, RenderData->GameAtlas.TextureID);
@@ -616,7 +590,8 @@ CloverRender(gl_render_data *RenderData)
             glActiveTexture(GL_TEXTURE1);
             glBindTexture(GL_TEXTURE_2D, RenderData->GameAtlas.TextureID);
 
-            glUniformMatrix4fv(RenderData->ProjectionViewMatrixUID, 1, GL_FALSE, &RenderData->GameCamera.ProjectionViewMatrix.Elements[0][0]);
+            glUniformMatrix4fv(RenderData->ProjectionMatrixUID, 1, GL_FALSE, &RenderData->GameCamera.ProjectionMatrix.Elements[0][0]);
+            glUniformMatrix4fv(RenderData->ViewMatrixUID, 1, GL_FALSE, &RenderData->GameCamera.ViewMatrix.Elements[0][0]);
 
             glActiveTexture(GL_TEXTURE2);
             glBindTexture(GL_TEXTURE_2D, RenderData->LoadedFonts[UBUNTU_MONO].FontAtlas.TextureID);
@@ -649,7 +624,8 @@ CloverRender(gl_render_data *RenderData)
             glActiveTexture(GL_TEXTURE1);
             glBindTexture(GL_TEXTURE_2D, RenderData->GameAtlas.TextureID);
 
-            glUniformMatrix4fv(RenderData->ProjectionViewMatrixUID, 1, GL_FALSE, &RenderData->GameUICamera.ProjectionViewMatrix.Elements[0][0]);
+            glUniformMatrix4fv(RenderData->ProjectionMatrixUID, 1, GL_FALSE, &RenderData->GameUICamera.ProjectionMatrix.Elements[0][0]);
+            glUniformMatrix4fv(RenderData->ViewMatrixUID, 1, GL_FALSE, &RenderData->GameUICamera.ViewMatrix.Elements[0][0]);
 
             glActiveTexture(GL_TEXTURE2);
             glBindTexture(GL_TEXTURE_2D, RenderData->LoadedFonts[UBUNTU_MONO].FontAtlas.TextureID);
@@ -676,7 +652,8 @@ CloverRender(gl_render_data *RenderData)
             glActiveTexture(GL_TEXTURE1);
             glBindTexture(GL_TEXTURE_2D, RenderData->GameAtlas.TextureID);
 
-            glUniformMatrix4fv(RenderData->ProjectionViewMatrixUID, 1, GL_FALSE, &RenderData->GameUICamera.ProjectionViewMatrix.Elements[0][0]);
+            glUniformMatrix4fv(RenderData->ProjectionMatrixUID, 1, GL_FALSE, &RenderData->GameUICamera.ProjectionMatrix.Elements[0][0]);
+            glUniformMatrix4fv(RenderData->ViewMatrixUID, 1, GL_FALSE, &RenderData->GameUICamera.ViewMatrix.Elements[0][0]);
 
             glActiveTexture(GL_TEXTURE2);
             glBindTexture(GL_TEXTURE_2D, RenderData->LoadedFonts[UBUNTU_MONO].FontAtlas.TextureID);

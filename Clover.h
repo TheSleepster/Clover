@@ -368,7 +368,6 @@ RangeFromQuad(quad *Quad)
 }
 
 // AABB stuff
-
 internal inline real32
 EaseOutQuad(real32 X)
 {

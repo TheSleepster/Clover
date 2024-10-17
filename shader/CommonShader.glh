@@ -11,33 +11,41 @@
 #ifdef ENGINE // ENGINE ONLY
 #include "Intrinsics.h"
 #include "../code/Clover_Renderer.h"
-
 #else // SHADER ONLY
-
-const unsigned int RENDERING_OPTION_FLIP_X = 0x00000001u;
-const unsigned int RENDERING_OPTION_FLIP_Y = 0x00000002u;
 
 #define real32 float
 #define real64 double
 #define int32  int
-#define uint   unsigned int
+#define uint32 unsigned int
+
+const uint32 RENDERING_OPTION_FLIP_X = 0x00000001u;
+const uint32 RENDERING_OPTION_FLIP_Y = 0x00000002u;
+
+#define alignas(x) 
 
 #endif
 // SHARED
 
-struct point_light
+struct attenuation_data
 {
-    vec3 Position;
-    vec2 Direction;
-
-    vec4 LightColor;
-
-    float AmbientStrength;
-    float DiffuseIntensity;
-    float Attenuation;
+    real32 Constant;
+    real32 Linear;
+    real32 Quadratic;
 };
 
-struct spot_light
+struct alignas(16) point_light
+{
+    vec3   Position;
+    vec2   Direction;
+    vec4   LightColor;
+
+    real32 Strength;
+    real32 Radius;
+
+    attenuation_data Attenuation;
+};
+
+struct alignas(16) spot_light
 {
     vec4   Color;
 

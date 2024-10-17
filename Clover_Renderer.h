@@ -124,14 +124,13 @@ struct orthocamera2d
 struct material_data
 {
     real32 Specular;
-    real32 Albedo;
-    real32 Normals;
 };
 
 struct vertex
 {
     vec4   Position;
     vec2   TextureCoords;
+    vec3   VertexNormals;
     vec4   DrawColor;
     real32 TextureIndex;
 };
@@ -152,7 +151,7 @@ struct quad
     };
     
     material_data Material;
-    vec4   DrawColor;
+    vec4          DrawColor;
     
     vec2 Position;
     vec2 Size;
@@ -161,6 +160,7 @@ struct quad
     real32 Rotation;
 };
 
+// TODO(Sleepster): Figure out a better way to store our textures and shaders
 struct gl_render_data
 {
     // OPENGL STUFF
@@ -173,15 +173,17 @@ struct gl_render_data
     GLuint GameUIEBOID;
     
     // MATRICES
-    GLuint ProjectionViewMatrixUID;
+    GLuint ProjectionMatrixUID;
+    GLuint ViewMatrixUID;
+
     GLuint BackgroundColorUID;
 
-    // FRAMEBUFFERS
-    GLuint GameFBOID;
-    GLuint GameFBTextureID;
+    GLuint gBufferViewMatrixUID;
+    GLuint gBufferProjectionMatrixUID;
 
+    // FRAMEBUFFERS
+    GLuint gBufferFBOID;
     GLuint LightingFBOID;
-    GLuint LightingFBTextureID;
 
     // SSBO
     GLuint PointLightSBOID;
@@ -190,10 +192,13 @@ struct gl_render_data
     // OTHER UNIFORMS
     GLuint PointLightCountUID;
     GLuint SpotLightCountUID;
+    GLuint gBufferScreensizeUID;
     
     // SHADERS
-    shader    BasicShader;
-    shader    LightingShader;
+    shader BasicShader;
+    shader gBufferShader;
+    shader LightingShader;
+    shader CombinationShader;
     
     // CAMERAS
     orthocamera2d GameCamera;
@@ -202,11 +207,19 @@ struct gl_render_data
     // CLEAR COLOR
     vec4          ClearColor;
     
-    // TEXTURES
+    // GAME TEXTURES
     texture2d     GameAtlas;
     font_data     LoadedFonts[2];
     uint32        TextureCount;
     real32        AspectRatio;
+
+
+    // RENDERING TEXTURES
+    GLuint gBuffer[3];
+    GLuint LightmapID;
+
+    // RENDER BUFFERS
+    GLuint gBufferDepthRBID;
 
     void(*CloverRender)(gl_render_data *RenderData);
 

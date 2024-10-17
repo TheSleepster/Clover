@@ -59,7 +59,7 @@ struct array
     inline int64 
     SizeInBytes()
     {
-        int64 Size = Capacity * sizeof(Type)
+        int64 Size = Capacity * sizeof(Type);
         return(Size);
     }
 

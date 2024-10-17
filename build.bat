@@ -5,8 +5,8 @@ REM remove -Zi
 
 Set opts=-DCLOVER_SLOW=1 -DCLOVER_PROFILE=0
 
-Set CommonCompilerFlags=-std:c++20 -permissive -F52428800 -fp:fast -Fm -GR- -EHa- -Od -Oi -Zi -W4 -wd4200 -wd4996 -wd4706 -wd4530 -wd4100 -wd4201 -wd4505 -wd4652 -wd4653 -wd4459 -wd4065 -wd4018
-Set CommonLinkerFlags=-ignore:4099 -incremental:no shell32.lib kernel32.lib user32.lib gdi32.lib opengl32.lib "../data/deps/ImGUI/ImGuiDEBUG.lib" "../data/deps/Freetype/freetype.lib" "../data/deps/MiniAudio/miniaudio.lib" "../data/deps/OpenGL/glad/src/Glad.lib" "../data/deps/yyjson/lib/yyjson.lib"
+Set CommonCompilerFlags=-std:c++20 -permissive -fp:fast -GR- -EHa- -Od -Oi -Zi -W4 -Og -Wno-missing-braces -Wno-unused-function -Wno-unused-parameter -Wno-missing-field-initializers -Wno-nonportable-include-path -Wno-deprecated-declarations -Wno-char-subscripts -Wno-pointer-bool-conversion -Wno-switch -Wno-delayed-template-parsing-in-cxx20 -Wno-writable-strings
+Set CommonLinkerFlags=-ignore:4099 -STACK:50000000 -incremental:no shell32.lib kernel32.lib user32.lib gdi32.lib opengl32.lib "../data/deps/ImGUI/ImGuiDEBUG.lib" "../data/deps/Freetype/freetype.lib" "../data/deps/MiniAudio/miniaudio.lib" "../data/deps/OpenGL/glad/src/Glad.lib" "../data/deps/yyjson/lib/yyjson.lib"
 Set CommonIncludes=-I"../data/deps" -I"../data/deps/Freetype/include/"
 
 Set Exports=-EXPORT:GameOnAwake -EXPORT:GameUpdateAndDraw -EXPORT:GameFixedUpdate
@@ -15,7 +15,11 @@ IF NOT EXIST ..\build mkdir ..\build
 pushd ..\build
 del *.obj
 del *.pdb
-del *.rdi
-cl %opts% ../code/Win32_Clover.cpp %CommonIncludes% %CommonCompilerFlags% -MT -link %CommonLinkerFlags% -OUT:"CloverGame.exe" 
-cl %opts% ../code/Clover.cpp %CommonIncludes% %CommonCompilerFlags% -MT -LD -link-ignore:4099 "../data/deps/ImGUI/ImGuiDEBUG.lib" "../data/deps/MiniAudio/miniaudio.lib" "../data/deps/OpenGL/glad/src/Glad.lib" "../data/deps/Freetype/freetype.lib" "../data/deps/yyjson/lib/yyjson.lib" -PDB:CloverGame_%RANDOM%.pdb %Exports% -OUT:"CloverGame.dll" 
+clang-cl %opts% ../code/Win32_Clover.cpp %CommonIncludes% %CommonCompilerFlags% -MT -link %CommonLinkerFlags% -OUT:"CloverGame.exe" 
+clang-cl %opts% ../code/Clover.cpp %CommonIncludes% %CommonCompilerFlags% -MT -LD -link -ignore:4099 "../data/deps/ImGUI/ImGuiDEBUG.lib" "../data/deps/MiniAudio/miniaudio.lib" "../data/deps/OpenGL/glad/src/Glad.lib" "../data/deps/Freetype/freetype.lib" "../data/deps/yyjson/lib/yyjson.lib" -PDB:CloverGame_%RANDOM%.pdb %Exports% -OUT:"CloverGame.dll" 
 popd
+
+@echo ====================
+@echo Compilation Complete
+@echo ====================
+
