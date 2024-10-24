@@ -1,0 +1,4266 @@
+{
+  "displayTimeUnit": "ms",
+  "traceEvents": [
+    {
+      "args": {
+        "Command Line": "-DCLOVER_SLOW=1 -DCLOVER_PROFILE=0 ../code/Win32_Clover.cpp -I../data/deps -I../data/deps/Freetype/include/ -std:c++20 -permissive -fp:fast -Fm -GR- -EHa- -Od -Oi -Zi -W4 -wd4189 -wd4200 -wd4996 -wd4706 -wd4530 -wd4100 -wd4201 -wd4505 -wd4652 -wd4653 -wd4459 -MT -link -ignore:4099 -incremental:no shell32.lib kernel32.lib user32.lib gdi32.lib opengl32.lib ../data/deps/ImGUI/ImGuiDEBUG.lib ../data/deps/Freetype/freetype.lib ../data/deps/MiniAudio/miniaudio.lib -OUT:CloverGame.exe",
+        "Env Var: INCLUDE": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\include;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\ATLMFC\\include;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Auxiliary\\VS\\include;C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt;C:\\Program Files (x86)\\Windows Kits\\10\\\\include\\10.0.22621.0\\\\um;C:\\Program Files (x86)\\Windows Kits\\10\\\\include\\10.0.22621.0\\\\shared;C:\\Program Files (x86)\\Windows Kits\\10\\\\include\\10.0.22621.0\\\\winrt;C:\\Program Files (x86)\\Windows Kits\\10\\\\include\\10.0.22621.0\\\\cppwinrt;C:\\Program Files (x86)\\Windows Kits\\NETFXSDK\\4.8\\include\\um",
+        "Env Var: LIBPATH": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\ATLMFC\\lib\\x64;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\lib\\x64;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\lib\\x86\\store\\references;C:\\Program Files (x86)\\Windows Kits\\10\\UnionMetadata\\10.0.22621.0;C:\\Program Files (x86)\\Windows Kits\\10\\References\\10.0.22621.0;C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319",
+        "Env Var: PATH": "C:\\Users\\ibjal\\AppData\\Local\\nvim-data\\mason\\bin;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\bin\\HostX64\\x64;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\VC\\VCPackages;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\TestWindow;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\TeamFoundation\\Team Explorer;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\bin\\Roslyn;C:\\Program Files (x86)\\Microsoft SDKs\\Windows\\v10.0A\\bin\\NETFX 4.8 Tools\\x64\\;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\FSharp\\Tools;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Team Tools\\DiagnosticsHub\\Collector;C:\\Program Files (x86)\\Windows Kits\\10\\bin\\10.0.22621.0\\\\x64;C:\\Program Files (x86)\\Windows Kits\\10\\bin\\\\x64;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\\\MSBuild\\Current\\Bin\\amd64;C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\Tools\\;C:\\Python312\\Scripts\\;C:\\Python312\\;C:\\WINDOWS\\system32;C:\\WINDOWS;C:\\WINDOWS\\System32\\Wbem;C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\;C:\\WINDOWS\\System32\\OpenSSH\\;C:\\ProgramData\\chocolatey\\bin;C:\\Program Files (x86)\\NVIDIA Corporation\\PhysX\\Common;C:\\Program Files\\Git\\cmd;C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\;C:\\Program Files\\CMake\\bin;C:\\Program Files\\OdinLanguage;C:\\MinGW\\bin;C:\\Program Files\\LLVM\\bin;C:\\Program Files\\Emacs\\x86_64\\bin;C:\\Program Files\\dotnet\\;C:\\Users\\ibjal\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup;W:\\Handmade\\misc;C:\\Program Files\\raddbg;C:\\Program Files\\Zed;C:\\Program Files\\Emacs\\emacs-29.4\\bin;C:\\Program Files\\Sublime Text;C:\\Program Files\\4coder;C:\\Users\\ibjal\\.cargo\\bin;C:\\Users\\ibjal\\AppData\\Local\\Microsoft\\WindowsApps;C:\\Program Files\\Neovim\\bin;D:\\Godot;C:\\Users\\ibjal\\AppData\\Local\\Programs\\Microsoft VS Code\\bin;C:\\Users\\ibjal\\.dotnet\\tools;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\bin;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\Ninja;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\VC\\Linux\\bin\\ConnectionManagerExe;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\vcpkg;C:\\Program Files\\Neovim\\bin;C:\\Program Files\\Neovim\\bin",
+        "File Input": "W:\\Clover\\code\\Win32_Clover.cpp",
+        "File Output": "W:\\Clover\\build\\Win32_Clover.obj",
+        "Tool Path": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\bin\\HostX64\\x64\\cl.exe",
+        "Tool Version": "19.40.33811.0",
+        "Working Directory": "W:\\Clover\\build"
+      },
+      "name": "CL Invocation 1",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111012276
+    },
+    {
+      "name": "FrontEndPass",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111022101
+    },
+    {
+      "name": "C1DLL",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111024136
+    },
+    {
+      "name": "W:\\Clover\\code\\Win32_Clover.cpp",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111028046
+    },
+    {
+      "name": "W:\\Clover\\data\\deps\\Freetype\\include\\ft2build.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111039692
+    },
+    {
+      "dur": 137,
+      "name": "W:\\Clover\\data\\deps\\Freetype\\include\\freetype\\config\\ftheader.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111039840
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111039986
+    },
+    {
+      "name": "W:\\Clover\\data\\deps\\Freetype\\include\\freetype\\freetype.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111040156
+    },
+    {
+      "name": "W:\\Clover\\data\\deps\\Freetype\\include\\freetype\\config\\ftconfig.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111040447
+    },
+    {
+      "dur": 160,
+      "name": "W:\\Clover\\data\\deps\\Freetype\\include\\freetype\\config\\ftoption.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111040529
+    },
+    {
+      "name": "W:\\Clover\\data\\deps\\Freetype\\include\\freetype\\config\\ftstdlib.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111040745
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\stddef.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111041248
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\corecrt.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111041339
+    },
+    {
+      "name": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\include\\vcruntime.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111041440
+    },
+    {
+      "name": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\include\\sal.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111041546
+    },
+    {
+      "dur": 121,
+      "name": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\include\\concurrencysal.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111042626
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111042756
+    },
+    {
+      "dur": 373,
+      "name": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\include\\vadefs.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111042816
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111043422
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111044109
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111044200
+    },
+    {
+      "dur": 77,
+      "name": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\include\\limits.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111044275
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\string.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111044421
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\corecrt_memory.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111044550
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\corecrt_memcpy_s.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111044638
+    },
+    {
+      "dur": 132,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\errno.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111044720
+    },
+    {
+      "dur": 289,
+      "name": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\include\\vcruntime_string.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111044916
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111045667
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111045882
+    },
+    {
+      "dur": 2283,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\corecrt_wstring.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111045966
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111050128
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\stdio.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111050207
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\corecrt_wstdio.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111050315
+    },
+    {
+      "dur": 162,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\corecrt_stdio_config.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111050450
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111060541
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111069265
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\stdlib.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111069394
+    },
+    {
+      "dur": 418,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\corecrt_malloc.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111069514
+    },
+    {
+      "dur": 372,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\corecrt_search.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111070021
+    },
+    {
+      "dur": 1292,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\corecrt_wstdlib.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111070476
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111075155
+    },
+    {
+      "dur": 223,
+      "name": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\include\\setjmp.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111075235
+    },
+    {
+      "dur": 55,
+      "name": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\include\\stdarg.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111075532
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111075598
+    },
+    {
+      "dur": 95,
+      "name": "W:\\Clover\\data\\deps\\Freetype\\include\\freetype\\config\\integer-types.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111075659
+    },
+    {
+      "dur": 55,
+      "name": "W:\\Clover\\data\\deps\\Freetype\\include\\freetype\\config\\public-macros.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111075813
+    },
+    {
+      "dur": 46,
+      "name": "W:\\Clover\\data\\deps\\Freetype\\include\\freetype\\config\\mac-support.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111075922
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111075979
+    },
+    {
+      "name": "W:\\Clover\\data\\deps\\Freetype\\include\\freetype\\fttypes.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111076040
+    },
+    {
+      "dur": 192,
+      "name": "W:\\Clover\\data\\deps\\Freetype\\include\\freetype\\ftsystem.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111076132
+    },
+    {
+      "dur": 584,
+      "name": "W:\\Clover\\data\\deps\\Freetype\\include\\freetype\\ftimage.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111076387
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111077173
+    },
+    {
+      "name": "W:\\Clover\\data\\deps\\Freetype\\include\\freetype\\fterrors.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111077236
+    },
+    {
+      "dur": 106,
+      "name": "W:\\Clover\\data\\deps\\Freetype\\include\\freetype\\ftmoderr.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111077327
+    },
+    {
+      "dur": 385,
+      "name": "W:\\Clover\\data\\deps\\Freetype\\include\\freetype\\fterrdef.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111077504
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111077935
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111079359
+    },
+    {
+      "name": "W:\\Clover\\code\\Intrinsics.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111079432
+    },
+    {
+      "dur": 117,
+      "name": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\include\\stdint.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111079526
+    },
+    {
+      "name": "W:\\Clover\\code\\util\\CustomStrings.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111079811
+    },
+    {
+      "dur": 48,
+      "name": "W:\\Clover\\code\\Intrinsics.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111079886
+    },
+    {
+      "name": "W:\\Clover\\code\\util\\MemoryArena.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111079985
+    },
+    {
+      "dur": 34,
+      "name": "W:\\Clover\\code\\Intrinsics.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111080036
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\Windows.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111081407
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\winapifamily.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111081668
+    },
+    {
+      "dur": 60,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\winpackagefamily.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111081769
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111082025
+    },
+    {
+      "dur": 125,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\sdkddkver.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111082101
+    },
+    {
+      "dur": 133,
+      "name": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\include\\excpt.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111082339
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\windef.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111082559
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\minwindef.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111082664
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\specstrings.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111082750
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\specstrings_strict.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111083134
+    },
+    {
+      "dur": 132,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\specstrings_undef.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111083251
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111083605
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\driverspecs.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111083676
+    },
+    {
+      "dur": 32,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\sdv_driverspecs.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111083771
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111083975
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111083992
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\winnt.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111084171
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\ctype.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111084284
+    },
+    {
+      "dur": 424,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\corecrt_wctype.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111084383
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111085596
+    },
+    {
+      "dur": 110,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\kernelspecs.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111085705
+    },
+    {
+      "dur": 910,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\basetsd.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111085896
+    },
+    {
+      "dur": 397,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\guiddef.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111087784
+    },
+    {
+      "dur": 48,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\pshpack4.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111094323
+    },
+    {
+      "dur": 42,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\poppack.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111094516
+    },
+    {
+      "dur": 46,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\pshpack4.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111094893
+    },
+    {
+      "dur": 39,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\poppack.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111095030
+    },
+    {
+      "dur": 64,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\pshpack4.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111104928
+    },
+    {
+      "dur": 43,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\pshpack2.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111105084
+    },
+    {
+      "dur": 40,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\poppack.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111105391
+    },
+    {
+      "dur": 39,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\pshpack2.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111105992
+    },
+    {
+      "dur": 52,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\pshpack2.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111106320
+    },
+    {
+      "dur": 51,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\poppack.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111106496
+    },
+    {
+      "dur": 51,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\poppack.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111107411
+    },
+    {
+      "dur": 44,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\pshpack8.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111107686
+    },
+    {
+      "dur": 40,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\poppack.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111107836
+    },
+    {
+      "dur": 49,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\pshpack1.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111108483
+    },
+    {
+      "dur": 39,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\poppack.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111108677
+    },
+    {
+      "dur": 34,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\pshpack1.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111108806
+    },
+    {
+      "dur": 39,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\poppack.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111109085
+    },
+    {
+      "dur": 42,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\poppack.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111110337
+    },
+    {
+      "dur": 73,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\apiset.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111110628
+    },
+    {
+      "dur": 292,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\ktmtypes.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111114156
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111115653
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111115916
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111116467
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\winbase.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111116551
+    },
+    {
+      "dur": 54,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\apisetcconv.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111116829
+    },
+    {
+      "dur": 931,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\minwinbase.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111116950
+    },
+    {
+      "dur": 126,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\apiquery2.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111117972
+    },
+    {
+      "dur": 435,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\processenv.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111118182
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\fileapifromapp.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111118702
+    },
+    {
+      "dur": 2034,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\fileapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111118830
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111121061
+    },
+    {
+      "dur": 214,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\debugapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111121139
+    },
+    {
+      "dur": 176,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\utilapiset.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111121423
+    },
+    {
+      "dur": 166,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\handleapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111121677
+    },
+    {
+      "dur": 348,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\errhandlingapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111121913
+    },
+    {
+      "dur": 139,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\fibersapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111122332
+    },
+    {
+      "dur": 449,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\namedpipeapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111122540
+    },
+    {
+      "dur": 139,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\profileapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111123064
+    },
+    {
+      "dur": 631,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\heapapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111123282
+    },
+    {
+      "dur": 322,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\ioapiset.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111123992
+    },
+    {
+      "dur": 1012,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\synchapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111124387
+    },
+    {
+      "dur": 188,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\interlockedapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111125476
+    },
+    {
+      "dur": 2617,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\processthreadsapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111125741
+    },
+    {
+      "dur": 994,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\sysinfoapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111128439
+    },
+    {
+      "dur": 1940,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\memoryapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111129512
+    },
+    {
+      "dur": 281,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\enclaveapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111131530
+    },
+    {
+      "dur": 223,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\threadpoollegacyapiset.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111131889
+    },
+    {
+      "dur": 638,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\threadpoolapiset.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111132201
+    },
+    {
+      "dur": 114,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\jobapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111132954
+    },
+    {
+      "dur": 267,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\jobapi2.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111133136
+    },
+    {
+      "dur": 381,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\wow64apiset.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111133476
+    },
+    {
+      "dur": 916,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\libloaderapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111133935
+    },
+    {
+      "dur": 2361,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\securitybaseapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111134932
+    },
+    {
+      "dur": 294,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\namespaceapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111137369
+    },
+    {
+      "dur": 160,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\systemtopologyapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111137743
+    },
+    {
+      "dur": 151,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\processtopologyapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111137976
+    },
+    {
+      "dur": 120,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\securityappcontainer.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111138198
+    },
+    {
+      "dur": 203,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\realtimeapiset.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111138387
+    },
+    {
+      "dur": 5885,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\winerror.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111148188
+    },
+    {
+      "dur": 408,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\timezoneapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111154166
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111157420
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\wingdi.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111157524
+    },
+    {
+      "dur": 45,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\pshpack1.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111157944
+    },
+    {
+      "dur": 39,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\poppack.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111158087
+    },
+    {
+      "dur": 42,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\pshpack2.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111158796
+    },
+    {
+      "dur": 39,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\poppack.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111158932
+    },
+    {
+      "dur": 39,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\pshpack2.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111159254
+    },
+    {
+      "dur": 37,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\poppack.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111159390
+    },
+    {
+      "dur": 38,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\pshpack4.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111159586
+    },
+    {
+      "dur": 37,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\poppack.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111159809
+    },
+    {
+      "dur": 31,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\pshpack4.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111159894
+    },
+    {
+      "dur": 37,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\poppack.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111160104
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111171112
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\winuser.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111171231
+    },
+    {
+      "dur": 49,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\pshpack2.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111175813
+    },
+    {
+      "dur": 41,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\poppack.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111176027
+    },
+    {
+      "dur": 164,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\tvout.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111186643
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111190714
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\winnls.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111190802
+    },
+    {
+      "dur": 321,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\datetimeapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111190928
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\stringapiset.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111192256
+    },
+    {
+      "dur": 431,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\winnls.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111192362
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111193151
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111195427
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\wincon.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111195507
+    },
+    {
+      "dur": 336,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\wincontypes.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111195617
+    },
+    {
+      "dur": 481,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\consoleapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111196039
+    },
+    {
+      "dur": 844,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\consoleapi2.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111196596
+    },
+    {
+      "dur": 583,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\consoleapi3.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111197563
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111198166
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\winver.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111198243
+    },
+    {
+      "dur": 156,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\verrsrc.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111198379
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111198906
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\winreg.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111198983
+    },
+    {
+      "dur": 89,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\reason.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111201247
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111201529
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\winnetwk.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111201603
+    },
+    {
+      "dur": 87,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\wnnc.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111201738
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111203140
+    },
+    {
+      "dur": 737,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\stralign.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111203223
+    },
+    {
+      "dur": 2416,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\winsvc.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111204039
+    },
+    {
+      "dur": 266,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\mcx.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111206535
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\imm.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111206874
+    },
+    {
+      "dur": 43,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\ime_cmodes.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111208058
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111208152
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111208169
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111208651
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111210844
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111210853
+    },
+    {
+      "name": "W:\\Clover\\code\\util\\Math.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111210924
+    },
+    {
+      "name": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\include\\xmmintrin.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111211044
+    },
+    {
+      "dur": 123,
+      "name": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\include\\mmintrin.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111211152
+    },
+    {
+      "dur": 357,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\malloc.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111211406
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111212679
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\math.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111212867
+    },
+    {
+      "dur": 3499,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\corecrt_math.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111212973
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111216483
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111235880
+    },
+    {
+      "dur": 248,
+      "name": "W:\\Clover\\code\\util\\Array.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111235999
+    },
+    {
+      "dur": 477,
+      "name": "W:\\Clover\\code\\util\\FileIO.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111236313
+    },
+    {
+      "name": "W:\\Clover\\data\\deps\\OpenGL\\glad\\src\\glad.c",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111236927
+    },
+    {
+      "name": "W:\\Clover\\data\\deps\\OpenGL\\glad\\include\\glad\\glad.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111237175
+    },
+    {
+      "dur": 140,
+      "name": "W:\\Clover\\data\\deps\\OpenGL\\glad\\include\\KHR\\khrplatform.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111237475
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111269101
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111316978
+    },
+    {
+      "name": "W:\\Clover\\data\\deps\\OpenGL\\glext.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111317188
+    },
+    {
+      "dur": 69,
+      "name": "W:\\Clover\\data\\deps\\OpenGL\\KHR\\khrplatform.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111317343
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111320193
+    },
+    {
+      "dur": 1386,
+      "name": "W:\\Clover\\data\\deps\\OpenGL\\wglext.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111320262
+    },
+    {
+      "dur": 1342,
+      "name": "W:\\Clover\\data\\deps\\OpenGL\\glcorearb.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111321716
+    },
+    {
+      "name": "W:\\Clover\\data\\deps\\ImGui\\imgui.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111323199
+    },
+    {
+      "dur": 51,
+      "name": "W:\\Clover\\data\\deps\\ImGui\\imconfig.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111323299
+    },
+    {
+      "dur": 373,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\float.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111323527
+    },
+    {
+      "dur": 100,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\assert.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111323998
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111344070
+    },
+    {
+      "dur": 112,
+      "name": "W:\\Clover\\data\\deps\\ImGui\\imgui_impl_win32.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111344212
+    },
+    {
+      "dur": 110,
+      "name": "W:\\Clover\\data\\deps\\ImGUI\\imgui_impl_opengl3.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111344432
+    },
+    {
+      "name": "W:\\Clover\\data\\deps\\stb\\stb_image.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111344656
+    },
+    {
+      "dur": 49,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\math.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111345235
+    },
+    {
+      "dur": 97,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\assert.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111345347
+    },
+    {
+      "dur": 1459,
+      "name": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\include\\emmintrin.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111345618
+    },
+    {
+      "name": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\include\\intrin.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111347152
+    },
+    {
+      "dur": 775,
+      "name": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\include\\intrin0.inl.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111347265
+    },
+    {
+      "name": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\include\\immintrin.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111348122
+    },
+    {
+      "name": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\include\\wmmintrin.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111348227
+    },
+    {
+      "name": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\include\\nmmintrin.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111348313
+    },
+    {
+      "name": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\include\\smmintrin.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111348410
+    },
+    {
+      "name": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\include\\tmmintrin.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111348499
+    },
+    {
+      "dur": 140,
+      "name": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\include\\pmmintrin.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111348584
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111348836
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111349144
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111349290
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111349355
+    },
+    {
+      "dur": 33100,
+      "name": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\include\\zmmintrin.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111354039
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111387745
+    },
+    {
+      "dur": 914,
+      "name": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\include\\ammintrin.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111387889
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111392643
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111441097
+    },
+    {
+      "name": "W:\\Clover\\data\\deps\\stb\\stb_image_write.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111441248
+    },
+    {
+      "dur": 50,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\math.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111441573
+    },
+    {
+      "dur": 101,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\assert.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111441681
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111453413
+    },
+    {
+      "dur": 15723,
+      "name": "W:\\Clover\\data\\deps\\MiniAudio\\miniaudio.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111453583
+    },
+    {
+      "dur": 454,
+      "name": "W:\\Clover\\code\\Clover_Globals.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111469479
+    },
+    {
+      "name": "W:\\Clover\\code\\Clover.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111470000
+    },
+    {
+      "dur": 43,
+      "name": "W:\\Clover\\code\\Clover.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111470063
+    },
+    {
+      "dur": 539,
+      "name": "W:\\Clover\\code\\Clover_Input.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111470161
+    },
+    {
+      "name": "W:\\Clover\\code\\Clover_Renderer.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111470771
+    },
+    {
+      "dur": 32,
+      "name": "W:\\Clover\\code\\shader\\ShaderHeader.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111470921
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111471545
+    },
+    {
+      "dur": 38,
+      "name": "W:\\Clover\\code\\Clover_Audio.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111471626
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111472140
+    },
+    {
+      "dur": 297,
+      "name": "W:\\Clover\\code\\Win32_Clover.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111472211
+    },
+    {
+      "dur": 2923,
+      "name": "W:\\Clover\\code\\Clover_Draw.cpp",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111472576
+    },
+    {
+      "dur": 846,
+      "name": "W:\\Clover\\code\\Clover_Input.cpp",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111475570
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111514702
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111531274
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111531948
+    },
+    {
+      "name": "BackEndPass",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111532263
+    },
+    {
+      "name": "C2DLL",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111535041
+    },
+    {
+      "name": "CodeGeneration",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111546625
+    },
+    {
+      "dur": 31551,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111547554
+    },
+    {
+      "dur": 33202,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 1,
+      "ts": 740111547567
+    },
+    {
+      "dur": 31596,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 2,
+      "ts": 740111547628
+    },
+    {
+      "dur": 31605,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 3,
+      "ts": 740111547670
+    },
+    {
+      "dur": 31494,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 4,
+      "ts": 740111547681
+    },
+    {
+      "dur": 32323,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 5,
+      "ts": 740111547713
+    },
+    {
+      "dur": 1139,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111579771
+    },
+    {
+      "dur": 635,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 2,
+      "ts": 740111579779
+    },
+    {
+      "dur": 215,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 3,
+      "ts": 740111579782
+    },
+    {
+      "dur": 0,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 4,
+      "ts": 740111579787
+    },
+    {
+      "dur": 0,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 4,
+      "ts": 740111579789
+    },
+    {
+      "dur": 938,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 4,
+      "ts": 740111579804
+    },
+    {
+      "dur": 0,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 3,
+      "ts": 740111579999
+    },
+    {
+      "dur": 388,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 3,
+      "ts": 740111580160
+    },
+    {
+      "dur": 361,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 5,
+      "ts": 740111580162
+    },
+    {
+      "dur": 0,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 2,
+      "ts": 740111580415
+    },
+    {
+      "dur": 142,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 2,
+      "ts": 740111580478
+    },
+    {
+      "dur": 0,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 5,
+      "ts": 740111580524
+    },
+    {
+      "dur": 203,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 2,
+      "ts": 740111580740
+    },
+    {
+      "dur": 23,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111580937
+    },
+    {
+      "dur": 34,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 1,
+      "ts": 740111580941
+    },
+    {
+      "dur": 24,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 2,
+      "ts": 740111580946
+    },
+    {
+      "dur": 14,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 3,
+      "ts": 740111580953
+    },
+    {
+      "dur": 11,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111580962
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111581020
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111581022
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111592117
+    },
+    {
+      "args": {
+        "Command Line": "/link /errorreport:prompt /out:Win32_Clover.exe /map:Win32_Clover.map /debug -ignore:4099 -incremental:no shell32.lib kernel32.lib user32.lib gdi32.lib opengl32.lib ../data/deps/ImGUI/ImGuiDEBUG.lib ../data/deps/Freetype/freetype.lib ../data/deps/MiniAudio/miniaudio.lib -OUT:CloverGame.exe Win32_Clover.obj",
+        "Env Var: LIB": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\ATLMFC\\lib\\x64;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\lib\\x64;C:\\Program Files (x86)\\Windows Kits\\NETFXSDK\\4.8\\lib\\um\\x64;C:\\Program Files (x86)\\Windows Kits\\10\\lib\\10.0.22621.0\\ucrt\\x64;C:\\Program Files (x86)\\Windows Kits\\10\\\\lib\\10.0.22621.0\\\\um\\x64",
+        "Env Var: PATH": "C:\\Users\\ibjal\\AppData\\Local\\nvim-data\\mason\\bin;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\bin\\HostX64\\x64;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\VC\\VCPackages;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\TestWindow;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\TeamFoundation\\Team Explorer;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\bin\\Roslyn;C:\\Program Files (x86)\\Microsoft SDKs\\Windows\\v10.0A\\bin\\NETFX 4.8 Tools\\x64\\;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\FSharp\\Tools;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Team Tools\\DiagnosticsHub\\Collector;C:\\Program Files (x86)\\Windows Kits\\10\\bin\\10.0.22621.0\\\\x64;C:\\Program Files (x86)\\Windows Kits\\10\\bin\\\\x64;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\\\MSBuild\\Current\\Bin\\amd64;C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\Tools\\;C:\\Python312\\Scripts\\;C:\\Python312\\;C:\\WINDOWS\\system32;C:\\WINDOWS;C:\\WINDOWS\\System32\\Wbem;C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\;C:\\WINDOWS\\System32\\OpenSSH\\;C:\\ProgramData\\chocolatey\\bin;C:\\Program Files (x86)\\NVIDIA Corporation\\PhysX\\Common;C:\\Program Files\\Git\\cmd;C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\;C:\\Program Files\\CMake\\bin;C:\\Program Files\\OdinLanguage;C:\\MinGW\\bin;C:\\Program Files\\LLVM\\bin;C:\\Program Files\\Emacs\\x86_64\\bin;C:\\Program Files\\dotnet\\;C:\\Users\\ibjal\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup;W:\\Handmade\\misc;C:\\Program Files\\raddbg;C:\\Program Files\\Zed;C:\\Program Files\\Emacs\\emacs-29.4\\bin;C:\\Program Files\\Sublime Text;C:\\Program Files\\4coder;C:\\Users\\ibjal\\.cargo\\bin;C:\\Users\\ibjal\\AppData\\Local\\Microsoft\\WindowsApps;C:\\Program Files\\Neovim\\bin;D:\\Godot;C:\\Users\\ibjal\\AppData\\Local\\Programs\\Microsoft VS Code\\bin;C:\\Users\\ibjal\\.dotnet\\tools;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\bin;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\Ninja;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\VC\\Linux\\bin\\ConnectionManagerExe;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\vcpkg;C:\\Program Files\\Neovim\\bin;C:\\Program Files\\Neovim\\bin",
+        "Env Var: TMP": "C:\\Users\\ibjal\\AppData\\Local\\Temp",
+        "File Input #00": "C:\\Program Files (x86)\\Windows Kits\\10\\lib\\10.0.22621.0\\um\\x64\\shell32.lib",
+        "File Input #01": "C:\\Program Files (x86)\\Windows Kits\\10\\lib\\10.0.22621.0\\um\\x64\\kernel32.lib",
+        "File Input #02": "C:\\Program Files (x86)\\Windows Kits\\10\\lib\\10.0.22621.0\\um\\x64\\user32.lib",
+        "File Input #03": "C:\\Program Files (x86)\\Windows Kits\\10\\lib\\10.0.22621.0\\um\\x64\\gdi32.lib",
+        "File Input #04": "C:\\Program Files (x86)\\Windows Kits\\10\\lib\\10.0.22621.0\\um\\x64\\opengl32.lib",
+        "File Input #05": "W:\\Clover\\data\\deps\\ImGUI\\ImGuiDEBUG.lib",
+        "File Input #06": "W:\\Clover\\data\\deps\\Freetype\\freetype.lib",
+        "File Input #07": "W:\\Clover\\data\\deps\\MiniAudio\\miniaudio.lib",
+        "File Input #08": "W:\\Clover\\build\\Win32_Clover.obj",
+        "File Input #09": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\lib\\x64\\LIBCMT.lib",
+        "File Input #10": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\lib\\x64\\OLDNAMES.lib",
+        "File Input #11": "C:\\Program Files (x86)\\Windows Kits\\10\\lib\\10.0.22621.0\\um\\x64\\imm32.lib",
+        "File Input #12": "C:\\Program Files (x86)\\Windows Kits\\10\\lib\\10.0.22621.0\\um\\x64\\dwmapi.lib",
+        "File Input #13": "C:\\Program Files (x86)\\Windows Kits\\10\\lib\\10.0.22621.0\\um\\x64\\uuid.lib",
+        "File Input #14": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\lib\\x64\\libvcruntime.lib",
+        "File Input #15": "C:\\Program Files (x86)\\Windows Kits\\10\\lib\\10.0.22621.0\\ucrt\\x64\\libucrt.lib",
+        "File Output": "W:\\Clover\\build\\CloverGame.exe",
+        "Tool Path": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\bin\\HostX64\\x64\\link.exe",
+        "Tool Version": "14.40.33811.0",
+        "Working Directory": "W:\\Clover\\build"
+      },
+      "name": "Link Invocation 1",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111600422
+    },
+    {
+      "dur": 66712,
+      "name": "Pass1",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111612145
+    },
+    {
+      "dur": 81385,
+      "name": "Pass2",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111678859
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111768303
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111789517
+    },
+    {
+      "args": {
+        "Command Line": "-DCLOVER_SLOW=1 -DCLOVER_PROFILE=0 ../code/Clover.cpp -I../data/deps -I../data/deps/Freetype/include/ -std:c++20 -permissive -fp:fast -Fm -GR- -EHa- -Od -Oi -Zi -W4 -wd4189 -wd4200 -wd4996 -wd4706 -wd4530 -wd4100 -wd4201 -wd4505 -wd4652 -wd4653 -wd4459 -MT -LD -link ../data/deps/ImGUI/ImGuiDEBUG.lib ../data/deps/MiniAudio/miniaudio.lib -PDB:CloverGame_10434.pdb -EXPORT:GameOnAwake -EXPORT:GameUpdateAndRender -EXPORT:GameFixedUpdate -OUT:CloverGame.dll",
+        "Env Var: INCLUDE": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\include;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\ATLMFC\\include;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Auxiliary\\VS\\include;C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt;C:\\Program Files (x86)\\Windows Kits\\10\\\\include\\10.0.22621.0\\\\um;C:\\Program Files (x86)\\Windows Kits\\10\\\\include\\10.0.22621.0\\\\shared;C:\\Program Files (x86)\\Windows Kits\\10\\\\include\\10.0.22621.0\\\\winrt;C:\\Program Files (x86)\\Windows Kits\\10\\\\include\\10.0.22621.0\\\\cppwinrt;C:\\Program Files (x86)\\Windows Kits\\NETFXSDK\\4.8\\include\\um",
+        "Env Var: LIBPATH": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\ATLMFC\\lib\\x64;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\lib\\x64;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\lib\\x86\\store\\references;C:\\Program Files (x86)\\Windows Kits\\10\\UnionMetadata\\10.0.22621.0;C:\\Program Files (x86)\\Windows Kits\\10\\References\\10.0.22621.0;C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319",
+        "Env Var: PATH": "C:\\Users\\ibjal\\AppData\\Local\\nvim-data\\mason\\bin;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\bin\\HostX64\\x64;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\VC\\VCPackages;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\TestWindow;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\TeamFoundation\\Team Explorer;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\bin\\Roslyn;C:\\Program Files (x86)\\Microsoft SDKs\\Windows\\v10.0A\\bin\\NETFX 4.8 Tools\\x64\\;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\FSharp\\Tools;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Team Tools\\DiagnosticsHub\\Collector;C:\\Program Files (x86)\\Windows Kits\\10\\bin\\10.0.22621.0\\\\x64;C:\\Program Files (x86)\\Windows Kits\\10\\bin\\\\x64;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\\\MSBuild\\Current\\Bin\\amd64;C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\Tools\\;C:\\Python312\\Scripts\\;C:\\Python312\\;C:\\WINDOWS\\system32;C:\\WINDOWS;C:\\WINDOWS\\System32\\Wbem;C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\;C:\\WINDOWS\\System32\\OpenSSH\\;C:\\ProgramData\\chocolatey\\bin;C:\\Program Files (x86)\\NVIDIA Corporation\\PhysX\\Common;C:\\Program Files\\Git\\cmd;C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\;C:\\Program Files\\CMake\\bin;C:\\Program Files\\OdinLanguage;C:\\MinGW\\bin;C:\\Program Files\\LLVM\\bin;C:\\Program Files\\Emacs\\x86_64\\bin;C:\\Program Files\\dotnet\\;C:\\Users\\ibjal\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup;W:\\Handmade\\misc;C:\\Program Files\\raddbg;C:\\Program Files\\Zed;C:\\Program Files\\Emacs\\emacs-29.4\\bin;C:\\Program Files\\Sublime Text;C:\\Program Files\\4coder;C:\\Users\\ibjal\\.cargo\\bin;C:\\Users\\ibjal\\AppData\\Local\\Microsoft\\WindowsApps;C:\\Program Files\\Neovim\\bin;D:\\Godot;C:\\Users\\ibjal\\AppData\\Local\\Programs\\Microsoft VS Code\\bin;C:\\Users\\ibjal\\.dotnet\\tools;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\bin;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\Ninja;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\VC\\Linux\\bin\\ConnectionManagerExe;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\vcpkg;C:\\Program Files\\Neovim\\bin;C:\\Program Files\\Neovim\\bin",
+        "File Input": "W:\\Clover\\code\\Clover.cpp",
+        "File Output": "W:\\Clover\\build\\Clover.obj",
+        "Tool Path": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\bin\\HostX64\\x64\\cl.exe",
+        "Tool Version": "19.40.33811.0",
+        "Working Directory": "W:\\Clover\\build"
+      },
+      "name": "CL Invocation 2",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111806686
+    },
+    {
+      "name": "FrontEndPass",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111816331
+    },
+    {
+      "name": "C1DLL",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111817820
+    },
+    {
+      "name": "W:\\Clover\\code\\Clover.cpp",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111821741
+    },
+    {
+      "name": "W:\\Clover\\code\\Intrinsics.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111832917
+    },
+    {
+      "name": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\include\\stdint.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111833348
+    },
+    {
+      "name": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\include\\vcruntime.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111833541
+    },
+    {
+      "name": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\include\\sal.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111833675
+    },
+    {
+      "dur": 132,
+      "name": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\include\\concurrencysal.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111834785
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111834926
+    },
+    {
+      "dur": 324,
+      "name": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\include\\vadefs.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111834988
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111835541
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111835639
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\stdlib.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111835915
+    },
+    {
+      "dur": 764,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\corecrt.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111836017
+    },
+    {
+      "dur": 405,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\corecrt_malloc.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111836856
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\corecrt_search.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111837332
+    },
+    {
+      "dur": 126,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\stddef.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111837430
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111837888
+    },
+    {
+      "dur": 1333,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\corecrt_wstdlib.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111837969
+    },
+    {
+      "dur": 110,
+      "name": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\include\\limits.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111839402
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111843193
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\string.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111843310
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\corecrt_memory.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111843432
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\corecrt_memcpy_s.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111843528
+    },
+    {
+      "dur": 136,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\errno.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111843626
+    },
+    {
+      "dur": 278,
+      "name": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\include\\vcruntime_string.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111843834
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111844513
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111844735
+    },
+    {
+      "dur": 2027,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\corecrt_wstring.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111844837
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111848687
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\stdio.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111848760
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\corecrt_wstdio.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111848872
+    },
+    {
+      "dur": 165,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\corecrt_stdio_config.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111848998
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111857832
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111866149
+    },
+    {
+      "name": "W:\\Clover\\data\\deps\\Freetype\\include\\ft2build.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111866263
+    },
+    {
+      "dur": 117,
+      "name": "W:\\Clover\\data\\deps\\Freetype\\include\\freetype\\config\\ftheader.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111866417
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111866541
+    },
+    {
+      "name": "W:\\Clover\\data\\deps\\Freetype\\include\\freetype\\freetype.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111866715
+    },
+    {
+      "name": "W:\\Clover\\data\\deps\\Freetype\\include\\freetype\\config\\ftconfig.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111866846
+    },
+    {
+      "dur": 154,
+      "name": "W:\\Clover\\data\\deps\\Freetype\\include\\freetype\\config\\ftoption.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111866927
+    },
+    {
+      "name": "W:\\Clover\\data\\deps\\Freetype\\include\\freetype\\config\\ftstdlib.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111867137
+    },
+    {
+      "dur": 226,
+      "name": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\include\\setjmp.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111867276
+    },
+    {
+      "dur": 69,
+      "name": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\include\\stdarg.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111867572
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111867650
+    },
+    {
+      "dur": 98,
+      "name": "W:\\Clover\\data\\deps\\Freetype\\include\\freetype\\config\\integer-types.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111867707
+    },
+    {
+      "dur": 60,
+      "name": "W:\\Clover\\data\\deps\\Freetype\\include\\freetype\\config\\public-macros.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111867864
+    },
+    {
+      "dur": 42,
+      "name": "W:\\Clover\\data\\deps\\Freetype\\include\\freetype\\config\\mac-support.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111867978
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111868028
+    },
+    {
+      "name": "W:\\Clover\\data\\deps\\Freetype\\include\\freetype\\fttypes.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111868081
+    },
+    {
+      "dur": 200,
+      "name": "W:\\Clover\\data\\deps\\Freetype\\include\\freetype\\ftsystem.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111868176
+    },
+    {
+      "dur": 588,
+      "name": "W:\\Clover\\data\\deps\\Freetype\\include\\freetype\\ftimage.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111868438
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111869224
+    },
+    {
+      "name": "W:\\Clover\\data\\deps\\Freetype\\include\\freetype\\fterrors.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111869288
+    },
+    {
+      "dur": 106,
+      "name": "W:\\Clover\\data\\deps\\Freetype\\include\\freetype\\ftmoderr.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111869383
+    },
+    {
+      "dur": 399,
+      "name": "W:\\Clover\\data\\deps\\Freetype\\include\\freetype\\fterrdef.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111869559
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111869997
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111871376
+    },
+    {
+      "name": "W:\\Clover\\code\\util\\CustomStrings.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111871520
+    },
+    {
+      "dur": 45,
+      "name": "W:\\Clover\\code\\Intrinsics.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111871618
+    },
+    {
+      "name": "W:\\Clover\\code\\util\\MemoryArena.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111871714
+    },
+    {
+      "dur": 32,
+      "name": "W:\\Clover\\code\\Intrinsics.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111871761
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\Windows.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111873401
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\winapifamily.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111873666
+    },
+    {
+      "dur": 78,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\winpackagefamily.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111873780
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111873906
+    },
+    {
+      "dur": 258,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\sdkddkver.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111873977
+    },
+    {
+      "dur": 150,
+      "name": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\include\\excpt.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111874359
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\windef.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111874584
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\minwindef.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111874698
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\specstrings.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111874789
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\specstrings_strict.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111875140
+    },
+    {
+      "dur": 137,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\specstrings_undef.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111875275
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111875635
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\driverspecs.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111875707
+    },
+    {
+      "dur": 38,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\sdv_driverspecs.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111875804
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111875999
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111876017
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\winnt.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111876202
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\ctype.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111876319
+    },
+    {
+      "dur": 469,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\corecrt_wctype.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111876420
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111877680
+    },
+    {
+      "dur": 117,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\kernelspecs.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111877794
+    },
+    {
+      "dur": 435,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\basetsd.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111877994
+    },
+    {
+      "dur": 352,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\guiddef.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111879277
+    },
+    {
+      "dur": 49,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\pshpack4.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111885879
+    },
+    {
+      "dur": 43,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\poppack.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111886076
+    },
+    {
+      "dur": 45,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\pshpack4.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111886467
+    },
+    {
+      "dur": 39,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\poppack.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111886603
+    },
+    {
+      "dur": 55,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\pshpack4.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111895948
+    },
+    {
+      "dur": 47,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\pshpack2.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111896080
+    },
+    {
+      "dur": 39,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\poppack.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111896385
+    },
+    {
+      "dur": 41,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\pshpack2.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111896975
+    },
+    {
+      "dur": 40,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\pshpack2.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111897228
+    },
+    {
+      "dur": 39,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\poppack.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111897357
+    },
+    {
+      "dur": 41,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\poppack.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111897951
+    },
+    {
+      "dur": 46,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\pshpack8.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111898180
+    },
+    {
+      "dur": 38,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\poppack.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111898322
+    },
+    {
+      "dur": 47,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\pshpack1.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111898962
+    },
+    {
+      "dur": 39,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\poppack.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111899140
+    },
+    {
+      "dur": 34,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\pshpack1.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111899265
+    },
+    {
+      "dur": 39,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\poppack.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111899529
+    },
+    {
+      "dur": 41,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\poppack.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111900580
+    },
+    {
+      "dur": 72,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\apiset.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111900867
+    },
+    {
+      "dur": 290,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\ktmtypes.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111904237
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111905709
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111905975
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111906493
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\winbase.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111906577
+    },
+    {
+      "dur": 53,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\apisetcconv.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111906722
+    },
+    {
+      "dur": 813,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\minwinbase.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111906842
+    },
+    {
+      "dur": 103,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\apiquery2.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111907739
+    },
+    {
+      "dur": 432,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\processenv.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111907912
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\fileapifromapp.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111908420
+    },
+    {
+      "dur": 2158,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\fileapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111908551
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111910906
+    },
+    {
+      "dur": 256,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\debugapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111910991
+    },
+    {
+      "dur": 177,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\utilapiset.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111911321
+    },
+    {
+      "dur": 181,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\handleapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111911568
+    },
+    {
+      "dur": 339,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\errhandlingapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111911822
+    },
+    {
+      "dur": 141,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\fibersapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111912233
+    },
+    {
+      "dur": 393,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\namedpipeapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111912472
+    },
+    {
+      "dur": 107,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\profileapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111912974
+    },
+    {
+      "dur": 412,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\heapapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111913152
+    },
+    {
+      "dur": 318,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\ioapiset.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111913653
+    },
+    {
+      "dur": 999,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\synchapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111914042
+    },
+    {
+      "dur": 178,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\interlockedapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111915118
+    },
+    {
+      "dur": 2585,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\processthreadsapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111915371
+    },
+    {
+      "dur": 1019,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\sysinfoapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111918037
+    },
+    {
+      "dur": 1806,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\memoryapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111919137
+    },
+    {
+      "dur": 275,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\enclaveapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111921022
+    },
+    {
+      "dur": 222,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\threadpoollegacyapiset.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111921373
+    },
+    {
+      "dur": 658,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\threadpoolapiset.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111921678
+    },
+    {
+      "dur": 112,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\jobapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111922410
+    },
+    {
+      "dur": 456,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\jobapi2.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111922589
+    },
+    {
+      "dur": 305,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\wow64apiset.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111923124
+    },
+    {
+      "dur": 903,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\libloaderapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111923502
+    },
+    {
+      "dur": 2359,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\securitybaseapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111924506
+    },
+    {
+      "dur": 203,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\namespaceapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111926941
+    },
+    {
+      "dur": 157,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\systemtopologyapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111927225
+    },
+    {
+      "dur": 160,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\processtopologyapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111927455
+    },
+    {
+      "dur": 122,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\securityappcontainer.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111927688
+    },
+    {
+      "dur": 209,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\realtimeapiset.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111927879
+    },
+    {
+      "dur": 5827,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\winerror.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111937875
+    },
+    {
+      "dur": 413,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\timezoneapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111943792
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111947023
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\wingdi.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111947105
+    },
+    {
+      "dur": 47,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\pshpack1.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111947513
+    },
+    {
+      "dur": 38,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\poppack.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111947670
+    },
+    {
+      "dur": 44,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\pshpack2.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111948250
+    },
+    {
+      "dur": 37,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\poppack.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111948387
+    },
+    {
+      "dur": 38,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\pshpack2.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111948677
+    },
+    {
+      "dur": 38,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\poppack.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111948813
+    },
+    {
+      "dur": 38,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\pshpack4.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111949016
+    },
+    {
+      "dur": 39,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\poppack.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111949230
+    },
+    {
+      "dur": 33,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\pshpack4.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111949317
+    },
+    {
+      "dur": 37,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\poppack.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111949532
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111961128
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\winuser.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111961264
+    },
+    {
+      "dur": 50,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\pshpack2.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111965779
+    },
+    {
+      "dur": 119,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\poppack.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111966002
+    },
+    {
+      "dur": 152,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\tvout.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111976279
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111980319
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\winnls.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111980407
+    },
+    {
+      "dur": 331,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\datetimeapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111980549
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\stringapiset.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111981844
+    },
+    {
+      "dur": 451,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\winnls.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111982084
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111982884
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111985317
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\wincon.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111985411
+    },
+    {
+      "dur": 340,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\wincontypes.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111985535
+    },
+    {
+      "dur": 481,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\consoleapi.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111985963
+    },
+    {
+      "dur": 804,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\consoleapi2.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111986531
+    },
+    {
+      "dur": 562,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\consoleapi3.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111987415
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111988006
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\winver.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111988084
+    },
+    {
+      "dur": 150,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\verrsrc.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111988216
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111988741
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\winreg.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111988817
+    },
+    {
+      "dur": 91,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\reason.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111991159
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111991453
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\winnetwk.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111991537
+    },
+    {
+      "dur": 76,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\wnnc.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111991668
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111993182
+    },
+    {
+      "dur": 740,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\shared\\stralign.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111993268
+    },
+    {
+      "dur": 2496,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\winsvc.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111994092
+    },
+    {
+      "dur": 254,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\mcx.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111996670
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\imm.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111997006
+    },
+    {
+      "dur": 47,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\um\\ime_cmodes.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111998328
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111998438
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111998472
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740111998984
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112001325
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112001340
+    },
+    {
+      "name": "W:\\Clover\\code\\util\\Math.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112001411
+    },
+    {
+      "name": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\include\\xmmintrin.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112001541
+    },
+    {
+      "dur": 122,
+      "name": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\include\\mmintrin.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112001644
+    },
+    {
+      "dur": 409,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\malloc.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112001899
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112002935
+    },
+    {
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\math.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112003052
+    },
+    {
+      "dur": 3452,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\corecrt_math.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112003142
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112006609
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112026463
+    },
+    {
+      "dur": 280,
+      "name": "W:\\Clover\\code\\util\\Array.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112026598
+    },
+    {
+      "dur": 474,
+      "name": "W:\\Clover\\code\\util\\FileIO.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112026963
+    },
+    {
+      "name": "W:\\Clover\\code\\Clover.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112027510
+    },
+    {
+      "dur": 42,
+      "name": "W:\\Clover\\code\\Clover.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112027578
+    },
+    {
+      "dur": 461,
+      "name": "W:\\Clover\\code\\Clover_Input.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112027675
+    },
+    {
+      "dur": 418,
+      "name": "W:\\Clover\\code\\Clover_Globals.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112028204
+    },
+    {
+      "name": "W:\\Clover\\code\\Clover_Renderer.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112028689
+    },
+    {
+      "name": "W:\\Clover\\data\\deps\\OpenGL\\glad\\src\\glad.c",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112028823
+    },
+    {
+      "name": "W:\\Clover\\data\\deps\\OpenGL\\glad\\include\\glad\\glad.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112029081
+    },
+    {
+      "dur": 132,
+      "name": "W:\\Clover\\data\\deps\\OpenGL\\glad\\include\\KHR\\khrplatform.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112029369
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112060584
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112107846
+    },
+    {
+      "name": "W:\\Clover\\data\\deps\\OpenGL\\glext.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112108078
+    },
+    {
+      "dur": 81,
+      "name": "W:\\Clover\\data\\deps\\OpenGL\\KHR\\khrplatform.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112108230
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112110840
+    },
+    {
+      "dur": 1386,
+      "name": "W:\\Clover\\data\\deps\\OpenGL\\wglext.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112110903
+    },
+    {
+      "dur": 1243,
+      "name": "W:\\Clover\\data\\deps\\OpenGL\\glcorearb.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112112369
+    },
+    {
+      "name": "W:\\Clover\\data\\deps\\ImGui\\imgui.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112113754
+    },
+    {
+      "dur": 51,
+      "name": "W:\\Clover\\data\\deps\\ImGui\\imconfig.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112113850
+    },
+    {
+      "dur": 355,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\float.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112113978
+    },
+    {
+      "dur": 94,
+      "name": "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\assert.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112114427
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112134035
+    },
+    {
+      "dur": 106,
+      "name": "W:\\Clover\\data\\deps\\ImGui\\imgui_impl_win32.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112134174
+    },
+    {
+      "dur": 106,
+      "name": "W:\\Clover\\data\\deps\\ImGUI\\imgui_impl_opengl3.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112134386
+    },
+    {
+      "dur": 35,
+      "name": "W:\\Clover\\code\\shader\\ShaderHeader.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112134611
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112135239
+    },
+    {
+      "name": "W:\\Clover\\code\\Clover_Audio.h",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112135322
+    },
+    {
+      "dur": 14951,
+      "name": "W:\\Clover\\data\\deps\\MiniAudio\\miniaudio.h",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112135453
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112150429
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112150893
+    },
+    {
+      "dur": 1278,
+      "name": "W:\\Clover\\code\\Clover_Audio.cpp",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112151010
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112156148
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112168708
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112169227
+    },
+    {
+      "name": "BackEndPass",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112169492
+    },
+    {
+      "name": "C2DLL",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112171838
+    },
+    {
+      "name": "CodeGeneration",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112181595
+    },
+    {
+      "dur": 3049,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112182174
+    },
+    {
+      "dur": 17743,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 1,
+      "ts": 740112182241
+    },
+    {
+      "dur": 2941,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 2,
+      "ts": 740112182304
+    },
+    {
+      "dur": 2761,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 3,
+      "ts": 740112182354
+    },
+    {
+      "dur": 2936,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 4,
+      "ts": 740112182418
+    },
+    {
+      "dur": 2827,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 5,
+      "ts": 740112182484
+    },
+    {
+      "dur": 0,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112185226
+    },
+    {
+      "dur": 70,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112185298
+    },
+    {
+      "dur": 14023,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112186014
+    },
+    {
+      "dur": 14329,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 2,
+      "ts": 740112186017
+    },
+    {
+      "dur": 14129,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 3,
+      "ts": 740112186020
+    },
+    {
+      "dur": 14113,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 4,
+      "ts": 740112186022
+    },
+    {
+      "dur": 14183,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 5,
+      "ts": 740112186026
+    },
+    {
+      "dur": 0,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 1,
+      "ts": 740112199985
+    },
+    {
+      "dur": 46,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 1,
+      "ts": 740112200026
+    },
+    {
+      "dur": 7,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112200375
+    },
+    {
+      "dur": 30,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112200383
+    },
+    {
+      "dur": 20,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 1,
+      "ts": 740112200400
+    },
+    {
+      "dur": 8,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 2,
+      "ts": 740112200410
+    },
+    {
+      "dur": 18,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112200424
+    },
+    {
+      "dur": 3,
+      "name": "CodeGenerationThread",
+      "ph": "X",
+      "pid": 0,
+      "tid": 1,
+      "ts": 740112200435
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112200483
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112200484
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112209066
+    },
+    {
+      "args": {
+        "Command Line": "/link /errorreport:prompt /out:Clover.dll /map:Clover.map /debug /dll /implib:Clover.lib ../data/deps/ImGUI/ImGuiDEBUG.lib ../data/deps/MiniAudio/miniaudio.lib -PDB:CloverGame_10434.pdb -EXPORT:GameOnAwake -EXPORT:GameUpdateAndRender -EXPORT:GameFixedUpdate -OUT:CloverGame.dll Clover.obj",
+        "Env Var: LIB": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\ATLMFC\\lib\\x64;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\lib\\x64;C:\\Program Files (x86)\\Windows Kits\\NETFXSDK\\4.8\\lib\\um\\x64;C:\\Program Files (x86)\\Windows Kits\\10\\lib\\10.0.22621.0\\ucrt\\x64;C:\\Program Files (x86)\\Windows Kits\\10\\\\lib\\10.0.22621.0\\\\um\\x64",
+        "Env Var: PATH": "C:\\Users\\ibjal\\AppData\\Local\\nvim-data\\mason\\bin;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\bin\\HostX64\\x64;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\VC\\VCPackages;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\TestWindow;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\TeamFoundation\\Team Explorer;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\bin\\Roslyn;C:\\Program Files (x86)\\Microsoft SDKs\\Windows\\v10.0A\\bin\\NETFX 4.8 Tools\\x64\\;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\FSharp\\Tools;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Team Tools\\DiagnosticsHub\\Collector;C:\\Program Files (x86)\\Windows Kits\\10\\bin\\10.0.22621.0\\\\x64;C:\\Program Files (x86)\\Windows Kits\\10\\bin\\\\x64;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\\\MSBuild\\Current\\Bin\\amd64;C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\Tools\\;C:\\Python312\\Scripts\\;C:\\Python312\\;C:\\WINDOWS\\system32;C:\\WINDOWS;C:\\WINDOWS\\System32\\Wbem;C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\;C:\\WINDOWS\\System32\\OpenSSH\\;C:\\ProgramData\\chocolatey\\bin;C:\\Program Files (x86)\\NVIDIA Corporation\\PhysX\\Common;C:\\Program Files\\Git\\cmd;C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\;C:\\Program Files\\CMake\\bin;C:\\Program Files\\OdinLanguage;C:\\MinGW\\bin;C:\\Program Files\\LLVM\\bin;C:\\Program Files\\Emacs\\x86_64\\bin;C:\\Program Files\\dotnet\\;C:\\Users\\ibjal\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup;W:\\Handmade\\misc;C:\\Program Files\\raddbg;C:\\Program Files\\Zed;C:\\Program Files\\Emacs\\emacs-29.4\\bin;C:\\Program Files\\Sublime Text;C:\\Program Files\\4coder;C:\\Users\\ibjal\\.cargo\\bin;C:\\Users\\ibjal\\AppData\\Local\\Microsoft\\WindowsApps;C:\\Program Files\\Neovim\\bin;D:\\Godot;C:\\Users\\ibjal\\AppData\\Local\\Programs\\Microsoft VS Code\\bin;C:\\Users\\ibjal\\.dotnet\\tools;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\bin;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\Ninja;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\VC\\Linux\\bin\\ConnectionManagerExe;C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\vcpkg;C:\\Program Files\\Neovim\\bin;C:\\Program Files\\Neovim\\bin",
+        "Env Var: TMP": "C:\\Users\\ibjal\\AppData\\Local\\Temp",
+        "File Input #00": "W:\\Clover\\data\\deps\\ImGUI\\ImGuiDEBUG.lib",
+        "File Input #01": "W:\\Clover\\data\\deps\\MiniAudio\\miniaudio.lib",
+        "File Input #02": "W:\\Clover\\build\\Clover.obj",
+        "File Input #03": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\lib\\x64\\LIBCMT.lib",
+        "File Input #04": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\lib\\x64\\OLDNAMES.lib",
+        "File Input #05": "C:\\Program Files (x86)\\Windows Kits\\10\\lib\\10.0.22621.0\\um\\x64\\user32.lib",
+        "File Input #06": "C:\\Program Files (x86)\\Windows Kits\\10\\lib\\10.0.22621.0\\um\\x64\\kernel32.lib",
+        "File Input #07": "C:\\Program Files (x86)\\Windows Kits\\10\\lib\\10.0.22621.0\\um\\x64\\shell32.lib",
+        "File Input #08": "C:\\Program Files (x86)\\Windows Kits\\10\\lib\\10.0.22621.0\\um\\x64\\imm32.lib",
+        "File Input #09": "C:\\Program Files (x86)\\Windows Kits\\10\\lib\\10.0.22621.0\\um\\x64\\uuid.lib",
+        "File Input #10": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\lib\\x64\\libvcruntime.lib",
+        "File Input #11": "C:\\Program Files (x86)\\Windows Kits\\10\\lib\\10.0.22621.0\\ucrt\\x64\\libucrt.lib",
+        "File Output #0": "W:\\Clover\\build\\Clover.lib",
+        "File Output #1": "W:\\Clover\\build\\Clover.exp",
+        "File Output #2": "W:\\Clover\\build\\CloverGame.dll",
+        "Tool Path": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\bin\\HostX64\\x64\\link.exe",
+        "Tool Version": "14.40.33811.0",
+        "Working Directory": "W:\\Clover\\build"
+      },
+      "name": "Link Invocation 2",
+      "ph": "B",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112217533
+    },
+    {
+      "dur": 69733,
+      "name": "Pass1",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112228846
+    },
+    {
+      "dur": 73382,
+      "name": "Pass2",
+      "ph": "X",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112298581
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112380828
+    },
+    {
+      "ph": "E",
+      "pid": 0,
+      "tid": 0,
+      "ts": 740112399445
+    }
+  ]
+}

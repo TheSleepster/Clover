@@ -10,7 +10,8 @@ layout(std430, binding = 0) buffer PointLightSBO
     point_light PointLights[];  
 };
 
-uniform int PointLightCount;
+uniform int   PointLightCount;
+uniform float uBrightness;
 
 // IN FROM VERTEX SHADER
 in vec3   vFragPos;
@@ -20,29 +21,18 @@ in vec4   vMatColor;
 in real32 vTextureIndex;
 
 // TEXTURES
-layout(binding = 1) uniform sampler2D GameAtlas;
-layout(binding = 2) uniform sampler2D FontAtlas;
+layout(binding = 0) uniform sampler2D GameAtlas;
+layout(binding = 1) uniform sampler2D FontAtlas;
 
 // OUTPUT COLOR
 out vec4 FragColor;
 
 void main()
 {
-    // NULL TEXTURE, TEXTURELESS QUADS
+    // GAME TEXTURES
     if(int(vTextureIndex) == 0)
     {
-        vec4 TextureColor = vMatColor;    
-        if(TextureColor.a <= 0.1)
-        {
-            discard;
-        }
-        FragColor = TextureColor;
-    }
-
-    // GAME TEXTURES
-    if(int(vTextureIndex) == 1)
-    {
-        float AmbientStrength = 0.2;
+        float AmbientStrength = 1.0;
         vec3  GlobalAmbientColor = vec3(0.8);
         vec3  AmbientLight = AmbientStrength * GlobalAmbientColor;
         vec3  Diffuse = vec3(0.0);
@@ -70,12 +60,20 @@ void main()
         {
             discard;
         }
+        
         vec4 ObjectColor = vec4(TextureColor.rgb * vMatColor.rgb, vMatColor.a);
-        FragColor = vec4((TotalLighting), 1.0) * ObjectColor;
+        if(TotalLighting == vec3(0.0))
+        {
+            FragColor = vec4((AmbientLight * ObjectColor.rgb) * uBrightness, vMatColor.a);
+        }
+        else
+        {
+            FragColor = vec4((TotalLighting), 1.0) * ObjectColor;
+        }
     }
 
     // FONT RENDERERING
-    if(int(vTextureIndex) == 2)
+    if(int(vTextureIndex) == 1)
     {
         // NOTE(Sleepster): 512 is the size of the game texture, if you change the size of the game of the texture, change this to that size 
         real32 NormalizedTextureUVX = vTextureUVs.x / 512;

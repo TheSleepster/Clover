@@ -5,27 +5,31 @@
 #include "/../code/shader/CommonShader.glh"
 #line 6
 
+uniform float uBrightness;
+
 in vec2 vTextureUVs;
 in vec3 vFragPos;
 in vec3 vNormals;
 in vec4 vMatColor;
 
-layout(location = 0) out vec3 gPosition;
+layout(location = 0) out vec4 gColor;
 layout(location = 1) out vec3 gNormals;
-layout(location = 2) out vec4 gAlbedoSpec;
 
 layout(binding = 0) uniform sampler2D GameAtlas;
+layout(binding = 1) uniform sampler2D NormalAtlas;
 
 void main()
 {
-    gPosition   = vFragPos;
-    gNormals    = normalize(vNormals);
-
-    vec4 TexelColor = texelFetch(GameAtlas, ivec2(TextureUVs), 0);
+    vec4 TexelColor = texelFetch(GameAtlas, ivec2(vTextureUVs), 0);
     if(TexelColor.a == 0.0)
     {
         discard;    
     }
-    gAlbedoSpec.rgb = TexelColor.rgb * vMatColor.rgb;
-    gAlbedoSpec.a   = 1.0;
+
+    gColor.rgb  = TexelColor.rgb * vMatColor.rgb;
+    gColor.rgb *= uBrightness;
+    gColor.a    = 1.0;
+
+    vec3 NormalizedNormals = normalize(vNormals);
+    gNormals = NormalizedNormals * 0.5 + 0.5;
 }

@@ -1358,6 +1358,15 @@ static inline mat3 mat3Create(void)
     return Result;
 }
 
+static inline mat3 mat3FromMat4(mat4 Transform)
+{
+    return mat3{
+        Transform.Elements[0][0], Transform.Elements[0][1], Transform.Elements[0][2],
+        Transform.Elements[1][0], Transform.Elements[1][1], Transform.Elements[1][2],
+        Transform.Elements[2][0], Transform.Elements[2][1], Transform.Elements[2][2]
+    };
+}
+
 static inline mat3 mat3CreateD(float Diagonal)
 {
     
@@ -1498,7 +1507,7 @@ static inline float mat3Determinate(mat3 Matrix)
     return v3Dot(Cross.Columns[2], Matrix.Columns[2]);
 }
 
-static inline mat3 mat3InvDeterminate(mat3 Matrix) 
+static inline mat3 mat3Inverse(mat3 Matrix) 
 {
     
     mat3 Cross;
@@ -2636,7 +2645,7 @@ static inline mat2 Inverse(mat2 Matrix)
 
 static inline mat3 Inverse(mat3 Matrix)
 {
-    return mat3InvDeterminate(Matrix);
+    return mat3Inverse(Matrix);
 }
 
 static inline mat4 Inverse(mat4 Matrix)

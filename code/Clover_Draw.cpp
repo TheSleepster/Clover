@@ -141,11 +141,13 @@ DrawQuadXForm(gl_render_data *RenderData, quad *Quad, mat4 *Transform, bool IsFo
     Quad->Elements[3].Position = mat4Transform(*Transform, Quad->Elements[3].Position);
 
     vec3 Normals = {0, 0, 1};
+    mat3 NormalMatrix = mat3Transpose(mat3Inverse(mat3FromMat4(*Transform)));
+    vec3 ComputedNormals = mat3Transform(NormalMatrix, Normals);
 
-    Quad->TopLeft.VertexNormals     = mat4Transform(*Transform, v3Expand(Normals, 1.0)).XYZ; 
-    Quad->TopRight.VertexNormals    = mat4Transform(*Transform, v3Expand(Normals, 1.0)).XYZ;
-    Quad->BottomLeft.VertexNormals  = mat4Transform(*Transform, v3Expand(Normals, 1.0)).XYZ;
-    Quad->BottomRight.VertexNormals = mat4Transform(*Transform, v3Expand(Normals, 1.0)).XYZ;
+    Quad->TopLeft.VertexNormals     = ComputedNormals; 
+    Quad->TopRight.VertexNormals    = ComputedNormals;
+    Quad->BottomLeft.VertexNormals  = ComputedNormals;
+    Quad->BottomRight.VertexNormals = ComputedNormals;
     
     vertex **VertexBufferptr;
     uint32  *ElementCounter;
@@ -329,14 +331,14 @@ DrawUIQuadTextured(gl_render_data *RenderData,
 internal quad*
 DrawQuad(gl_render_data *RenderData, vec2 Position, vec2 Size, real32 Rotation, vec4 Color, bool IsFont)
 {
-    quad Quad = CreateDrawQuad(RenderData, Position, Size, ivec2{16, 16}, ivec2{0, 0}, Rotation, Color, 1);
+    quad Quad = CreateDrawQuad(RenderData, Position, Size, ivec2{16, 16}, ivec2{0, 0}, Rotation, Color, 0);
     return(DrawQuadProjected(RenderData, &Quad, IsFont));
 }
 
 internal quad*
 DrawUIQuad(gl_render_data *RenderData, vec2 Position, vec2 Size, real32 Rotation, vec4 Color, bool IsFont)
 {
-    quad Quad = CreateDrawQuad(RenderData, Position, Size, ivec2{16, 16}, ivec2{0, 0}, Rotation, Color, 1);
+    quad Quad = CreateDrawQuad(RenderData, Position, Size, ivec2{16, 16}, ivec2{0, 0}, Rotation, Color, 0);
     return(DrawUIQuadProjected(RenderData, &Quad, IsFont));
 }
 
@@ -370,7 +372,7 @@ internal quad *
 DrawEntity(gl_render_data *RenderData, game_state *State, entity *Entity, vec2 Position, vec4 Color)
 {
     static_sprite_data SpriteData = State->GameData.Sprites[Entity->Sprite];
-    return(DrawSprite(RenderData, SpriteData, Entity->Position, Entity->Size, Color, Entity->Rotation, 1));
+    return(DrawSprite(RenderData, SpriteData, Entity->Position, Entity->Size, Color, Entity->Rotation, 0));
 }
 
 
@@ -402,7 +404,7 @@ DrawUIEntity(gl_render_data *RenderData,
              vec4            Color)
 {
     static_sprite_data SpriteData = State->GameData.Sprites[Entity->Sprite];
-    return(DrawUISprite(RenderData, SpriteData, Entity->Position, v2Cast(SpriteData.SpriteSize), Color, Entity->Rotation, 1));
+    return(DrawUISprite(RenderData, SpriteData, Entity->Position, v2Cast(SpriteData.SpriteSize), Color, Entity->Rotation, 0));
 }
 
 internal void
@@ -433,7 +435,7 @@ DrawUISpriteXForm(gl_render_data    *RenderData,
                                Sprite.AtlasOffset, 
                                Rotation, 
                                Color, 
-                               1); 
+                               0); 
     return(DrawUIQuadXForm(RenderData, &Quad, &XForm, 0));
 }
 
@@ -451,7 +453,7 @@ DrawSpriteXForm(gl_render_data    *RenderData,
                                Sprite.AtlasOffset, 
                                Rotation, 
                                Color, 
-                               1); 
+                               0); 
     return(DrawQuadXForm(RenderData, &Quad, &XForm, 0));
 }
 
@@ -484,7 +486,7 @@ DrawGameText(gl_render_data *RenderData,
         ivec2 AtlasOffset   = Glyph.GlyphUVs;
         ivec2 GlyphSize     = Glyph.GlyphSize;
         
-        DrawQuadTextured(RenderData, Position, RenderScale, AtlasOffset, GlyphSize, 0.0f, Color, 2, 1);
+        DrawQuadTextured(RenderData, Position, RenderScale, AtlasOffset, GlyphSize, 0.0f, Color, 1, 1);
         Position.X += Glyph.GlyphAdvance.X * TrueScale;
     }
 }
@@ -518,7 +520,7 @@ DrawUIText(gl_render_data *RenderData,
         ivec2 AtlasOffset   = Glyph.GlyphUVs;
         ivec2 GlyphSize     = Glyph.GlyphSize;
         
-        DrawUIQuadTextured(RenderData, Position, RenderScale, AtlasOffset, GlyphSize, 0.0f, Color, 2, 1);
+        DrawUIQuadTextured(RenderData, Position, RenderScale, AtlasOffset, GlyphSize, 0.0f, Color, 1, 1);
         Position.X += Glyph.GlyphAdvance.X * TrueScale;
     }
 }

@@ -297,7 +297,7 @@ CloverUIDrawWidgets(gl_render_data *RenderData, clover_ui_context *Context)
                                                      Widget->Sprite.AtlasOffset,
                                                      0,
                                                      Widget->DrawColor,
-                                                     1);
+                                                     0);
                     DrawUIQuadXForm(RenderData, &WidgetQuad, &Widget->XForm, 0);
                 }break;
                 case UI_TextBox:
@@ -309,7 +309,7 @@ CloverUIDrawWidgets(gl_render_data *RenderData, clover_ui_context *Context)
                                                      Widget->Sprite.AtlasOffset,
                                                      0,
                                                      Widget->DrawColor,
-                                                     1);
+                                                     0);
                     DrawUIQuadXForm(RenderData, &WidgetQuad, &Widget->XForm, 0);
                     DrawUIText(RenderData, Widget->ElementText, Widget->TextOrigin, Widget->FontScale, Context->ActiveFontIndex, Widget->TextDrawColor);
                 }break;
@@ -322,7 +322,7 @@ CloverUIDrawWidgets(gl_render_data *RenderData, clover_ui_context *Context)
                                                      Widget->Sprite.AtlasOffset,
                                                      0,
                                                      Widget->DrawColor,
-                                                     1);
+                                                     0);
                     DrawUIQuadXForm(RenderData, &WidgetQuad, &Widget->XForm, 0);
                 }break;
                 case UI_Text:

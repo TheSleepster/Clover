@@ -168,6 +168,7 @@ struct gl_render_data
     GLuint GameVBOID;
     GLuint GameEBOID;
     
+    // TODO(Sleepster): Font Buffer 
     GLuint GameUIVAOID;
     GLuint GameUIVBOID;
     GLuint GameUIEBOID;
@@ -192,7 +193,6 @@ struct gl_render_data
     // OTHER UNIFORMS
     GLuint PointLightCountUID;
     GLuint SpotLightCountUID;
-    GLuint gBufferScreensizeUID;
     
     // SHADERS
     shader BasicShader;
@@ -215,11 +215,16 @@ struct gl_render_data
 
 
     // RENDERING TEXTURES
-    GLuint gBuffer[3];
+    GLuint gBuffer[2];
+    GLuint gBufferTextures[2];
     GLuint LightmapID;
 
     // RENDER BUFFERS
     GLuint gBufferDepthRBID;
+
+    // POST PROCESSING UNIFORMS
+    GLuint gBufferBrightnessUID;
+    GLuint  BasicShaderBrightnessUID;
 
     void(*CloverRender)(gl_render_data *RenderData);
 

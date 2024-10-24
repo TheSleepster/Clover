@@ -23,7 +23,7 @@ out float vTextureIndex;
 void main()
 {
     vTextureUVs   = TextureCoords;
-    vNormals      = (ViewMatrix * vec4(VertexNormals, 1.0)).xyz; 
+    vNormals      = VertexNormals; 
     vMatColor     = MatColor;
     vTextureIndex = TextureIndex;
 

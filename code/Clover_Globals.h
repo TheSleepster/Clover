@@ -43,6 +43,11 @@ constexpr uint32 TRUE_MAX_VERTICES = MAX_VERTICES * 2;
 constexpr uint32 MAX_POINT_LIGHTS = 1000;
 constexpr uint32 MAX_SPOT_LIGHTS  = 1000;
 
+
+// POST PROCESSING VALUES
+global_variable real32 RenderBrightness = 1.0f;
+
+
 // GAME GLOBALS
 constexpr uint32 MAX_SOUNDS      = 128;
 constexpr uint32 MAX_TRACKS      = 12;

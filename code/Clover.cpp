@@ -2063,7 +2063,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                                    SelectionBoxDrawSize, 
                                    WHITE, 
                                    0, 
-                                   1);
+                                   0);
                     }
                     DrawEntity(RenderData, State, Temp, Temp->Position, WHITE);
                 }break;

@@ -1,0 +1,200 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "W:\\Clover\\build\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|W:\\Clover\\code\\Clover_Renderer.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|W:\\Clover\\code\\Win32_Clover.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|W:\\Clover\\data\\deps\\ImGUI\\imgui_impl_opengl3.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ibjal\\Documents\\C\u002B\u002BStuff\\Clover\\code\\Clover.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|W:\\Clover\\code\\util\\FileIO.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|W:\\Clover\\code\\Clover_Draw.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|W:\\Clover\\code\\Clover_Renderer.h||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|W:\\Clover\\code\\Clover_Audio.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ibjal\\Documents\\C\u002B\u002BStuff\\Clover\\code\\Win32_Clover.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|W:\\Clover\\code\\Clover.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|W:\\Clover\\code\\Clover_UI.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ibjal\\Documents\\C\u002B\u002BStuff\\Clover\\code\\Clover_UI.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Clover_Renderer.cpp",
+              "DocumentMoniker": "W:\\Clover\\code\\Clover_Renderer.cpp",
+              "RelativeDocumentMoniker": "..\\code\\Clover_Renderer.cpp",
+              "ToolTip": "W:\\Clover\\code\\Clover_Renderer.cpp",
+              "RelativeToolTip": "..\\code\\Clover_Renderer.cpp",
+              "ViewState": "AgIAAPQBAAAAAAAAAAAYwBkCAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-10-12T11:57:16.186Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "imgui_impl_opengl3.cpp",
+              "DocumentMoniker": "W:\\Clover\\data\\deps\\ImGUI\\imgui_impl_opengl3.cpp",
+              "RelativeDocumentMoniker": "..\\data\\deps\\ImGUI\\imgui_impl_opengl3.cpp",
+              "ToolTip": "W:\\Clover\\data\\deps\\ImGUI\\imgui_impl_opengl3.cpp",
+              "RelativeToolTip": "..\\data\\deps\\ImGUI\\imgui_impl_opengl3.cpp",
+              "ViewState": "AgIAANABAAAAAAAAAAAcwPUBAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-10-12T02:34:24.44Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "FileIO.h",
+              "DocumentMoniker": "W:\\Clover\\code\\util\\FileIO.h",
+              "RelativeDocumentMoniker": "..\\code\\util\\FileIO.h",
+              "ToolTip": "W:\\Clover\\code\\util\\FileIO.h",
+              "RelativeToolTip": "..\\code\\util\\FileIO.h",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABgAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-10-08T17:18:45.529Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "Clover_UI.cpp",
+              "DocumentMoniker": "C:\\Users\\ibjal\\Documents\\C\u002B\u002BStuff\\Clover\\code\\Clover_UI.cpp",
+              "ToolTip": "C:\\Users\\ibjal\\Documents\\C\u002B\u002BStuff\\Clover\\code\\Clover_UI.cpp",
+              "ViewState": "AgIAAAwAAAAAAAAAAAAhwDIAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-10-02T22:57:56.784Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "Clover.cpp",
+              "DocumentMoniker": "C:\\Users\\ibjal\\Documents\\C\u002B\u002BStuff\\Clover\\code\\Clover.cpp",
+              "ToolTip": "C:\\Users\\ibjal\\Documents\\C\u002B\u002BStuff\\Clover\\code\\Clover.cpp",
+              "ViewState": "AgIAANoHAAAAAAAAAAAAAN0HAAARAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-10-01T00:08:38.522Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Win32_Clover.cpp",
+              "DocumentMoniker": "W:\\Clover\\code\\Win32_Clover.cpp",
+              "RelativeDocumentMoniker": "..\\code\\Win32_Clover.cpp",
+              "ToolTip": "W:\\Clover\\code\\Win32_Clover.cpp",
+              "RelativeToolTip": "..\\code\\Win32_Clover.cpp",
+              "ViewState": "AgIAAO8BAAAAAAAAAAAMwBQCAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-09-28T18:47:00.283Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "Clover_UI.cpp",
+              "DocumentMoniker": "W:\\Clover\\code\\Clover_UI.cpp",
+              "RelativeDocumentMoniker": "..\\code\\Clover_UI.cpp",
+              "ToolTip": "W:\\Clover\\code\\Clover_UI.cpp",
+              "RelativeToolTip": "..\\code\\Clover_UI.cpp",
+              "ViewState": "AgIAABEBAAAAAAAAAAAuwEkBAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-09-26T06:13:25.949Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "Clover_Draw.cpp",
+              "DocumentMoniker": "W:\\Clover\\code\\Clover_Draw.cpp",
+              "RelativeDocumentMoniker": "..\\code\\Clover_Draw.cpp",
+              "ToolTip": "W:\\Clover\\code\\Clover_Draw.cpp",
+              "RelativeToolTip": "..\\code\\Clover_Draw.cpp",
+              "ViewState": "AgIAAAQBAAAAAAAAAAAqwBgBAAA/AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-09-19T23:36:03.382Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "Clover.cpp",
+              "DocumentMoniker": "W:\\Clover\\code\\Clover.cpp",
+              "RelativeDocumentMoniker": "..\\code\\Clover.cpp",
+              "ToolTip": "W:\\Clover\\code\\Clover.cpp",
+              "RelativeToolTip": "..\\code\\Clover.cpp",
+              "ViewState": "AgIAANAFAAAAAAAAAAAuwPEFAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-09-12T01:46:12.637Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "Win32_Clover.cpp",
+              "DocumentMoniker": "C:\\Users\\ibjal\\Documents\\C\u002B\u002BStuff\\Clover\\code\\Win32_Clover.cpp",
+              "ToolTip": "C:\\Users\\ibjal\\Documents\\C\u002B\u002BStuff\\Clover\\code\\Win32_Clover.cpp",
+              "ViewState": "AgIAAGEBAAAAAAAAAAAEwHsBAAAMAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-09-04T11:00:35.292Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "Clover_Audio.cpp",
+              "DocumentMoniker": "W:\\Clover\\code\\Clover_Audio.cpp",
+              "RelativeDocumentMoniker": "..\\code\\Clover_Audio.cpp",
+              "ToolTip": "W:\\Clover\\code\\Clover_Audio.cpp",
+              "RelativeToolTip": "..\\code\\Clover_Audio.cpp",
+              "ViewState": "AgIAADgAAAAAAAAAAAAuwHIAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-09-03T23:35:29.38Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "Clover_Renderer.h",
+              "DocumentMoniker": "W:\\Clover\\code\\Clover_Renderer.h",
+              "RelativeDocumentMoniker": "..\\code\\Clover_Renderer.h",
+              "ToolTip": "W:\\Clover\\code\\Clover_Renderer.h",
+              "RelativeToolTip": "..\\code\\Clover_Renderer.h",
+              "ViewState": "AgIAADkAAAAAAAAAAAArwDMAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-08-27T18:10:32.353Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
