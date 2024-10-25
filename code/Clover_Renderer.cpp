@@ -587,26 +587,28 @@ CloverRender(gl_render_data *RenderData)
     {
         {
             glBindFramebuffer(GL_FRAMEBUFFER, RenderData->gBuffer[0]);
-
-            glEnable(GL_FRAMEBUFFER_SRGB);
-            glDisable(0x809D); // Disabling multisampling
- 
             glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
+            glEnable(GL_DEPTH_TEST);
             glEnable(GL_BLEND);        
+            glEnable(GL_FRAMEBUFFER_SRGB);
+            glDisable(0x809D); // Disabling multisampling
+
             glBlendEquation(GL_FUNC_ADD);
             glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-                
-            glEnable(GL_DEPTH_TEST);
+
             glBindBuffer(GL_ARRAY_BUFFER, RenderData->GameVBOID);
             glBufferSubData(GL_ARRAY_BUFFER, 
                             0, 
                             (RenderData->DrawFrame.OpaqueQuadCount * 4) * sizeof(vertex), 
                             RenderData->DrawFrame.Vertices);
 
+            /* glBindBuffer(GL_SHADER_STORAGE_BUFFER, RenderData->PointLightSBOID); */
+            /* glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(point_light) * RenderData->DrawFrame.SpotLightCount, RenderData->DrawFrame.SpotLights); */
+            /* glUniform1i(RenderData->PointLightCountUID, RenderData->DrawFrame.SpotLightCount); */
+
             glUniformMatrix4fv(RenderData->gBufferProjectionMatrixUID, 1, GL_FALSE, &RenderData->GameCamera.ProjectionMatrix.Elements[0][0]);
             glUniformMatrix4fv(RenderData->gBufferViewMatrixUID, 1, GL_FALSE, &RenderData->GameCamera.ViewMatrix.Elements[0][0]);
-
             glUniform1f(RenderData->gBufferBrightnessUID, RenderBrightness);
 
             glActiveTexture(GL_TEXTURE0);

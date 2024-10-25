@@ -1981,12 +1981,12 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
     
     // TRANSPARENCY TEST
     {
-        /* mat4 Identity  = mat4Identity(1.0f); */
-        /* mat4 Translate = mat4Multiply(Identity, mat4Translate(vec3{10.0f, 10.0f, 0.0f})); */
-        /* mat4 Scale     = mat4Multiply(Identity, mat4MakeScale(vec3{100.0f, 100.0f, 1.0f})); */
+        mat4 Identity  = mat4Identity(1.0f);
+        mat4 Translate = mat4Multiply(Identity, mat4Translate(vec3{10.0f, 10.0f, 0.0f}));
+        mat4 Scale     = mat4Multiply(Identity, mat4MakeScale(vec3{100.0f, 100.0f, 1.0f}));
         
-        /* mat4 Total = Translate * Scale; */
-        /* DrawRectXForm(RenderData, Total, {16, 16}, 0, vec4{1.0f, 0.0f, 1.0f, 0.3f}); */
+        mat4 Total = Translate * Scale;
+        DrawRectXForm(RenderData, Total, {16, 16}, 0, vec4{1.0f, 0.0f, 1.0f, 0.3f});
     }
     
     

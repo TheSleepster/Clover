@@ -54,7 +54,6 @@
 #include "Clover_Renderer.cpp"
 #include "Clover_Input.cpp"
 
-
 // NOTE(Sleepster): ImGui WNDPROC. It uses this for input
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -500,7 +499,7 @@ WinMain(HINSTANCE hInstance,
 #endif
                 real64 NewTime     = GetLastTime();
                 CurrentTime = NewTime;
-                
+
                 Time.Delta = (real32)GetLastTime();
                 Time.Current = (real32)CurrentTime;
                 while(Accumulator >= SIMRATE)

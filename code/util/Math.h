@@ -1361,9 +1361,9 @@ static inline mat3 mat3Create(void)
 static inline mat3 mat3FromMat4(mat4 Transform)
 {
     return mat3{
-        Transform.Elements[0][0], Transform.Elements[0][1], Transform.Elements[0][2],
-        Transform.Elements[1][0], Transform.Elements[1][1], Transform.Elements[1][2],
-        Transform.Elements[2][0], Transform.Elements[2][1], Transform.Elements[2][2]
+        Transform.Elements[0][0], Transform.Elements[1][0], Transform.Elements[2][0],
+        Transform.Elements[0][1], Transform.Elements[1][1], Transform.Elements[2][1],
+        Transform.Elements[0][2], Transform.Elements[1][2], Transform.Elements[2][2]
     };
 }
 
