@@ -26,7 +26,7 @@ void main()
     vNormals      = (ViewMatrix * vec4(VertexNormals, 1.0)).xyz; 
     vMatColor     = MatColor;
     vTextureIndex = TextureIndex;
-    vFragPos = (ProjectionMatrix * ViewMatrix * vec4(VertexPos, 1.0f)).xyz;
 
+    vFragPos = (ProjectionMatrix * ViewMatrix * vec4(VertexPos, 1.0f)).xyz;
     gl_Position = ProjectionMatrix * ViewMatrix * vec4(VertexPos, 1.0f); 
 }

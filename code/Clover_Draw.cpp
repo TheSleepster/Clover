@@ -38,13 +38,15 @@ DrawImGui(game_state *State, gl_render_data *RenderData, time Time)
     {
         ImGui::SetCurrentContext(RenderData->CurrentImGuiContext);
         ImGui::Begin("Render Quad Color Picker");
+
+        ImGui::SeparatorText("ENGINE DEBUG INFO");
         ImGui::Text("Famerate: %i", Time.FPSCounter);
         ImGui::Text("FrameTime: %.02f", Time.MSPerFrame);
-        ImGui::Separator();
-        
-        ImGui::Text("Clear Color:");
-        ImGui::ColorPicker4("ClearColor", &RenderData->ClearColor.R, ImGuiColorEditFlags_PickerHueWheel);
-        ImGui::SameLine();
+
+        ImGui::SeparatorText("GAME DEBUG INFO");
+        ImGui::Text("Entity Count: %i", State->World.EntityCounter);
+        ImGui::Text("Quad Count: %i", RenderData->LastFrameQuadCount);
+
         ImGui::End();
     }
 }
@@ -140,14 +142,16 @@ DrawQuadXForm(gl_render_data *RenderData, quad *Quad, mat4 *Transform, bool IsFo
     Quad->Elements[2].Position = mat4Transform(*Transform, Quad->Elements[2].Position);
     Quad->Elements[3].Position = mat4Transform(*Transform, Quad->Elements[3].Position);
 
-    vec3 Normals = {0, 0, 1};
-    mat3 NormalMatrix = mat3Transpose(mat3Inverse(mat3FromMat4(*Transform)));
-    vec3 ComputedNormals = mat3Transform(NormalMatrix, Normals);
+    mat3 NormalMatrix = mat3FromMat4(*Transform);
+    Quad->Elements[0].VertexNormals = vec3{-0.5f,  0.5f, 1.0f};
+    Quad->Elements[1].VertexNormals = vec3{ 0.5f,  0.5f, 1.0f};
+    Quad->Elements[2].VertexNormals = vec3{ 0.5f, -0.5f, 1.0f};
+    Quad->Elements[3].VertexNormals = vec3{-0.5f, -0.5f, 1.0f};
 
-    Quad->TopLeft.VertexNormals     = ComputedNormals; 
-    Quad->TopRight.VertexNormals    = ComputedNormals;
-    Quad->BottomLeft.VertexNormals  = ComputedNormals;
-    Quad->BottomRight.VertexNormals = ComputedNormals;
+    Quad->TopLeft.VertexNormals     = mat3Transform(NormalMatrix, Quad->Elements[0].VertexNormals); 
+    Quad->TopRight.VertexNormals    = mat3Transform(NormalMatrix, Quad->Elements[1].VertexNormals);
+    Quad->BottomLeft.VertexNormals  = mat3Transform(NormalMatrix, Quad->Elements[2].VertexNormals);
+    Quad->BottomRight.VertexNormals = mat3Transform(NormalMatrix, Quad->Elements[3].VertexNormals);
     
     vertex **VertexBufferptr;
     uint32  *ElementCounter;
@@ -536,8 +540,6 @@ CreatePointLight(gl_render_data   *RenderData,
     point_light *Light    = &RenderData->DrawFrame.PointLights[RenderData->DrawFrame.PointLightCount++];
     
     mat4 Translation  = mat4Identity(1.0);
-         Translation  = mat4Multiply(Translation, RenderData->GameCamera.ProjectionMatrix);
-         Translation  = mat4Multiply(Translation, RenderData->GameCamera.ViewMatrix);
          Translation  = mat4Translation(Translation, v2Expand(Position, 0.0));
     vec3 TruePosition = Translation.Columns[3].XYZ;
     

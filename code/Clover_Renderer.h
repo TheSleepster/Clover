@@ -215,21 +215,24 @@ struct gl_render_data
 
 
     // RENDERING TEXTURES
-    GLuint gBuffer[2];
-    GLuint gBufferTextures[2];
+    GLuint gBuffer;
+    GLuint gBufferTextures[3];
     GLuint LightmapID;
 
     // RENDER BUFFERS
     GLuint gBufferDepthRBID;
 
     // POST PROCESSING UNIFORMS
-    GLuint gBufferBrightnessUID;
+    GLuint  gBufferBrightnessUID;
     GLuint  BasicShaderBrightnessUID;
+    GLuint  LightingShaderUserBrightnessUID;
+    GLuint  LightingShaderWorldBrightnessUID;
 
     void(*CloverRender)(gl_render_data *RenderData);
 
     // IMGUI STUFF
     ImGuiContext *CurrentImGuiContext;
+    uint32        LastFrameQuadCount;
     
     // DRAW FRAME DATA
     struct

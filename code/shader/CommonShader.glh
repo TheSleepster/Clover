@@ -74,4 +74,3 @@ struct alignas(16) spot_light
 };
 
 #endif // COMMONSHADER_H
-

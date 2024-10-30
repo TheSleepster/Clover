@@ -20,17 +20,18 @@ global_variable real64 DeltaCounter;
 
 
 // COLORS
-constexpr vec4 WHITE     = {1.0f, 1.0f, 1.0f, 1.0f};
-constexpr vec4 GRAY      = {0.1f, 0.1f, 0.1f, 1.0f};
-constexpr vec4 BLACK     = {0.0f, 0.0f, 0.0f, 1.0f};
-constexpr vec4 RED       = {1.0f, 0.0f, 0.0f, 1.0f};
-constexpr vec4 YELLOW    = {1.0f, 1.0f, 0.0f, 1.0f};
-constexpr vec4 ORANGE    = {1.0f, 0.2f, 0.0f, 1.0f};
-constexpr vec4 GREEN     = {0.0f, 1.0f, 0.0f, 1.0f};
-constexpr vec4 BLUE      = {0.0f, 0.0f, 1.0f, 1.0f};
-constexpr vec4 TEAL      = {0.1f, 0.6f, 1.0f, 1.0f};
-constexpr vec4 PURPLE    = {0.4f, 0.2f, 1.0f, 1.0f};
-constexpr vec4 DARK_GRAY = {0.05f, 0.05f, 0.05f, 1.0f};
+constexpr vec4 WHITE       = {1.0f, 1.0f, 1.0f, 1.0f};
+constexpr vec4 GRAY        = {0.1f, 0.1f, 0.1f, 1.0f};
+constexpr vec4 BLACK       = {0.0f, 0.0f, 0.0f, 1.0f};
+constexpr vec4 RED         = {1.0f, 0.0f, 0.0f, 1.0f};
+constexpr vec4 YELLOW      = {1.0f, 1.0f, 0.0f, 1.0f};
+constexpr vec4 ORANGE      = {1.0f, 0.2f, 0.0f, 1.0f};
+constexpr vec4 GREEN       = {0.0f, 1.0f, 0.0f, 1.0f};
+constexpr vec4 BLUE        = {0.0f, 0.0f, 1.0f, 1.0f};
+constexpr vec4 TEAL        = {0.1f, 0.6f, 1.0f, 1.0f};
+constexpr vec4 PURPLE      = {0.4f, 0.2f, 1.0f, 1.0f};
+constexpr vec4 DARK_GRAY   = {0.05f, 0.05f, 0.05f, 1.0f};
+constexpr vec4 DARKER_GRAY = {0.01f, 0.01f, 0.01f, 1.0f};
 
 
 // RENDERER STUFF
@@ -46,6 +47,7 @@ constexpr uint32 MAX_SPOT_LIGHTS  = 1000;
 
 // POST PROCESSING VALUES
 global_variable real32 RenderBrightness = 1.0f;
+global_variable real32 CurrentWorldBrightness = 0.2f;
 
 
 // GAME GLOBALS

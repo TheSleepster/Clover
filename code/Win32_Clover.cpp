@@ -1,3 +1,10 @@
+/* ========================================================================
+   $File: Win32_Clover.cpp $
+   $Date: August 27 2024 10:26 am $
+   $Revision: $
+   $Creator: Justin Lewis $
+   ======================================================================== */
+
 // NOTE(Sleepster): Freetype must come first due to the #define internal static inside of the intrinsics header
 #include "../data/deps/Freetype/include/ft2build.h"
 #include FT_FREETYPE_H

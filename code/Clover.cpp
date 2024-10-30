@@ -666,6 +666,7 @@ ResetGame(gl_render_data *RenderData, game_state *State, game_memory *Memory)
         entity *Temp = &State->World.Entities[i];
         DeleteEntity(Temp);
     }
+    State->World.EntityCounter = 0;
     
     for(uint32 i = 0; i < SPRITE_Count; i++)
     {
@@ -1981,12 +1982,12 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
     
     // TRANSPARENCY TEST
     {
-        mat4 Identity  = mat4Identity(1.0f);
-        mat4 Translate = mat4Multiply(Identity, mat4Translate(vec3{10.0f, 10.0f, 0.0f}));
-        mat4 Scale     = mat4Multiply(Identity, mat4MakeScale(vec3{100.0f, 100.0f, 1.0f}));
+        /* mat4 Identity  = mat4Identity(1.0f); */
+        /* mat4 Translate = mat4Multiply(Identity, mat4Translate(vec3{10.0f, 10.0f, 0.0f})); */
+        /* mat4 Scale     = mat4Multiply(Identity, mat4MakeScale(vec3{100.0f, 100.0f, 1.0f})); */
         
-        mat4 Total = Translate * Scale;
-        DrawRectXForm(RenderData, Total, {16, 16}, 0, vec4{1.0f, 0.0f, 1.0f, 0.3f});
+        /* mat4 Total = Translate * Scale; */
+        /* DrawRectXForm(RenderData, Total, {16, 16}, 0, vec4{1.0f, 0.0f, 1.0f, 0.3f}); */
     }
     
     
@@ -2087,14 +2088,20 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             {
                 real32 X = TileX * TILE_SIZE;
                 real32 Y = TileY * TILE_SIZE;
-                DrawQuad(RenderData, {X, Y - (TILE_SIZE)}, {TILE_SIZE, TILE_SIZE}, 0, DARK_GRAY, 0);
+                DrawQuadTextured(RenderData, {X, Y - (TILE_SIZE)}, vec2{16, 16}, ivec2{0, 0}, ivec2{16, 16}, 0, DARK_GRAY, 0, 0);
+            }
+            else
+            {
+                real32 X = TileX * TILE_SIZE;
+                real32 Y = TileY * TILE_SIZE;
+                DrawQuadTextured(RenderData, {X, Y - (TILE_SIZE)}, vec2{16, 16}, ivec2{0, 0}, ivec2{16, 16}, 0, DARKER_GRAY, 0, 0);
             }
         }
     }
 
-    attenuation_data TestLightData = {.Constant = 0.3, .Linear = 0.009, .Quadratic = 100};
-    CreatePointLight(RenderData, vec2{0, 0}, 1.0, 10, &TestLightData, WHITE);
-    CreatePointLight(RenderData, vec2{100, 0}, 2.0, 10, &TestLightData, RED);
+    attenuation_data TestLightData = {.Constant = 0.05, .Linear = 0.0009, .Quadratic = 0.001};
+    CreatePointLight(RenderData, vec2{ 80, 80}, 2.0, 100, &TestLightData, RED);
+    CreatePointLight(RenderData, vec2{-80, 80}, 2.0, 100, &TestLightData, WHITE);
 }
 
 extern

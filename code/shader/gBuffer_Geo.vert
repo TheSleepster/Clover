@@ -23,10 +23,10 @@ out float vTextureIndex;
 void main()
 {
     vTextureUVs   = TextureCoords;
-    vNormals      = mat3(ViewMatrix) * VertexNormals;
+    vNormals      = VertexNormals;
     vMatColor     = MatColor;
     vTextureIndex = TextureIndex;
 
     vFragPos    = VertexPos;
-    gl_Position = ProjectionMatrix * ViewMatrix * vec4(VertexPos, 1.0f); 
+    gl_Position = ProjectionMatrix * ViewMatrix * vec4(VertexPos, 1.0f);
 }

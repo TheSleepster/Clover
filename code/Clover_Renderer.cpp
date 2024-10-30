@@ -370,6 +370,8 @@ CloverReloadTexture(gl_render_data *RenderData, texture2d *TextureInfo, uint32 T
 internal void
 CloverResetRendererState(gl_render_data *RenderData)
 {
+    RenderData->LastFrameQuadCount = RenderData->DrawFrame.TotalQuadCount;
+
     RenderData->DrawFrame.VertexBufferptr            = &RenderData->DrawFrame.Vertices[0];
     RenderData->DrawFrame.TransparentVertexBufferptr = &RenderData->DrawFrame.Vertices[int32(MAX_VERTICES * 0.5f)];
     RenderData->DrawFrame.OpaqueQuadCount = 0;
@@ -490,10 +492,10 @@ CloverSetupRenderer(memory_arena *Memory, gl_render_data *RenderData)
 
     // GBUFFER FRAMEBUFFER
     {
-        glCreateFramebuffers(2, RenderData->gBuffer); 
-        glBindFramebuffer(GL_FRAMEBUFFER, RenderData->gBuffer[0]);
+        glCreateFramebuffers(1, &RenderData->gBuffer); 
+        glBindFramebuffer(GL_FRAMEBUFFER, RenderData->gBuffer);
 
-        glGenTextures(2, RenderData->gBufferTextures);
+        glGenTextures(3, RenderData->gBufferTextures);
         glBindTexture(GL_TEXTURE_2D, RenderData->gBufferTextures[0]);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB_ALPHA, SizeData.Width, SizeData.Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -504,11 +506,17 @@ CloverSetupRenderer(memory_arena *Memory, gl_render_data *RenderData)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
+        glBindTexture(GL_TEXTURE_2D, RenderData->gBufferTextures[2]);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, SizeData.Width, SizeData.Height, 0, GL_RGB, GL_FLOAT, 0);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, RenderData->gBufferTextures[0], 0);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, RenderData->gBufferTextures[1], 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, RenderData->gBufferTextures[2], 0);
 
-        GLenum ColorAttachments[3] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
-        glDrawBuffers(2, ColorAttachments);
+        GLenum ColorAttachments[3] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2};
+        glDrawBuffers(3, ColorAttachments);
 
         glGenRenderbuffers(1, &RenderData->gBufferDepthRBID);
         glBindRenderbuffer(GL_RENDERBUFFER, RenderData->gBufferDepthRBID);
@@ -519,9 +527,6 @@ CloverSetupRenderer(memory_arena *Memory, gl_render_data *RenderData)
         {
             Check(0, "Framebuffer Failure\n");
         }
-
-        glBindTexture(GL_TEXTURE_2D, 0);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
     // TEXTURE/FONT LOADING
@@ -542,23 +547,27 @@ CloverSetupRenderer(memory_arena *Memory, gl_render_data *RenderData)
             CloverCreateShader(Memory, STR("../code/shader/Basic.vert"), STR("../code/shader/Basic.frag"));
         RenderData->gBufferShader = 
             CloverCreateShader(Memory, STR("../code/shader/gBuffer_Geo.vert"), STR("../code/shader/gBuffer_Geo.frag"));
+        RenderData->LightingShader = 
+            CloverCreateShader(Memory, STR("../code/shader/gBuffer_lighting.vert"), STR("../code/shader/gBuffer_lighting.frag"));
     }
 
     // SHADER UNIFORM / STORAGE BUFFER SETUP
     {
-        RenderData->GameCamera.ViewMatrix   = mat4Identity(1.0f);
-        RenderData->GameUICamera.ViewMatrix = mat4Identity(1.0f);
+        RenderData->GameCamera.ViewMatrix            = mat4Identity(1.0f);
+        RenderData->GameUICamera.ViewMatrix          = mat4Identity(1.0f);
 
-        RenderData->gBufferProjectionMatrixUID   = glGetUniformLocation(RenderData->gBufferShader.ShaderID,  "ProjectionMatrix");
-        RenderData->gBufferViewMatrixUID         = glGetUniformLocation(RenderData->gBufferShader.ShaderID,  "ViewMatrix");
-        RenderData->gBufferBrightnessUID         = glGetUniformLocation(RenderData->gBufferShader.ShaderID,  "uBrightness");
+        RenderData->gBufferProjectionMatrixUID       = glGetUniformLocation(RenderData->gBufferShader.ShaderID,  "ProjectionMatrix");
+        RenderData->gBufferViewMatrixUID             = glGetUniformLocation(RenderData->gBufferShader.ShaderID,  "ViewMatrix");
+        RenderData->gBufferBrightnessUID             = glGetUniformLocation(RenderData->gBufferShader.ShaderID,  "uBrightness");
 
-        RenderData->ProjectionMatrixUID          = glGetUniformLocation(RenderData->BasicShader.ShaderID,    "ProjectionMatrix");
-        RenderData->ViewMatrixUID                = glGetUniformLocation(RenderData->BasicShader.ShaderID,    "ViewMatrix");
-        RenderData->BasicShaderBrightnessUID     = glGetUniformLocation(RenderData->BasicShader.ShaderID,    "uBrightness");
+        RenderData->ProjectionMatrixUID              = glGetUniformLocation(RenderData->BasicShader.ShaderID,    "ProjectionMatrix");
+        RenderData->ViewMatrixUID                    = glGetUniformLocation(RenderData->BasicShader.ShaderID,    "ViewMatrix");
+        RenderData->BasicShaderBrightnessUID         = glGetUniformLocation(RenderData->BasicShader.ShaderID,    "uBrightness");
  
-        RenderData->PointLightSBOID              = glGetUniformLocation(RenderData->BasicShader.ShaderID,    "PointLightSBO");
-        RenderData->PointLightCountUID           = glGetUniformLocation(RenderData->BasicShader.ShaderID,    "PointLightCount");
+        RenderData->PointLightSBOID                  = glGetUniformLocation(RenderData->LightingShader.ShaderID, "gBufferPointLightSBO");
+        RenderData->PointLightCountUID               = glGetUniformLocation(RenderData->LightingShader.ShaderID, "uPointLightCount");
+        RenderData->LightingShaderUserBrightnessUID  = glGetUniformLocation(RenderData->LightingShader.ShaderID, "uBrightnessFactor");
+        RenderData->LightingShaderWorldBrightnessUID = glGetUniformLocation(RenderData->LightingShader.ShaderID, "uWorldBrightness");
 
         // NOTE(Sleepster): Point Light Shader Buffer
         uint64 MaxBufferSize = sizeof(struct point_light) * MAX_POINT_LIGHTS;
@@ -583,29 +592,24 @@ CloverRender(gl_render_data *RenderData)
     // NOTE(Sleepster): Figure out this offset  
     // OPAQUE GAME OBJECT RENDERING PASS
     glUseProgram(RenderData->gBufferShader.ShaderID);
+    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
     if(RenderData->DrawFrame.OpaqueQuadCount > 0)
     {
+        // GBUFFER RENDERING
         {
-            glBindFramebuffer(GL_FRAMEBUFFER, RenderData->gBuffer[0]);
+            glBindFramebuffer(GL_FRAMEBUFFER, RenderData->gBuffer);
             glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
             glEnable(GL_DEPTH_TEST);
-            glEnable(GL_BLEND);        
             glEnable(GL_FRAMEBUFFER_SRGB);
+            glDisable(GL_BLEND);        
             glDisable(0x809D); // Disabling multisampling
-
-            glBlendEquation(GL_FUNC_ADD);
-            glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
             glBindBuffer(GL_ARRAY_BUFFER, RenderData->GameVBOID);
             glBufferSubData(GL_ARRAY_BUFFER, 
                             0, 
                             (RenderData->DrawFrame.OpaqueQuadCount * 4) * sizeof(vertex), 
                             RenderData->DrawFrame.Vertices);
-
-            /* glBindBuffer(GL_SHADER_STORAGE_BUFFER, RenderData->PointLightSBOID); */
-            /* glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(point_light) * RenderData->DrawFrame.SpotLightCount, RenderData->DrawFrame.SpotLights); */
-            /* glUniform1i(RenderData->PointLightCountUID, RenderData->DrawFrame.SpotLightCount); */
 
             glUniformMatrix4fv(RenderData->gBufferProjectionMatrixUID, 1, GL_FALSE, &RenderData->GameCamera.ProjectionMatrix.Elements[0][0]);
             glUniformMatrix4fv(RenderData->gBufferViewMatrixUID, 1, GL_FALSE, &RenderData->GameCamera.ViewMatrix.Elements[0][0]);
@@ -623,15 +627,52 @@ CloverRender(gl_render_data *RenderData)
                         GL_UNSIGNED_INT, 
                         0); 
         }
+
+        // DEFERRED RENDERER LIGHTING
+        {
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+            glDisable(GL_DEPTH_TEST);
+            glEnable(GL_FRAMEBUFFER_SRGB);
+
+            glEnable(GL_BLEND);        
+            glBlendEquation(GL_FUNC_ADD);
+            glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+            glDisable(0x809D); // Disabling multisampling
+            glUseProgram(RenderData->LightingShader.ShaderID);
+
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, RenderData->gBufferTextures[0]);
+
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, RenderData->gBufferTextures[1]);
+
+            glActiveTexture(GL_TEXTURE2);
+            glBindTexture(GL_TEXTURE_2D, RenderData->gBufferTextures[2]);
+
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, RenderData->PointLightSBOID);
+            glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(point_light) * RenderData->DrawFrame.PointLightCount, RenderData->DrawFrame.PointLights);
+
+            glUniform1i(RenderData->PointLightCountUID, RenderData->DrawFrame.PointLightCount);
+            glUniform1f(RenderData->LightingShaderUserBrightnessUID, RenderBrightness);
+            glUniform1f(RenderData->LightingShaderWorldBrightnessUID, CurrentWorldBrightness);
+
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, RenderData->gBuffer);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+        glBlitFramebuffer(0, 0, SizeData.Width, SizeData.Height, 0, 0, SizeData.Width, SizeData.Height, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
-    
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, RenderData->gBuffer[0]);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-    glBlitFramebuffer(0, 0, SizeData.Width, SizeData.Height, 0, 0, SizeData.Width, SizeData.Height, GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT, GL_NEAREST);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    /* glBindFramebuffer(GL_READ_FRAMEBUFFER, RenderData->gBuffer[0]); */
+    /* glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); */
+    /* glBlitFramebuffer(0, 0, SizeData.Width, SizeData.Height, 0, 0, SizeData.Width, SizeData.Height, GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT, GL_NEAREST); */
+    /* glBindFramebuffer(GL_FRAMEBUFFER, 0); */
 
     glUseProgram(RenderData->BasicShader.ShaderID);
-
     if(RenderData->DrawFrame.TransparentQuadCount > 0)
     {
         GLintptr BufferOffset   =  (RenderData->DrawFrame.OpaqueQuadCount * 4) * sizeof(vertex);
