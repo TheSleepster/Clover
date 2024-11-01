@@ -9,6 +9,8 @@
 #include "../data/deps/Freetype/include/ft2build.h"
 #include FT_FREETYPE_H
 
+#include <SDL3/SDL.h>
+
 // INTRINSICS
 #include "Intrinsics.h"
 
@@ -55,11 +57,13 @@
 #include "Clover_Renderer.h"
 #include "Clover_Input.h"
 #include "Win32_Clover.h"
+#include "Clover_AudioEngine.h"
 
 // FILES FOR UNITY BUILD
 #include "Clover_Audio.cpp"
 #include "Clover_Renderer.cpp"
 #include "Clover_Input.cpp"
+#include "Clover_AudioEngine.cpp"
 
 // NOTE(Sleepster): ImGui WNDPROC. It uses this for input
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -165,7 +169,6 @@ Win32ProcessInputMessages(MSG Message, HWND WindowHandle, game_state *State)
                     }
                 }break;
                 
-                
                 case WM_LBUTTONUP:
                 case WM_RBUTTONUP:
                 case WM_MBUTTONUP:
@@ -196,7 +199,6 @@ Win32ProcessInputMessages(MSG Message, HWND WindowHandle, game_state *State)
                     Key->HalfTransitionCount++;
                 }break;
                 
-                
                 case WM_MOUSEMOVE:
                 {
                     POINT MousePoint;
@@ -206,8 +208,8 @@ Win32ProcessInputMessages(MSG Message, HWND WindowHandle, game_state *State)
                     State->GameInput.Keyboard.LastMouse    = State->GameInput.Keyboard.CurrentMouse;
                     State->GameInput.Keyboard.CurrentMouse = ivec2{MousePoint.x, MousePoint.y};
                     State->GameInput.Keyboard.DeltaMouse   = State->GameInput.Keyboard.CurrentMouse - State->GameInput.Keyboard.LastMouse;
+
                 }break;
-                
                 
                 default:
                 {
@@ -387,7 +389,7 @@ WinMain(HINSTANCE hInstance,
             
             Win32LoadKeyData(&State);
             Win32LoadDefaultBindings(&State.GameInput);
-            
+
             const int32 PixelAttributes[] =
             {
                 WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
@@ -460,6 +462,16 @@ WinMain(HINSTANCE hInstance,
             /* Assert(ma_engine_init(0, &State.SFXData.AudioEngine) == MA_SUCCESS); */
             /* Assert(ma_engine_set_volume(&State.SFXData.AudioEngine, 0.1f) == MA_SUCCESS); */
             
+            if(SDL_Init(SDL_INIT_AUDIO) == 0)
+            {
+                printm("[ERROR]: SDL has failed to Init. Error code: %s\n", SDL_GetError());
+                Assert(1 == 0);
+            }
+
+            InitAudio(&State.SFXData.SoundPlayer);
+//            LoadSound(&Memory.TemporaryStorage, &State.SFXData.SoundPlayer, STR("../data/res/sounds/Test.wav"));
+            ReadWAVFile(&Memory.PermanentStorage, &State.SFXData.SoundPlayer, STR("../data/res/sounds/Test2.wav"));
+
             Game.OnAwake(&Memory, &RenderData, &State);
             RenderData.CloverRender = CloverRender;
             
@@ -473,6 +485,7 @@ WinMain(HINSTANCE hInstance,
                 MSG Message = {};
                 Win32ProcessInputMessages(Message, WindowHandle, &State);
                 //DATA RELOADING
+
 #if CLOVER_SLOW
                 FILETIME NewDLLWriteTime = Win32GetLastWriteTime(STR("CloverGame.dll"));
                 if(CompareFileTime(&Game.LastWriteTime, &NewDLLWriteTime) != 0)
@@ -499,13 +512,24 @@ WinMain(HINSTANCE hInstance,
                 if(CompareFileTime(&NewVertexShaderWriteTime,   &RenderData.BasicShader.VertexShader.LastWriteTime) != 0 ||
                    CompareFileTime(&NewFragmentShaderWriteTime, &RenderData.BasicShader.FragmentShader.LastWriteTime) != 0)
                 {
-                    glDeleteProgram(RenderData.BasicShader.ShaderID);
-                    CloverCreateShader(&Memory.TemporaryStorage, RenderData.BasicShader.VertexShader.Filepath, RenderData.BasicShader.FragmentShader.Filepath);
-                    Sleep(100);
+                    RebuildShader(&Memory.TemporaryStorage, &RenderData.BasicShader);
+                }
+
+                if(CompareFileTime(&NewVertexShaderWriteTime,   &RenderData.gBufferShader.VertexShader.LastWriteTime) != 0 ||
+                   CompareFileTime(&NewFragmentShaderWriteTime, &RenderData.gBufferShader.FragmentShader.LastWriteTime) != 0)
+                {
+                    RebuildShader(&Memory.TemporaryStorage, &RenderData.gBufferShader); 
+                }
+
+                if(CompareFileTime(&NewVertexShaderWriteTime,   &RenderData.LightingShader.VertexShader.LastWriteTime) != 0 ||
+                   CompareFileTime(&NewFragmentShaderWriteTime, &RenderData.LightingShader.FragmentShader.LastWriteTime) != 0)
+                {
+                    RebuildShader(&Memory.TemporaryStorage, &RenderData.LightingShader); 
                 }
 #endif
+
                 real64 NewTime     = GetLastTime();
-                CurrentTime = NewTime;
+                CurrentTime        = NewTime;
 
                 Time.Delta = (real32)GetLastTime();
                 Time.Current = (real32)CurrentTime;

@@ -399,6 +399,22 @@ CompareVertexYAxis(const void *A, const void *B)
 }
 
 internal void
+RebuildShader(memory_arena *Memory, shader *ReloadingShader)
+{
+    FILETIME NewVertexShaderWriteTime   = Win32GetLastWriteTime(ReloadingShader->VertexShader.Filepath);
+    FILETIME NewFragmentShaderWriteTime = Win32GetLastWriteTime(ReloadingShader->FragmentShader.Filepath);
+    if(CompareFileTime(&NewVertexShaderWriteTime,   &ReloadingShader->VertexShader.LastWriteTime) != 0 ||
+       CompareFileTime(&NewFragmentShaderWriteTime, &ReloadingShader->FragmentShader.LastWriteTime) != 0)
+    {
+        glDeleteProgram(ReloadingShader->ShaderID);
+        *ReloadingShader = CloverCreateShader(Memory, 
+                                              ReloadingShader->VertexShader.Filepath, 
+                                              ReloadingShader->FragmentShader.Filepath);
+        Sleep(100);
+    }
+}
+
+internal void
 CloverSetupRenderer(memory_arena *Memory, gl_render_data *RenderData)
 {
     // STATE INITIALIZATION
@@ -556,13 +572,13 @@ CloverSetupRenderer(memory_arena *Memory, gl_render_data *RenderData)
         RenderData->GameCamera.ViewMatrix            = mat4Identity(1.0f);
         RenderData->GameUICamera.ViewMatrix          = mat4Identity(1.0f);
 
-        RenderData->gBufferProjectionMatrixUID       = glGetUniformLocation(RenderData->gBufferShader.ShaderID,  "ProjectionMatrix");
-        RenderData->gBufferViewMatrixUID             = glGetUniformLocation(RenderData->gBufferShader.ShaderID,  "ViewMatrix");
-        RenderData->gBufferBrightnessUID             = glGetUniformLocation(RenderData->gBufferShader.ShaderID,  "uBrightness");
-
         RenderData->ProjectionMatrixUID              = glGetUniformLocation(RenderData->BasicShader.ShaderID,    "ProjectionMatrix");
         RenderData->ViewMatrixUID                    = glGetUniformLocation(RenderData->BasicShader.ShaderID,    "ViewMatrix");
         RenderData->BasicShaderBrightnessUID         = glGetUniformLocation(RenderData->BasicShader.ShaderID,    "uBrightness");
+
+        RenderData->gBufferProjectionMatrixUID       = glGetUniformLocation(RenderData->gBufferShader.ShaderID,  "ProjectionMatrix");
+        RenderData->gBufferViewMatrixUID             = glGetUniformLocation(RenderData->gBufferShader.ShaderID,  "ViewMatrix");
+        RenderData->gBufferBrightnessUID             = glGetUniformLocation(RenderData->gBufferShader.ShaderID,  "uBrightness");
  
         RenderData->PointLightSBOID                  = glGetUniformLocation(RenderData->LightingShader.ShaderID, "gBufferPointLightSBO");
         RenderData->PointLightCountUID               = glGetUniformLocation(RenderData->LightingShader.ShaderID, "uPointLightCount");

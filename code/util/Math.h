@@ -244,19 +244,19 @@ typedef union ivec2
 {
     struct 
     {
-        int32 X;
-        int32 Y;
+        int X;
+        int Y;
     };
     struct 
     {
-        int32 Width;
-        int32 Height;
+        int Width;
+        int Height;
     };
 }ivec2;
 
 // OPERATOR OVERLOADING
 
-internal inline ivec2
+static inline ivec2
 operator-(ivec2 A, ivec2 B)
 {
     ivec2 Result = {};
@@ -266,8 +266,8 @@ operator-(ivec2 A, ivec2 B)
     return(Result);
 }
 
-internal inline ivec2
-operator-(ivec2 A, int32 B)
+static inline ivec2
+operator-(ivec2 A, int B)
 {
     ivec2 Result = {0};
     
@@ -277,7 +277,7 @@ operator-(ivec2 A, int32 B)
     return(Result);
 }
 
-internal inline ivec2
+static inline ivec2
 operator+(ivec2 A, ivec2 B)
 {
     ivec2 Result = {};
@@ -287,7 +287,7 @@ operator+(ivec2 A, ivec2 B)
     return(Result);
 }
 
-internal inline ivec2
+static inline ivec2
 operator*(ivec2 A, ivec2 B)
 {
     ivec2 Result = {};
@@ -297,28 +297,28 @@ operator*(ivec2 A, ivec2 B)
     return(Result);
 }
 
-internal inline ivec2
+static inline ivec2
 operator*(ivec2 A, int B)
 {
     ivec2 Result = {0};
     
-    Result.X = int32(A.X * B);
-    Result.Y = int32(A.Y * B);
+    Result.X = int(A.X * B);
+    Result.Y = int(A.Y * B);
     
     return(Result);
 }
 
-internal inline ivec2
-operator*(ivec2 A, real32 B)
+static inline ivec2
+operator*(ivec2 A, float B)
 {
     ivec2 Result = {};
-    Result.X = int32(A.X * B);
-    Result.Y = int32(A.Y * B);
+    Result.X = int(A.X * B);
+    Result.Y = int(A.Y * B);
     
     return(Result);
 }
 
-internal inline ivec2
+static inline ivec2
 operator/(ivec2 A, ivec2 B)
 {
     ivec2 Result = {};
@@ -328,51 +328,51 @@ operator/(ivec2 A, ivec2 B)
     return(Result);
 }
 
-internal inline ivec2
-operator/(ivec2 A, real32 B)
+static inline ivec2
+operator/(ivec2 A, float B)
 {
     ivec2 Result = {};
     
-    Result.X = int32(A.X * B);
-    Result.Y = int32(A.Y * B);
+    Result.X = int(A.X * B);
+    Result.Y = int(A.Y * B);
     
     return(Result);
 }
 
-internal inline ivec2
-operator*=(ivec2 &A, int32 B)
+static inline ivec2
+operator*=(ivec2 &A, int B)
 {
     A.X = A.X * B;
     A.Y = A.Y * B;
     return(A);
 }
 
-internal inline vec2
+static inline vec2
 v2Cast(ivec2 A)
 {
     vec2 Result = {};
     
-    Result.X = real32(A.X);
-    Result.Y = real32(A.Y);
+    Result.X = float(A.X);
+    Result.Y = float(A.Y);
     
     return(Result);
 }
 
-internal inline ivec2
+static inline ivec2
 iv2Cast(vec2 A)
 {
     ivec2 Result = {};
     
-    Result.X = int32(A.X);
-    Result.Y = int32(A.Y);
+    Result.X = int(A.X);
+    Result.Y = int(A.Y);
     
     return(Result);
 }
 
 struct range_r32
 {
-    real32 Minimum;
-    real32 Maximum;
+    float Minimum;
+    float Maximum;
 };
 
 struct range_v2
@@ -432,8 +432,8 @@ typedef union vec3
 #endif
 } vec3;
 
-internal inline vec3
-v2Expand(vec2 A, real32 B)
+static inline vec3
+v2Expand(vec2 A, float B)
 {
     vec3 Result = {};
     Result.X = A.X;
@@ -445,20 +445,20 @@ v2Expand(vec2 A, real32 B)
 
 typedef union
 {
-    int32 Elements[3];
+    int Elements[3];
     
     struct
     {
-        int32 x;
-        int32 y;
-        int32 z;
+        int x;
+        int y;
+        int z;
     };
     
     struct
     {
-        int32 Width;
-        int32 Height;
-        int32 Channels;
+        int Width;
+        int Height;
+        int Channels;
     };
 }ivec3;
 
@@ -526,8 +526,8 @@ typedef union vec4
 #endif
 } vec4;
 
-internal inline vec4
-v2Expand(vec2 A, real32 B, real32 C)
+static inline vec4
+v2Expand(vec2 A, float B, float C)
 {
     vec4 Result = {};
     Result.X = A.X;
@@ -540,13 +540,13 @@ v2Expand(vec2 A, real32 B, real32 C)
 
 typedef union
 {
-    int32 Elements[4];
+    int Elements[4];
     struct
     {
-        int32 X;
-        int32 Y;
-        int32 Width;
-        int32 Height;
+        int X;
+        int Y;
+        int Width;
+        int Height;
     };
 }ivec4;
 
@@ -734,26 +734,43 @@ static inline float Clamp(float Min, float Value, float Max)
     return Result;
 }
 
+static float
+r32Clamp(float Value, float Min, float Max)
+{
+    if (Value <= Min) return Min;
+    if (Value >= Max) return Max;
+    return Value;
+}
 
-internal inline bool
-Equals(real32 A, real32 B, real32 Tolerance)
+static vec2 
+v2Clamp(vec2 Value, vec2 Min, vec2 Max)
+{
+    Value.X = r32Clamp(Value.X, Min.X, Max.X);
+    Value.Y = r32Clamp(Value.Y, Min.Y, Max.Y);
+    return(Value);
+}
+
+
+
+static inline bool
+Equals(float A, float B, float Tolerance)
 {
     return(fabs(A - B) <= Tolerance);
 }
 
 
-internal inline void
-Approach(real32 *Value, real32 Target, real32 Rate, real32 Delta_t)
+static inline void
+Approach(float *Value, float Target, float Rate, float Delta_t)
 {
-    *Value += real32((Target - *Value) * (1.0 - pow(2.0f, -Rate * Delta_t)));
+    *Value += float((Target - *Value) * (1.0 - pow(2.0f, -Rate * Delta_t)));
     if(Equals(*Value, Target, 0.001f))
     {
         *Value = Target;
     }
 }
 
-internal inline void
-v2Approach(vec2 *Value, vec2 Target, real32 Rate, real32 Delta_t)
+static inline void
+v2Approach(vec2 *Value, vec2 Target, float Rate, float Delta_t)
 {
     Approach(&(Value->X), Target.X, Rate, Delta_t);
     Approach(&(Value->Y), Target.Y, Rate, Delta_t);
@@ -3347,7 +3364,7 @@ static inline vec4 operator-(vec4 In)
 }
 
 static inline 
-real32 NormalizeClamp(real32 value) 
+float NormalizeClamp(float value) 
 {
     if (value < 0.0f) {
         return 0.0f;

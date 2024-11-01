@@ -124,6 +124,7 @@ CreateDrawRect(gl_render_data *RenderData, vec2 Size, real32 Rotation, vec4 Colo
     return(Quad);
 }
 
+// TODO(Sleepster): Culling
 internal quad *
 DrawQuadXForm(gl_render_data *RenderData, quad *Quad, mat4 *Transform, bool IsFont)
 {
@@ -533,7 +534,7 @@ internal point_light*
 CreatePointLight(gl_render_data   *RenderData,
                  vec2              Position, // THIS IS IN WORLDSPACE POSITION
                  real32            Strength,
-                 real32            Radius, 
+                 real32            Radius,   // PIXELS
                  attenuation_data *Attenuation,
                  vec4              Color)
 {   

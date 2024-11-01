@@ -3,6 +3,10 @@
 #ifndef CLOVER_RENDERER_H
 #define CLOVER_RENDERER_H
 
+// NOTE(Sleepster): Freetype must come first due to the #define internal static inside of the intrinsics header
+#include "../data/deps/Freetype/include/ft2build.h"
+#include FT_FREETYPE_H
+
 #include "Intrinsics.h"
 
 #ifndef GLAD_OPENGL_IMPL
@@ -64,6 +68,12 @@ struct texture2d
     
     GLuint TextureID;
     GLenum ActiveTexture;
+};
+
+struct game_texture2d
+{
+    texture2d SpriteAtlas;  
+    texture2d NormalAtlas;
 };
 
 // FONT RENDERING

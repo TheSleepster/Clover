@@ -3,6 +3,12 @@
 #include "../Intrinsics.h"
 #include "MemoryArena.h"
 
+struct entire_file
+{
+    uint32 Size;
+    void *Contents;
+};
+
 internal int32
 GetFileSizeInBytes(string Filepath)
 {
@@ -32,7 +38,7 @@ ReadEntireFile(string Filepath, uint32 *Size, char *Buffer)
     fseek(File, 0, SEEK_SET);
     
     memset(Buffer, 0, *Size + 1);
-    fread(Buffer, sizeof(char), *Size, File);
+    fread(Buffer, sizeof(uint8), *Size, File);
     
     fclose(File);
     return(Buffer);

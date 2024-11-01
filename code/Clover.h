@@ -3,6 +3,7 @@
 #ifndef CLOVER_H
 #define CLOVER_H
 
+#include "Clover_AudioEngine.h"
 #include "Intrinsics.h"
 
 #include "util/Math.h"
@@ -255,8 +256,9 @@ struct game_state
     // NOTE(Sleepster): Audio Stuffs
     struct
     {   
-        ma_engine AudioEngine;
+        audio_engine_info SoundPlayer;
         
+        ma_engine AudioEngine;
         sound_instance Instances[MAX_SOUNDS];
         sound_instance SoundTracks[MAX_TRACKS];
         
@@ -367,11 +369,57 @@ RangeFromQuad(quad *Quad)
     return(Result);
 }
 
-// AABB stuff
+// NOTE(Sleepster): Random Number Generation stuff
+#define RAND_MAX_64 0xFFFFFFFFFFFFFFFFull
+#define MULTIPLIER 6364136223846793005ull
+#define INCREMENT 1442695040888963407ull
+
+global_variable uint64 RDTSCRandomSeed = __rdtsc();
+
+internal inline uint64
+PeekRandom()
+{
+    RDTSCRandomSeed = RDTSCRandomSeed * MULTIPLIER + INCREMENT;
+    return(RDTSCRandomSeed);
+}
+
+internal inline uint64 
+GetRandom(void)
+{
+    uint64 RandomSeed = PeekRandom();
+    return(RandomSeed);
+}
+
+internal inline real32
+GetRandomReal32(void)
+{
+    return((real32)GetRandom() / (real32)UINT64_MAX);
+}
+
+internal inline real32
+GetRandomReal32_Range(real32 Minimum, real32 Maximum)
+{
+    return((Maximum - Minimum)*GetRandomReal32() + Minimum);
+}
+
+
 internal inline real32
 EaseOutQuad(real32 X)
 {
     return 1 - (1 - X) * (1 - X);
+}
+
+internal inline real32
+SinBreatheNormalized(real32 Time, real32 Modifier, real32 Min, real32 Max)
+{
+    real32 SineValue = (sinf(Modifier * 2 * PI32 * Time) + 1.0f) / 2.0f;
+    return(Min + (Max - Min) * SineValue);
+}
+
+internal inline real32
+SinBreathe(real32 Time, real32 Modifier)
+{
+    return(sinf(Time * Modifier));
 }
 
 #define GAME_ON_AWAKE(name) void name(game_memory *Memory, gl_render_data *RenderData, game_state *State)
@@ -386,7 +434,7 @@ GAME_FIXED_UPDATE(GameFixedUpdateStub)
 {
 }
 
-#define GAME_UPDATE_AND_DRAW(name) void name(game_memory *Memory, gl_render_data *RenderData, game_state *State, time Time, ivec4 SizeData)
+#define GAME_UPDATE_AND_DRAW(name) void name(game_memory *Memory, gl_render_data *RenderData, game_state *State, time Time, ivec4 SizeDataIn)
 typedef GAME_UPDATE_AND_DRAW(game_update_and_draw);
 GAME_UPDATE_AND_DRAW(GameUpdateAndDrawStub)
 {

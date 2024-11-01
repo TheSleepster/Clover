@@ -1,3 +1,11 @@
+// NOTE(Sleepster): As of right now SDL is being used ONLY for the audio engine.
+#include "../data/deps/SDL3/include/SDL3/SDL.h"
+#include "../data/deps/SDL3/include/SDL3/SDL_audio.h"
+
+// NOTE(Sleepster): Freetype must come first due to the #define internal static inside of the intrinsics header
+#include "../data/deps/Freetype/include/ft2build.h"
+#include FT_FREETYPE_H
+
 #include "Intrinsics.h"
 
 // UTILS
@@ -14,6 +22,7 @@
 #include "Clover_Audio.h"
 #include "Clover_Input.h" 
 #include "Clover_Renderer.h"
+#include "Clover_AudioEngine.h"
 #include "shader/CommonShader.glh"
 
 // IMGUI IMPl
@@ -28,40 +37,6 @@
 
 
 global_variable entity *Player = {};
-
-
-// NOTE(Sleepster): Random Number Generation stuff
-#define RAND_MAX_64 0xFFFFFFFFFFFFFFFFull
-#define MULTIPLIER 6364136223846793005ull
-#define INCREMENT 1442695040888963407ull
-
-global_variable uint64 RDTSCRandomSeed = __rdtsc();
-
-internal inline uint64
-PeekRandom()
-{
-    RDTSCRandomSeed = RDTSCRandomSeed * MULTIPLIER + INCREMENT;
-    return(RDTSCRandomSeed);
-}
-
-internal inline uint64 
-GetRandom(void)
-{
-    uint64 RandomSeed = PeekRandom();
-    return(RandomSeed);
-}
-
-internal inline real32
-GetRandomReal32(void)
-{
-    return((real32)GetRandom() / (real32)UINT64_MAX);
-}
-
-internal inline real32
-GetRandomReal32_Range(real32 Minimum, real32 Maximum)
-{
-    return((Maximum - Minimum)*GetRandomReal32() + Minimum);
-}
 
 internal inline void
 LoadSpriteData(game_state *State)
@@ -721,19 +696,6 @@ RoundToTile(vec2 WorldPosition)
     return(NewWorldPosition);
 }
 
-internal inline real32
-SinBreatheNormalized(real32 Time, real32 Modifier, real32 Min, real32 Max)
-{
-    real32 SineValue = (sinf(Modifier * 2 * PI32 * Time) + 1.0f) / 2.0f;
-    return(Min + (Max - Min) * SineValue);
-}
-
-internal inline real32
-SinBreathe(real32 Time, real32 Modifier)
-{
-    return(sinf(Time * Modifier));
-}
-
 inline int
 CompareEntityYAxis(const void *A, const void *B)
 {
@@ -815,22 +777,6 @@ SetupDroppedEntity(gl_render_data *RenderData, game_state *State, item *Selectio
         vec2 MaxDropPosition = Player->Position + Direction * MaxDropDistance;
         SpawnedItem->Target = MaxDropPosition;
     }
-}
-
-internal real32
-r32Clamp(real32 Value, real32 Min, real32 Max)
-{
-    if (Value <= Min) return Min;
-    if (Value >= Max) return Max;
-    return Value;
-}
-
-internal vec2 
-v2Clamp(vec2 Value, vec2 Min, vec2 Max)
-{
-    Value.X = r32Clamp(Value.X, Min.X, Max.X);
-    Value.Y = r32Clamp(Value.Y, Min.Y, Max.Y);
-    return(Value);
 }
 
 internal void
@@ -1068,10 +1014,10 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                                               State->GameInput.Keyboard.CurrentMouse, 
                                               SizeData);
     
-    /* vec2 MouseToScreen = TransformMouseCoords(RenderData->GameUICamera.ViewMatrix, */
-    /*                                           RenderData->GameUICamera.ProjectionMatrix, */ 
-    /*                                           State->GameInput.Keyboard.CurrentMouse, */ 
-    /*                                           SizeData); */
+    // vec2 MouseToScreen = TransformMouseCoords(RenderData->GameUICamera.ViewMatrix,
+    //                                           RenderData->GameUICamera.ProjectionMatrix, 
+    //                                           State->GameInput.Keyboard.CurrentMouse, 
+    //                                           SizeData);
     
     // NOTE(Sleepster): SELECTED ENTITY
     real32 SelectionDistance = 32.0f;
@@ -1748,7 +1694,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                         Building->Position = MousePosition;
                         Building->BoxCollider = CreateRange(vec2{Building->Position.X - (TILE_SIZE * 0.5f), Building->Position.Y}, 
                                                             vec2{Building->Position.X - (TILE_SIZE * 0.5f), Building->Position.Y} + Building->Size);
-                        
+
                         if(InventoryItem) ResetItemSlotState(InventoryItem);
                         if(HotbarItem) ResetItemSlotState(HotbarItem);
                     }
