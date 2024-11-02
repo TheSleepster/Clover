@@ -11,7 +11,7 @@
 #include "util/Math.h"
 #include "util/Array.h"
 #include "util/FileIO.h"
-#include "util/CustomStrings.h"
+#include "util/String.h"
 
 // CLOVER HEADERS
 #include "Clover.h"

@@ -1,10 +1,18 @@
-/* date = July 25 2024 01:18 am*/
+#if !defined(STRING_H)
+/* ========================================================================
+   $File: String.h $
+   $Date: October 19 2024 04:58 pm $
+   $Revision: $
+   $Creator: Justin Lewis $
+   ======================================================================== */
 
-#ifndef SH_STRINGS_H
-#define SH_STRINGS_H
+#define STRING_H
 
 #include "../Intrinsics.h"
-#include "MemoryArena.h"
+#include "Arena.h"
+
+#include <stdio.h>
+#include <stdarg.h>
 
 // NOTE(Sleepster): Length Based Strings
 struct string
@@ -45,7 +53,7 @@ HeapString(memory_arena *Scratch, uint64 Length)
 {
     string S;
     S.Length = Length;
-    S.Data = (uint8 *)ArenaAlloc(Scratch, Length);
+    S.Data = (uint8 *)PushSize(Scratch, Length);
     
     return(S);
 }
@@ -68,7 +76,7 @@ ConcatinatePair(memory_arena *Arena, const string Left, const string Right)
     
     string Result = {};
     Result.Length = Left.Length + Right.Length;
-    Result.Data = (uint8 *)ArenaAlloc(Arena, Result.Length);
+    Result.Data = (uint8 *)PushSize(Arena, Result.Length);
     
     const char *LeftS = (const char *)Left.Data;
     const char *RightS = (const char *)Right.Data;
@@ -96,7 +104,7 @@ CStringToString(const char *CString)
 internal inline char *
 StringToCString(memory_arena *Memory, const string String)
 {
-    char *CString = ArenaAlloc(Memory, sizeof(String.Data + 1));
+    char *CString = (char *)PushSize(Memory, sizeof(String.Data + 1));
     memcpy(CString, String.Data, String.Length);
     CString[String.Length] = 0;
     
@@ -238,7 +246,7 @@ SprintVAList(memory_arena *Memory, const string fmt, va_list args)
     uint64 Count = FormatStringToBuffer(NULL, 0, fmt_cstring, args) + 1;
     
     char* Buffer = {};
-    Buffer = ArenaAlloc(Memory, Count);
+    Buffer = (char *)PushSize(Memory, Count);
     
     return(SprintCStringArgsToBuffer(fmt_cstring, args, Buffer, Count));
 }
@@ -279,11 +287,12 @@ internal char *
 ConcatinateCString(memory_arena *Memory, char *A, char *B)
 {
     char *Result = {};
-    Result = ArenaAlloc(Memory, strlen(A) + strlen(B) + 1);
+    Result = (char *)PushSize(Memory, strlen(A) + strlen(B) + 1);
     
     memcpy(Result, A, strlen(A));
     memcpy(Result + strlen(A), B, strlen(B) + 1);
     return(Result);
 }
 
-#endif // _SH_STRINGS_H
+#endif // STRING_H
+

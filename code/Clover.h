@@ -9,28 +9,38 @@
 #include "util/Math.h"
 #include "util/Array.h"
 #include "util/FileIO.h"
-#include "util/CustomStrings.h"
+#include "util/String.h"
 #include "util/Pairs.h"
 
 #include "Clover_Input.h"
-#include "Clover_Audio.h"
 #include "Clover_Renderer.h"
 #include "Clover_UI.h"
+#include "Clover_AudioEngine.h"
 
-struct sound_instance
-{
-    ma_sound Sound;
-    bool     IsPlaying;
-    bool     IsActive;
-};
-
+#if 0
 struct game_memory
 {
     memory_arena PermanentStorage;
     memory_arena TemporaryStorage;
 };
+#endif
 
-struct time
+struct game_memory
+{
+    bool  IsInitialized;
+
+    int64 PermanentStorageSize; 
+    int64 OccupiedPStorage;
+
+    void *PermanentStorage;
+
+    int64 TransientStorageSize;
+    int64 OccupiedTStorage;
+
+    void *TransientStorage;
+};
+
+struct time_data
 {
     real32 Delta;
     real32 Current;
@@ -221,8 +231,24 @@ struct entity
     int32 UniqueDropCount;
 };
 
+struct game_world_data
+{
+    entity Entities[MAX_ENTITIES];  
+    item   Items[1000];
+    uint32 EntityCounter;
+
+    memory_arena WorldArena;
+    
+    struct 
+    {
+        entity *SelectedEntity;
+    }WorldFrame;
+};
+
 struct game_state
 {
+    bool IsInitialized;
+    
     KeyCodeID KeyCodeLookup[KEY_COUNT];
     Input GameInput;
     
@@ -237,43 +263,21 @@ struct game_state
     
     entity *ActiveCraftingStation;
     item   *ActiveRecipe;
-    
     item   *ActiveBlueprint;
+
+    audio_engine_info TestEngine;
+    loaded_sound  TestSound;
+    playing_sound FirstPlayingSound;
     
-    // NOTE(Sleepster): World Data
-    struct
-    {
-        entity Entities[MAX_ENTITIES];  
-        item   Items[1000];
-        uint32 EntityCounter;
-        
-        struct 
-        {
-            entity *SelectedEntity;
-        }WorldFrame;
-    }World;
+    game_world_data World;
+
+    memory_arena StringArena;
     
-    // NOTE(Sleepster): Audio Stuffs
-    struct
-    {   
-        audio_engine_info SoundPlayer;
-        
-        ma_engine AudioEngine;
-        sound_instance Instances[MAX_SOUNDS];
-        sound_instance SoundTracks[MAX_TRACKS];
-        
-        uint32 ActiveInstances;
-        uint32 LoadedTracks;
-    }SFXData;
-    
-    // NOTE(Sleepster): Visual Assets
     struct 
     { 
         static_sprite_data          Sprites[SPRITE_Count];
         item                        GameItems[ITEM_IDCount];
         pair <item_id, sprite_type> ItemSprites[ITEM_IDCount];
-
-        void (*EntitySetupFunctions[ARCH_ID_MAX])(game_state*, entity*);
     }GameData;
 };
 
@@ -428,30 +432,17 @@ GAME_ON_AWAKE(GameOnAwakeStub)
 {
 }
 
-#define GAME_FIXED_UPDATE(name) void name(game_memory *Memory, gl_render_data *RenderData, game_state *State, time Time)
+#define GAME_FIXED_UPDATE(name) void name(game_memory *Memory, gl_render_data *RenderData, game_state *State, time_data Time)
 typedef GAME_FIXED_UPDATE(game_fixed_update);
 GAME_FIXED_UPDATE(GameFixedUpdateStub)
 {
 }
 
-#define GAME_UPDATE_AND_DRAW(name) void name(game_memory *Memory, gl_render_data *RenderData, game_state *State, time Time, ivec4 SizeDataIn)
+#define GAME_UPDATE_AND_DRAW(name) void name(game_memory *Memory, gl_render_data *RenderData, game_state *State, time_data Time, ivec4 SizeDataIn)
 typedef GAME_UPDATE_AND_DRAW(game_update_and_draw);
 GAME_UPDATE_AND_DRAW(GameUpdateAndDrawStub)
 {
 }
-
-struct game_functions
-{
-    HMODULE  GameCodeDLL;
-    FILETIME LastWriteTime;
-    
-    game_on_awake          *OnAwake;
-    game_fixed_update      *FixedUpdate;
-    game_update_and_draw   *UpdateAndDraw;
-    
-    bool IsLoaded;
-    bool IsValid;
-};
 
 bool
 operator!=(static_sprite_data A, static_sprite_data B)

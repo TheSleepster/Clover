@@ -7,7 +7,7 @@
 #include "util/Math.h"
 #include "util/Array.h"
 #include "util/FileIO.h"
-#include "util/CustomStrings.h"
+#include "util/String.h"
 #include "util/Pairs.h"
 
 #include "Intrinsics.h"
@@ -15,6 +15,18 @@
 // NOTE(Sleepster): As of right now SDL is being used ONLY for the audio engine.
 #include "../data/deps/SDL3/include/SDL3/SDL.h"
 #include "../data/deps/SDL3/include/SDL3/SDL_audio.h"
+#if 0
+internal void
+LoadSound(memory_arena *Memory, audio_engine_info *InputEngine, string Filepath)
+{
+    uint8 *WAVBuffer = {};
+    uint32  BufferLength = {};
+    SDL_LoadWAV(CSTR(Filepath), &InputEngine->OutputSpec, &WAVBuffer, &BufferLength);
+    SDL_PutAudioStreamData(InputEngine->SoundSampleBuffer, (const void *)WAVBuffer, BufferLength);
+
+    SDL_FlushAudioStream(InputEngine->SoundSampleBuffer);
+}
+#endif
 
 // NOTE(Sleepster): This function is a mess, sorry
 internal void
@@ -39,17 +51,6 @@ InitAudio(audio_engine_info *InputEngine)
     }
     else 
     {Check(1 == 0, "[ERROR]: Failure to open the default output device. Error code: %s\n", SDL_GetError());}
-}
-
-internal void
-LoadSound(memory_arena *Memory, audio_engine_info *InputEngine, string Filepath)
-{
-    uint8 *WAVBuffer = {};
-    uint32  BufferLength = {};
-    SDL_LoadWAV(CSTR(Filepath), &InputEngine->OutputSpec, &WAVBuffer, &BufferLength);
-    SDL_PutAudioStreamData(InputEngine->SoundSampleBuffer, (const void *)WAVBuffer, BufferLength);
-
-    SDL_FlushAudioStream(InputEngine->SoundSampleBuffer);
 }
 
 internal inline riff_iterator
@@ -92,7 +93,6 @@ GetChunkDataSize(riff_iterator Iter)
     WAVE_chunk *Chunk = (WAVE_chunk *)Iter.At;
     return(Chunk->Size);
 }    
-
 
 internal inline uint32
 GetType(riff_iterator Iter)
@@ -169,6 +169,5 @@ ReadWAVFile(memory_arena *Memory, audio_engine_info *InputEngine, string Filepat
         Assert(1 == 0);
     }
     SDL_FlushAudioStream(InputEngine->SoundSampleBuffer);
-
     return(Result);
 }

@@ -18,17 +18,12 @@
 #include "util/Math.h"
 #include "util/Array.h"
 #include "util/FileIO.h"
-#include "util/MemoryArena.h"
-#include "util/CustomStrings.h"
+#include "util/Arena.h"
+#include "util/String.h"
 
 // GLAD
 #define GLAD_OPENGL_IMPL
 #include "../data/deps/OpenGL/glad/include/glad/glad.h"
-
-// OPENGL HEADERS
-#include "../data/deps/OpenGL/glext.h"
-#include "../data/deps/OpenGL/wglext.h"
-#include "../data/deps/OpenGL/glcorearb.h"
 
 // IMGUI IMPl
 #include "../data/deps/ImGui/imgui.h"
@@ -50,17 +45,20 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 
+// OPENGL HEADERS
+#include "../data/deps/OpenGL/glext.h"
+#include "../data/deps/OpenGL/wglext.h"
+#include "../data/deps/OpenGL/glcorearb.h"
+
 // CLOVER HEADERS
 #include "Clover_Globals.h"
 #include "Clover.h"
-#include "Clover_Audio.h"
 #include "Clover_Renderer.h"
 #include "Clover_Input.h"
 #include "Win32_Clover.h"
 #include "Clover_AudioEngine.h"
 
 // FILES FOR UNITY BUILD
-#include "Clover_Audio.cpp"
 #include "Clover_Renderer.cpp"
 #include "Clover_Input.cpp"
 #include "Clover_AudioEngine.cpp"
@@ -331,11 +329,11 @@ WinMain(HINSTANCE hInstance,
         LPSTR lpCmdLine,
         int32 nShowCmd)
 {
-    WNDCLASS              Window = {};
-    time                  Time   = {};
-    game_state            State  = {};
-    game_memory           Memory = {};
-    game_functions        Game   = {};
+    WNDCLASS              Window     = {};
+    time_data             Time       = {};
+    game_state            State      = {};
+    game_memory           GameMemory = {};
+    game_functions        Game       = {};
     wgl_function_pointers WGLFunctions  = {};
     gl_render_data        RenderData    = {};
     
@@ -353,7 +351,6 @@ WinMain(HINSTANCE hInstance,
     Window.lpszClassName = "MakeshiftWindow";
     
     SizeData = {100, 100, 1920, 1080};
-    
     if(RegisterClass(&Window))
     {
         RECT rect = {0, 0, SizeData.Width, SizeData.Height};
@@ -380,11 +377,31 @@ WinMain(HINSTANCE hInstance,
         {
             HDC WindowDC = GetDC(WindowHandle);
             
-            Memory.TemporaryStorage = ArenaCreate(Megabytes(512));
-            Memory.PermanentStorage = ArenaCreate(Megabytes(512));
+            GameMemory.PermanentStorageSize = Megabytes(512);
+            GameMemory.TransientStorageSize = Megabytes(512);
+            GameMemory.TransientStorage = VirtualAlloc(0, GameMemory.TransientStorageSize, MEM_COMMIT, PAGE_READWRITE);
+            GameMemory.PermanentStorage = VirtualAlloc(0, GameMemory.PermanentStorageSize, MEM_COMMIT, PAGE_READWRITE);
             
+            InitializeArena(&RenderData.VertexArena,   sizeof(vertex) * TRUE_MAX_VERTICES, GameMemory.PermanentStorage);
+            InitializeArena(&RenderData.UIVertexArena, sizeof(vertex) * TRUE_MAX_VERTICES, (uint8 *)GameMemory.PermanentStorage + (sizeof(vertex) * TRUE_MAX_VERTICES));
+
+            
+            memory_arena FileIOArena;
+            InitializeArena(&FileIOArena, Megabytes(200), GameMemory.PermanentStorage);
+
+            RenderData.DrawFrame.Vertices   = (vertex *)RenderData.VertexArena.Base;
+            RenderData.DrawFrame.UIVertices = (vertex *)RenderData.UIVertexArena.Base;
+
+            RenderData.DrawFrame.TransparentVertexBufferptr   = (vertex *)(RenderData.VertexArena.Base + (RenderData.VertexArena.Capacity / 2));
+            RenderData.DrawFrame.TransparentUIVertexBufferptr = (vertex *)(RenderData.UIVertexArena.Base + (RenderData.UIVertexArena.Capacity / 2));
+#if 0
+            Memory.TransientStorage = ArenaCreate(Megabytes(512));
+            Memory.PermanentStorage = ArenaCreate(Megabytes(512));
+
             RenderData.DrawFrame.Vertices = (vertex *)ArenaAlloc(&Memory.PermanentStorage, sizeof(vertex) * TRUE_MAX_VERTICES);
             RenderData.DrawFrame.UIVertices = (vertex *)ArenaAlloc(&Memory.PermanentStorage, sizeof(vertex) * TRUE_MAX_VERTICES);
+#endif
+
             CloverResetRendererState(&RenderData);
             
             Win32LoadKeyData(&State);
@@ -432,8 +449,8 @@ WinMain(HINSTANCE hInstance,
             WGLFunctions.wglSwapIntervalEXT(0);
             // VSYNC
             
-            
-            CloverSetupRenderer(&Memory.TemporaryStorage, &RenderData);
+
+            CloverSetupRenderer(&FileIOArena, &RenderData);
             Game = Win32LoadGameCode(STR("CloverGame.dll"));
             
             // NOTE(Sleepster): ImGui Setup 
@@ -449,6 +466,7 @@ WinMain(HINSTANCE hInstance,
             io.WantCaptureMouse = 1;
             io.DeltaTime = Time.Delta > 0 ? SIMRATE : Time.Delta;
             
+
             // Choose Dear ImGui style
             ImGui::StyleColorsDark();
             
@@ -468,11 +486,10 @@ WinMain(HINSTANCE hInstance,
                 Assert(1 == 0);
             }
 
-            InitAudio(&State.SFXData.SoundPlayer);
-//            LoadSound(&Memory.TemporaryStorage, &State.SFXData.SoundPlayer, STR("../data/res/sounds/Test.wav"));
-            ReadWAVFile(&Memory.PermanentStorage, &State.SFXData.SoundPlayer, STR("../data/res/sounds/Test2.wav"));
+            InitAudio(&State.TestEngine);
+            loaded_sound Test = ReadWAVFile(&FileIOArena, &State.TestEngine, STR("../data/res/sounds/Test2.wav"));
 
-            Game.OnAwake(&Memory, &RenderData, &State);
+            Game.OnAwake(&GameMemory, &RenderData, &State);
             RenderData.CloverRender = CloverRender;
             
             Running = 1;
@@ -495,36 +512,36 @@ WinMain(HINSTANCE hInstance,
                     
                     // NOTE(Sleepster): Audio Engine setup, MiniAudio makes this REALLLLLLYYYYYYYY easy 
                     Time.CurrentTimeInSeconds = 0.0f;
-                    Game.OnAwake(&Memory, &RenderData, &State);
+                    Game.OnAwake(&GameMemory, &RenderData, &State);
                 }
 
                 // NOTE(Sleepster: Shader Reloading  
-                FILETIME NewTextureWriteTime        = Win32GetLastWriteTime(RenderData.GameAtlas.Filepath);    
-                FILETIME NewVertexShaderWriteTime   = Win32GetLastWriteTime(RenderData.BasicShader.VertexShader.Filepath);
-                FILETIME NewFragmentShaderWriteTime = Win32GetLastWriteTime(RenderData.BasicShader.FragmentShader.Filepath);
+                filetime NewTextureWriteTime        = FileGetLastWriteTime(RenderData.GameAtlas.Filepath);    
+                filetime NewVertexShaderWriteTime   = FileGetLastWriteTime(RenderData.BasicShader.VertexShader.Filepath);
+                filetime NewFragmentShaderWriteTime = FileGetLastWriteTime(RenderData.BasicShader.FragmentShader.Filepath);
 
-                if(CompareFileTime(&NewTextureWriteTime, &RenderData.GameAtlas.LastWriteTime) != 0)
+                if(!CloverCompareFiletime(NewTextureWriteTime, RenderData.GameAtlas.LastWriteTime))
                 {
                     CloverReloadTexture(&RenderData, &RenderData.GameAtlas, 0);
                     Sleep(100);
                 }
 
-                if(CompareFileTime(&NewVertexShaderWriteTime,   &RenderData.BasicShader.VertexShader.LastWriteTime) != 0 ||
-                   CompareFileTime(&NewFragmentShaderWriteTime, &RenderData.BasicShader.FragmentShader.LastWriteTime) != 0)
+                if(!CloverCompareFiletime(NewVertexShaderWriteTime,   RenderData.BasicShader.VertexShader.LastWriteTime) ||
+                   !CloverCompareFiletime(NewFragmentShaderWriteTime, RenderData.BasicShader.FragmentShader.LastWriteTime))
                 {
-                    RebuildShader(&Memory.TemporaryStorage, &RenderData.BasicShader);
+                    RebuildShader(&FileIOArena, &RenderData.BasicShader);
                 }
 
-                if(CompareFileTime(&NewVertexShaderWriteTime,   &RenderData.gBufferShader.VertexShader.LastWriteTime) != 0 ||
-                   CompareFileTime(&NewFragmentShaderWriteTime, &RenderData.gBufferShader.FragmentShader.LastWriteTime) != 0)
+                if(!CloverCompareFiletime(NewVertexShaderWriteTime,   RenderData.gBufferShader.VertexShader.LastWriteTime) ||
+                   !CloverCompareFiletime(NewFragmentShaderWriteTime, RenderData.gBufferShader.FragmentShader.LastWriteTime))
                 {
-                    RebuildShader(&Memory.TemporaryStorage, &RenderData.gBufferShader); 
+                    RebuildShader(&FileIOArena, &RenderData.gBufferShader); 
                 }
 
-                if(CompareFileTime(&NewVertexShaderWriteTime,   &RenderData.LightingShader.VertexShader.LastWriteTime) != 0 ||
-                   CompareFileTime(&NewFragmentShaderWriteTime, &RenderData.LightingShader.FragmentShader.LastWriteTime) != 0)
+                if(!CloverCompareFiletime(NewVertexShaderWriteTime,   RenderData.LightingShader.VertexShader.LastWriteTime) ||
+                   !CloverCompareFiletime(NewFragmentShaderWriteTime, RenderData.LightingShader.FragmentShader.LastWriteTime))
                 {
-                    RebuildShader(&Memory.TemporaryStorage, &RenderData.LightingShader); 
+                    RebuildShader(&FileIOArena, &RenderData.LightingShader); 
                 }
 #endif
 
@@ -535,7 +552,7 @@ WinMain(HINSTANCE hInstance,
                 Time.Current = (real32)CurrentTime;
                 while(Accumulator >= SIMRATE)
                 {
-                    Game.FixedUpdate(&Memory, &RenderData, &State, Time);
+                    Game.FixedUpdate(&GameMemory, &RenderData, &State, Time);
                     Accumulator -= Time.Delta;
                     Time.CurrentTimeInSeconds = real32(GetCurrentTimeInSeconds());
                 }
@@ -553,7 +570,7 @@ WinMain(HINSTANCE hInstance,
                 ImGui::NewFrame();
                 
                 RenderData.AspectRatio = (real32)SizeData.Width / (real32)SizeData.Height;
-                Game.UpdateAndDraw(&Memory, &RenderData, &State, Time, SizeData);
+                Game.UpdateAndDraw(&GameMemory, &RenderData, &State, Time, SizeData);
                 
                 ImGui::Render();
 
@@ -562,8 +579,9 @@ WinMain(HINSTANCE hInstance,
 
                 ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
                 SwapBuffers(WindowDC);
-                
-                ArenaReset(&Memory.TemporaryStorage);
+
+                ClearArena(&State.StringArena);
+                ClearArena(&FileIOArena);
                 
                 // DELTA
                 LARGE_INTEGER EndCounter;

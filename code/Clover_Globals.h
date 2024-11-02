@@ -8,7 +8,7 @@
 #include "util/Math.h"
 #include "util/Array.h"
 #include "util/FileIO.h"
-#include "util/CustomStrings.h"
+#include "util/String.h"
 
 // PLATFORM DATA
 global_variable ivec4 SizeData = {0, 0, 1920, 1080};

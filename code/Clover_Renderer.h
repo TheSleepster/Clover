@@ -23,11 +23,7 @@
 #include "util/Math.h"
 #include "util/Array.h"
 #include "util/FileIO.h"
-#include "util/CustomStrings.h"
-
-#include "../data/deps/OpenGL/glext.h"
-#include "../data/deps/OpenGL/wglext.h"
-#include "../data/deps/OpenGL/glcorearb.h"
+#include "util/String.h"
 
 // IMGUI IMPl
 #include "../data/deps/ImGui/imgui.h"
@@ -60,7 +56,7 @@ struct static_sprite_data
 
 struct texture2d
 {
-    FILETIME LastWriteTime;
+    time_t LastWriteTime;
     
     ivec3  TextureData;
     char  *RawData;
@@ -110,7 +106,7 @@ struct gl_shader_source
 {
     GLuint   SourceID;
     string   Filepath;
-    FILETIME LastWriteTime;
+    time_t   LastWriteTime;
 };
 
 struct shader
@@ -243,6 +239,9 @@ struct gl_render_data
     // IMGUI STUFF
     ImGuiContext *CurrentImGuiContext;
     uint32        LastFrameQuadCount;
+
+    memory_arena   VertexArena;
+    memory_arena UIVertexArena;
     
     // DRAW FRAME DATA
     struct

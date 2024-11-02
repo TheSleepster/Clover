@@ -1,10 +1,15 @@
-/* date = July 31st 2024 6:22 pm */
+#if !defined(ARRAY_H)
+/* ========================================================================
+   $File: Array.h $
+   $Date: October 19 2024 05:03 pm $
+   $Revision: $
+   $Creator: Justin Lewis $
+   ======================================================================== */
 
-#ifndef _SH_ARRAY_H
-#define _SH_ARRAY_H
+#define ARRAY_H
 
 #include "../Intrinsics.h"
-#include "MemoryArena.h"
+#include "Arena.h"
 
 // NOTE(Sleepster): Just a test, C++ makes me vomit
 template <typename Type, int32 Capacity>
@@ -73,4 +78,5 @@ struct array
     }
 };
 
-#endif
+#endif // ARRAY_H
+

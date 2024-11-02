@@ -8,8 +8,8 @@
 #include "util/Math.h"
 #include "util/Array.h"
 #include "util/FileIO.h"
-#include "util/MemoryArena.h"
-#include "util/CustomStrings.h"
+#include "util/Arena.h"
+#include "util/String.h"
 
 #include "Clover_Renderer.h"
 
@@ -79,7 +79,7 @@ CloverLoadFont(memory_arena *Memory, gl_render_data *RenderData, string Filepath
     int32 Row = {};
     int32 Column = Font.AtlasPadding;
     
-    char *TextureData = ArenaAlloc(Memory, (uint64)(sizeof(char) * (BITMAP_ATLAS_SIZE * BITMAP_ATLAS_SIZE)));
+    char *TextureData = (char *)PushSize(Memory, (uint64)(sizeof(char) * (BITMAP_ATLAS_SIZE * BITMAP_ATLAS_SIZE)));
     if(TextureData)
     {
         for(uint32 GlyphIndex = 32;
@@ -180,7 +180,7 @@ CloverLoadSDFFont(memory_arena *Memory, gl_render_data *RenderData, string Filep
     
     FT_GlyphSlot CurrentSlot = Font.FontFace->glyph;
     
-    char *TextureData = ArenaAlloc(Memory, (uint64)(sizeof(char) * (BITMAP_ATLAS_SIZE * BITMAP_ATLAS_SIZE)));
+    char *TextureData = (char *)PushSize(Memory, (uint64)(sizeof(char) * (BITMAP_ATLAS_SIZE * BITMAP_ATLAS_SIZE)));
     if(TextureData)
     {
         for(uint32 GlyphIndex = 32;
@@ -292,8 +292,8 @@ CloverCreateShader(memory_arena *Memory, string VertexShader, string FragmentSha
     ReturnShader.VertexShader   = CloverLoadShaderSource(Memory, GL_VERTEX_SHADER, VertexShader);
     ReturnShader.FragmentShader = CloverLoadShaderSource(Memory, GL_FRAGMENT_SHADER, FragmentShader);
     
-    ReturnShader.VertexShader.LastWriteTime   = Win32GetLastWriteTime(VertexShader);
-    ReturnShader.FragmentShader.LastWriteTime = Win32GetLastWriteTime(FragmentShader);
+    ReturnShader.VertexShader.LastWriteTime   = FileGetLastWriteTime(VertexShader);
+    ReturnShader.FragmentShader.LastWriteTime = FileGetLastWriteTime(FragmentShader);
     
     ReturnShader.ShaderID = glCreateProgram();
     glAttachShader(ReturnShader.ShaderID, ReturnShader.VertexShader.SourceID);
@@ -320,7 +320,7 @@ CloverLoadTexture(gl_render_data *RenderData, texture2d *TextureInfo, string Fil
     glBindTexture(GL_TEXTURE_2D, TextureInfo->TextureID);
     
     TextureInfo->Filepath = Filepath;
-    TextureInfo->LastWriteTime = Win32GetLastWriteTime(Filepath);
+    TextureInfo->LastWriteTime = FileGetLastWriteTime(Filepath);
     TextureInfo->RawData = (char *)stbi_load((const char *)Filepath.Data, 
                                              &TextureInfo->TextureData.Width, 
                                              &TextureInfo->TextureData.Height, 
@@ -346,7 +346,7 @@ CloverReloadTexture(gl_render_data *RenderData, texture2d *TextureInfo, uint32 T
 {
     glBindTexture(GL_TEXTURE_2D, TextureInfo->TextureID);
     
-    TextureInfo->LastWriteTime = Win32GetLastWriteTime(TextureInfo->Filepath);
+    TextureInfo->LastWriteTime = FileGetLastWriteTime(TextureInfo->Filepath);
     TextureInfo->RawData = (char *)stbi_load((const char *)TextureInfo->Filepath.Data, 
                                              &TextureInfo->TextureData.Width, 
                                              &TextureInfo->TextureData.Height, 
@@ -401,10 +401,10 @@ CompareVertexYAxis(const void *A, const void *B)
 internal void
 RebuildShader(memory_arena *Memory, shader *ReloadingShader)
 {
-    FILETIME NewVertexShaderWriteTime   = Win32GetLastWriteTime(ReloadingShader->VertexShader.Filepath);
-    FILETIME NewFragmentShaderWriteTime = Win32GetLastWriteTime(ReloadingShader->FragmentShader.Filepath);
-    if(CompareFileTime(&NewVertexShaderWriteTime,   &ReloadingShader->VertexShader.LastWriteTime) != 0 ||
-       CompareFileTime(&NewFragmentShaderWriteTime, &ReloadingShader->FragmentShader.LastWriteTime) != 0)
+    filetime NewVertexShaderWriteTime   = FileGetLastWriteTime(ReloadingShader->VertexShader.Filepath);
+    filetime NewFragmentShaderWriteTime = FileGetLastWriteTime(ReloadingShader->FragmentShader.Filepath);
+    if(!CloverCompareFiletime(NewVertexShaderWriteTime,   ReloadingShader->VertexShader.LastWriteTime)||
+       !CloverCompareFiletime(NewFragmentShaderWriteTime, ReloadingShader->FragmentShader.LastWriteTime))
     {
         glDeleteProgram(ReloadingShader->ShaderID);
         *ReloadingShader = CloverCreateShader(Memory, 
@@ -545,6 +545,7 @@ CloverSetupRenderer(memory_arena *Memory, gl_render_data *RenderData)
         }
     }
 
+    // TODO(Sleepster): Is this okay?
     // TEXTURE/FONT LOADING
     {
         // NOTE(Sleepster): The order is important, whatever you gen first will end up in the GL_TEXTUREX slot 

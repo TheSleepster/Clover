@@ -6,9 +6,17 @@
 #include "util/Math.h"
 #include "util/Array.h"
 #include "util/FileIO.h"
-#include "util/CustomStrings.h"
+#include "util/String.h"
 
 #include "Clover_Renderer.h"
+
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+
+#include "../data/deps/OpenGL/glext.h"
+#include "../data/deps/OpenGL/wglext.h"
+#include "../data/deps/OpenGL/glcorearb.h"
 
 struct wgl_function_pointers
 {
@@ -16,6 +24,20 @@ struct wgl_function_pointers
     PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB;
     PFNWGLSWAPINTERVALEXTPROC         wglSwapIntervalEXT;
 };
+
+struct game_functions
+{
+    HMODULE  GameCodeDLL;
+    FILETIME LastWriteTime;
+    
+    game_on_awake          *OnAwake;
+    game_fixed_update      *FixedUpdate;
+    game_update_and_draw   *UpdateAndDraw;
+    
+    bool IsLoaded;
+    bool IsValid;
+};
+
 
 internal inline FILETIME
 Win32MaxFiletime(FILETIME A, FILETIME B)

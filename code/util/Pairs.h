@@ -8,6 +8,8 @@
 
 #define PAIRS_H
 
+#include "../Intrinsics.h"
+
 template <typename Type1, typename Type2>
 struct pair
 {
@@ -39,4 +41,3 @@ MakePair(const Type1 &A, const Type2 &B)
 }
 
 #endif // PAIRS_H
-

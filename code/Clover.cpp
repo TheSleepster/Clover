@@ -1,3 +1,10 @@
+/* ========================================================================
+   $File: Clover.cpp $
+   $Date: September 09 2024 04:51 pm $
+   $Revision: $
+   $Creator: Justin Lewis $
+   ======================================================================== */
+
 // NOTE(Sleepster): As of right now SDL is being used ONLY for the audio engine.
 #include "../data/deps/SDL3/include/SDL3/SDL.h"
 #include "../data/deps/SDL3/include/SDL3/SDL_audio.h"
@@ -12,14 +19,12 @@
 #include "util/Math.h"
 #include "util/Array.h"
 #include "util/FileIO.h"
-#include "util/CustomStrings.h"
+#include "util/String.h"
 #include "util/Pairs.h"
-#include "util/Sorting.h"
 
 // CLOVER HEADERS
 #include "Clover.h"
 #include "Clover_Globals.h"
-#include "Clover_Audio.h"
 #include "Clover_Input.h" 
 #include "Clover_Renderer.h"
 #include "Clover_AudioEngine.h"
@@ -30,13 +35,12 @@
 #include "../data/deps/ImGui/imgui_impl_win32.h"
 #include "../data/deps/ImGUI/imgui_impl_opengl3.h"
 
-// NOTE(Sleepster): If MiniAudio starts acting weird, I compiled it in a non debug mode.
-#include "Clover_Audio.cpp"
 #include "Clover_Draw.cpp"
 #include "Clover_UI.cpp"
 
 
 global_variable entity *Player = {};
+
 
 internal inline void
 LoadSpriteData(game_state *State)
@@ -54,7 +58,7 @@ LoadSpriteData(game_state *State)
     State->GameData.Sprites[SPRITE_Workbench]             = {.AtlasOffset = { 16, 80}, .SpriteSize = {16, 16}};
     State->GameData.Sprites[SPRITE_Furnace]               = {.AtlasOffset = {  0, 80}, .SpriteSize = {16, 16}};
     State->GameData.Sprites[SPRITE_Outline]               = {.AtlasOffset = {128,  0}, .SpriteSize = {16, 16}};
-
+    
     State->GameData.Sprites[SPRITE_Rock]                  = {.AtlasOffset = { 48, 35}, .SpriteSize = {16, 13}};
     State->GameData.Sprites[SPRITE_Pebbles]               = {.AtlasOffset = { 48, 48}, .SpriteSize = {13, 12}};
     State->GameData.Sprites[SPRITE_Tree00]                = {.AtlasOffset = { 96, 31}, .SpriteSize = {16, 17}};
@@ -268,7 +272,7 @@ DeleteEntity(entity *Entity)
 }
 
 internal void
-HandleInput(game_state *State, entity *PlayerIn, time Time)
+HandleInput(game_state *State, entity *PlayerIn, time_data Time)
 {
     // NOTE(Sleepster): Player Position 
     vec2 InputAxis = {};
@@ -297,7 +301,7 @@ HandleInput(game_state *State, entity *PlayerIn, time Time)
     PlayerIn->Position = v2Lerp(NextPos, Time.Delta, OldPlayerP);
     
     // NOTE(Sleepster): Game Update Stuff 
-
+    
     if(IsKeyPressed(KEY_ESCAPE, &State->GameInput))
     {
         Player->Inventory.SelectedInventoryItem = {};
@@ -416,7 +420,7 @@ SetupRock(game_state *State, entity *Entity)
     Entity->Rotation    = 0;
     Entity->Speed       = 1.0f;
     Entity->BoxCollider = {};
-
+    
     Entity->UniqueDropCount = 1;
     Entity->EntityDrops[0] = 
     {
@@ -436,7 +440,7 @@ SetupTree00(game_state *State, entity *Entity)
     Entity->Rotation    = 0;
     Entity->Speed       = 1.0f;
     Entity->BoxCollider = {};
-
+    
     Entity->UniqueDropCount = 1;
     Entity->EntityDrops[0] = 
     {
@@ -456,7 +460,7 @@ SetupTree01(game_state *State, entity *Entity)
     Entity->Rotation    = 0;
     Entity->Speed       = 1.0f;
     Entity->BoxCollider = {};
-
+    
     Entity->UniqueDropCount = 1;
     Entity->EntityDrops[0] = 
     {
@@ -476,7 +480,7 @@ SetupRubyNode(game_state *State, entity *Entity)
     Entity->Rotation    = 0;
     Entity->Speed       = 1.0f;
     Entity->BoxCollider = {};
-
+    
     Entity->UniqueDropCount = 1;
     Entity->EntityDrops[0] = 
     {
@@ -894,11 +898,10 @@ GAME_ON_AWAKE(GameOnAwake)
     LoadSpriteData(State);
     LoadItemData(State);
 
+    InitializeArena(&State->StringArena, Kilobytes(100), Memory->TransientStorage);
+    
     // TODO(Sleepster): Write a proper implementation of Mini Audio's low level API so that 
     //                  hotreloading the engine doesn't just crash the program
-    
-    //PlaySound(&Memory->TemporaryStorage, State, STR("boop.wav"), 1);
-    //PlayTrackFromDisk(&Memory->TemporaryStorage, State, STR("Test.mp3"), 0.5f);
     
     real32 SizeScaler = WORLD_SIZE * 10;
     for(uint32 EntityIndex = 0;
@@ -955,7 +958,7 @@ GAME_ON_AWAKE(GameOnAwake)
     GroundWorkbench->Target   = {0, -100};
     GroundWorkbench->BoxCollider = CreateRange(vec2{GroundWorkbench->Position.X - (TILE_SIZE * 0.5f), GroundWorkbench->Position.Y}, 
                                                vec2{GroundWorkbench->Position.X - (TILE_SIZE * 0.5f), GroundWorkbench->Position.Y} + GroundWorkbench->Size);
-
+    
     entity *GroundFurnace = CreateEntity(State);
     SetupItemFurnace(State, GroundFurnace);
     GroundFurnace->Position = {20, -100};
@@ -985,10 +988,6 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
     DrawImGui(State, RenderData, Time);
     
     State->World.WorldFrame = {};
-    
-    HandleLoadedSounds(State);
-    HandleLoadedTracks(State);
-    
     // MATRICES
     {
         // NOTE(Sleepster): GAME 
@@ -1038,7 +1037,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     State->World.WorldFrame.SelectedEntity = Temp;
                     MinimumDistance = Distance;
                 }
-
+                
                 // NOTE(Sleepster): Handle Entity Destruction 
                 if(IsGameKeyPressed(ATTACK, &State->GameInput) && 
                    (Temp->Flags & IS_DESTRUCTABLE) && 
@@ -1059,13 +1058,13 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                             {
                                 entity *CreatedEntity = CreateEntity(State);
                                 item DroppedItem = State->GameData.GameItems[Temp->EntityDrops[DropCount].DroppedItem];
-
+                                
                                 SetupDroppedEntity(RenderData, State, &DroppedItem, CreatedEntity);
                                 CreatedEntity->Position = Temp->Position;
                                 CreatedEntity->Target   = Temp->Position;
                             }
                         }
-
+                        
                         //PlaySound(&Memory->TemporaryStorage, State, STR("boop.wav"), 1);
                         State->World.WorldFrame.SelectedEntity = {};
                         DeleteEntity(Temp);
@@ -1195,7 +1194,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     
                     vec4 ItemCountTextPosition = SpriteXForm.Columns[3];
                     Position = vec2{ItemCountTextPosition.X, ItemCountTextPosition.Y};
-                    CloverUIMakeTextElement(&State->UIContext, sprints(&Memory->TemporaryStorage, STR("x%d"), Item->CurrentStack), {Position.X + 3, Position.Y}, 15, TEXT_ALIGNMENT_Center, GREEN);
+                    CloverUIMakeTextElement(&State->UIContext, sprints(&State->StringArena, STR("x%d"), Item->CurrentStack), {Position.X + 3, Position.Y}, 15, TEXT_ALIGNMENT_Center, GREEN);
                 }
             }
             
@@ -1326,7 +1325,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     
                     vec4 ItemCountTextPosition = SpriteXForm.Columns[3];
                     Position = vec2{ItemCountTextPosition.X, ItemCountTextPosition.Y};
-                    CloverUIMakeTextElement(&State->UIContext, sprints(&Memory->TemporaryStorage, STR("x%d"), Item->CurrentStack), {Position.X + 3, Position.Y}, 15, TEXT_ALIGNMENT_Center, GREEN);
+                    CloverUIMakeTextElement(&State->UIContext, sprints(&State->StringArena, STR("x%d"), Item->CurrentStack), {Position.X + 3, Position.Y}, 15, TEXT_ALIGNMENT_Center, GREEN);
                 }
             }
         }
@@ -1448,7 +1447,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
     // NOTE(Sleepster): UI Rendering 
     CloverUIDrawWidgets(RenderData, &State->UIContext);
     CloverUIResetState(&State->UIContext); 
-
+    
     // NOTE(Sleepster): Building
     {
         if(State->GameUIState == UI_State_Building)
@@ -1552,7 +1551,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     
                     CloverUIPushLayer(&State->UIContext, 2);
                     CloverUISpriteElement(&State->UIContext, {0, 0}, {0, 0}, XForm, Sprite, WHITE);
-                    CloverUIMakeTextElement(&State->UIContext, sprints(&Memory->TemporaryStorage, STR("%d/%d"), InventoryCount[MaterialIndex], Material->RequiredCount), {10, NewYOffset + 5}, 10, TEXT_ALIGNMENT_Center, BLACK);
+                    CloverUIMakeTextElement(&State->UIContext, sprints(&State->StringArena, STR("%d/%d"), InventoryCount[MaterialIndex], Material->RequiredCount), {10, NewYOffset + 5}, 10, TEXT_ALIGNMENT_Center, BLACK);
                     CloverUIPushLayer(&State->UIContext, 0);
                 }
                 
@@ -1694,7 +1693,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                         Building->Position = MousePosition;
                         Building->BoxCollider = CreateRange(vec2{Building->Position.X - (TILE_SIZE * 0.5f), Building->Position.Y}, 
                                                             vec2{Building->Position.X - (TILE_SIZE * 0.5f), Building->Position.Y} + Building->Size);
-
+                        
                         if(InventoryItem) ResetItemSlotState(InventoryItem);
                         if(HotbarItem) ResetItemSlotState(HotbarItem);
                     }
@@ -1856,7 +1855,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     
                     CloverUIPushLayer(&State->UIContext, 2);
                     CloverUISpriteElement(&State->UIContext, {0, 0}, {0, 0}, XForm, Sprite, WHITE);
-                    CloverUIMakeTextElement(&State->UIContext, sprints(&Memory->TemporaryStorage, STR("%d/%d"), InventoryCount[MaterialIndex], Material->RequiredCount), {55, NewYOffset - 5}, 10, TEXT_ALIGNMENT_Center, BLACK);
+                    CloverUIMakeTextElement(&State->UIContext, sprints(&State->StringArena, STR("%d/%d"), InventoryCount[MaterialIndex], Material->RequiredCount), {55, NewYOffset - 5}, 10, TEXT_ALIGNMENT_Center, BLACK);
                     CloverUIPushLayer(&State->UIContext, 0);
                 }
                 
@@ -1961,7 +1960,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             }
         }
     }
-
+    
     vec2 SelectionBoxDrawSize = {16, 16};
     // NOTE(Sleepster): DRAW ENTITIES
     for(uint32 EntityIndex = 0;
@@ -1996,7 +1995,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                             Temp->Flags += CAN_BE_PICKED_UP;
                         }
                     }
-
+                    
                     if(State->World.WorldFrame.SelectedEntity == Temp && !(Temp->Flags & IS_ITEM))
                     {
                         State->World.WorldFrame.SelectedEntity = Temp;
@@ -2017,7 +2016,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             }
         }
     }
-
+    
     // NOTE(Sleepster): Draw the Tiles
     ivec2  PlayerOffset = WorldToTilePos(Player->Position);
     ivec2  TileRadius   = {14, 16};
@@ -2044,7 +2043,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             }
         }
     }
-
+    
     attenuation_data TestLightData = {.Constant = 0.05, .Linear = 0.0009, .Quadratic = 0.001};
     CreatePointLight(RenderData, vec2{ 80, 80}, 2.0, 100, &TestLightData, RED);
     CreatePointLight(RenderData, vec2{-80, 80}, 2.0, 100, &TestLightData, WHITE);

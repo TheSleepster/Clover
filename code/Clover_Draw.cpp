@@ -8,16 +8,12 @@
 #include "util/Math.h"
 #include "util/Array.h"
 #include "util/FileIO.h"
-#include "util/CustomStrings.h"
+#include "util/String.h"
 
 // GLAD
 #ifndef GLAD_OPENGL_IMPL
 #define GLAD_OPENGL_IMPL
 #include "../data/deps/OpenGL/glad/include/glad/glad.h"
-
-#include "../data/deps/OpenGL/glext.h"
-#include "../data/deps/OpenGL/wglext.h"
-#include "../data/deps/OpenGL/glcorearb.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -32,7 +28,7 @@
 // RENDERING INTERFACE FUNCTIONS
 
 internal void
-DrawImGui(game_state *State, gl_render_data *RenderData, time Time)
+DrawImGui(game_state *State, gl_render_data *RenderData, time_data Time)
 {
     if(State->DrawDebug)
     {

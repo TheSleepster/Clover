@@ -11,7 +11,7 @@
 #include "util/Math.h"
 #include "util/Array.h"
 #include "util/FileIO.h"
-#include "util/CustomStrings.h"
+#include "util/String.h"
 #include "util/Pairs.h"
 
 #include "Intrinsics.h"
@@ -69,12 +69,21 @@ struct riff_iterator
 struct loaded_sound
 {
     uint32 SoundID;
+    uint32 NextID;
+    
     uint16 ChannelCount;
-
-    uint32 SamplesConsumed;
     uint32 SampleCount;
     
     uint8 *Samples;
+};
+
+struct playing_sound
+{
+    uint32 SoundID;
+    uint32 SamplesConsumed;
+    real32 Volume[2];
+
+    playing_sound *Next;
 };
 
 struct audio_engine_info
@@ -87,6 +96,11 @@ struct audio_engine_info
 
     uint32             SampleRate;
     uint32             ChannelCount;
+};
+
+struct clover_audio_engine
+{
+    audio_engine_info *Info;
 };
 
 #endif // CLOVER_AUDIOENGINE_H

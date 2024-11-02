@@ -1,28 +1,47 @@
-/* date = August 20 2024 12:28 am*/
+#if !defined(INTRINSICS_H)
+/* ========================================================================
+   $File: Intrinsics.h $
+   $Date: October 19 2024 04:46 pm $
+   $Revision: $
+   $Creator: Justin Lewis $
+   ======================================================================== */
 
-#ifndef INTRINSICS_H
 #define INTRINSICS_H
-
-#define CLOVER_SLOW 1
 #if CLOVER_SLOW 
 
-#define Check(Expression, Message, ...) if(!(Expression)) {char CHECKBUFFER[1024] = {}; sprintf(CHECKBUFFER, Message, __VA_ARGS__); OutputDebugStringA(CHECKBUFFER); DebugBreak();}
-#define Assert(Expression) if(!(Expression)) {DebugBreak();}
-#define InvalidCodePath DebugBreak()
-#define Trace(Message) {OutputDebugStringA(Message);}
-#define printm(Message, ...)  {char BUFFER[128] = {};  if(strlen(Message) > sizeof(BUFFER)) {Check(0, "stwing to warge >w<\n")}; sprintf(BUFFER, Message, __VA_ARGS__); OutputDebugStringA(BUFFER); printf("%s\n", BUFFER);}
-#define printlm(Message, ...) {char BUFFER[5192] = {}; if(strlen(Message) > sizeof(BUFFER)) {Check(0, "stwing to warge >w<\n")}; sprintf(BUFFER, Message, __VA_ARGS__); OutputDebugStringA(BUFFER); printf("%s\n", BUFFER);}
+#ifdef _WIN32
+#define Check(Expression, Message, ...) if(!(Expression)) {char CHECKBUFFER[1024] = {}; sprintf(CHECKBUFFER, Message, __VA_ARGS__); printf("%s\n", CHECKBUFFER); __debugbreak();}
+#define Assert(Expression) if(!(Expression)) {__debugbreak();}
+#define InvalidCodePath __debugbreak()
+#define Trace(Message) {printm(Message)}
+#define printm(Message, ...)  {char BUFFER[128] = {};  if(strlen(Message) > sizeof(BUFFER)) {Check(0, "stwing to warge >w<\n")}; sprintf(BUFFER, Message, ##__VA_ARGS__); printf("%s\n", BUFFER);}
+#define printlm(Message, ...) {char BUFFER[5192] = {}; if(strlen(Message) > sizeof(BUFFER)) {Check(0, "stwing to warge >w<\n")}; sprintf(BUFFER, Message, ##__VA_ARGS__); printf("%s\n", BUFFER);}
 
-#else
+#elif __linux__
+#include <csignal>
+#define Check(Expression, Message, ...) if(!(Expression)) {char CHECKBUFFER[1024] = {}; sprintf(CHECKBUFFER, Message, ##__VA_ARGS__); raise(SIGTRAP);}
+#define Assert(Expression) if(!(Expression)) {raise(SIGTRAP);}
+#define InvalidCodePath raise(SIGTRAP)
+#define Trace(Message) {printm(Message)}
+#define printm(Message, ...)  {char BUFFER[128] = {};  if(strlen(Message) > sizeof(BUFFER)) {Check(0, "stwing to warge >w<\n")}; sprintf(BUFFER, Message, ##__VA_ARGS__); printf("%s\n", BUFFER);}
+#define printlm(Message, ...) {char BUFFER[5192] = {}; if(strlen(Message) > sizeof(BUFFER)) {Check(0, "stwing to warge >w<\n")}; sprintf(BUFFER, Message, ##__VA_ARGS__); printf("%s\n", BUFFER);}
 
+#elif __APPLE__
 #define Assert(Expression)
-#define Check(Expression, Message)
-#define dAssert(Expression)
+#define Check(Expression, Message, ...)
 #define Trace(Message)
 #define printm(Message, ...)
 #define printlm(Message, ...)
 #define InvalidCodePath
+#endif
 
+#else
+#define Assert(Expression)
+#define Check(Expression, Message)
+#define Trace(Message)
+#define printm(Message, ...)
+#define printlm(Message, ...)
+#define InvalidCodePath
 #endif
 
 #define Kilobytes(Value) ((uint64)(Value) * 1024)
@@ -66,8 +85,5 @@ typedef double   real64;
 #define inline     __forceinline
 #endif
 
-#include "util/CustomStrings.h"
-
-
-#endif // _INTRINSICS_H
+#endif // INTRINSICS_H
 
