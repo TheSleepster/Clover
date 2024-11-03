@@ -14,8 +14,8 @@
 #define Assert(Expression) if(!(Expression)) {__debugbreak();}
 #define InvalidCodePath __debugbreak()
 #define Trace(Message) {printm(Message)}
-#define printm(Message, ...)  {char BUFFER[128] = {};  if(strlen(Message) > sizeof(BUFFER)) {Check(0, "stwing to warge >w<\n")}; sprintf(BUFFER, Message, ##__VA_ARGS__); printf("%s\n", BUFFER);}
-#define printlm(Message, ...) {char BUFFER[5192] = {}; if(strlen(Message) > sizeof(BUFFER)) {Check(0, "stwing to warge >w<\n")}; sprintf(BUFFER, Message, ##__VA_ARGS__); printf("%s\n", BUFFER);}
+#define printm(Message, ...)  {char BUFFER[128] = {};  if(strlen(Message) > sizeof(BUFFER)) {Check(0, "[ERROR]: String is too large\n")}; sprintf(BUFFER, Message, ##__VA_ARGS__); printf("%s\n", BUFFER);}
+#define printlm(Message, ...) {char BUFFER[5192] = {}; if(strlen(Message) > sizeof(BUFFER)) {Check(0, "[ERROR]: String is too large\n")}; sprintf(BUFFER, Message, ##__VA_ARGS__); printf("%s\n", BUFFER);}
 
 #elif __linux__
 #include <csignal>
@@ -23,8 +23,8 @@
 #define Assert(Expression) if(!(Expression)) {raise(SIGTRAP);}
 #define InvalidCodePath raise(SIGTRAP)
 #define Trace(Message) {printm(Message)}
-#define printm(Message, ...)  {char BUFFER[128] = {};  if(strlen(Message) > sizeof(BUFFER)) {Check(0, "stwing to warge >w<\n")}; sprintf(BUFFER, Message, ##__VA_ARGS__); printf("%s\n", BUFFER);}
-#define printlm(Message, ...) {char BUFFER[5192] = {}; if(strlen(Message) > sizeof(BUFFER)) {Check(0, "stwing to warge >w<\n")}; sprintf(BUFFER, Message, ##__VA_ARGS__); printf("%s\n", BUFFER);}
+#define printm(Message, ...)  {char BUFFER[128] = {};  if(strlen(Message) > sizeof(BUFFER)) {Check(0, "[ERROR]: String is too large\n")}; sprintf(BUFFER, Message, ##__VA_ARGS__); printf("%s\n", BUFFER);}
+#define printlm(Message, ...) {char BUFFER[5192] = {}; if(strlen(Message) > sizeof(BUFFER)) {Check(0, "[ERROR]: String is too large\n")}; sprintf(BUFFER, Message, ##__VA_ARGS__); printf("%s\n", BUFFER);}
 
 #elif __APPLE__
 #define Assert(Expression)

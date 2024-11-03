@@ -63,6 +63,7 @@
 #include "Clover_Input.cpp"
 #include "Clover_AudioEngine.cpp"
 
+
 // NOTE(Sleepster): ImGui WNDPROC. It uses this for input
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -323,19 +324,27 @@ Win32UnloadGameCode(game_functions *GameCode)
     GameCode->UpdateAndDraw = GameUpdateAndDrawStub;
 }
 
+internal inline void
+ClearTransientState(transient_state *TransientState)
+{
+    ClearArena(&TransientState->StringArena);
+    ClearArena(&TransientState->FileIOArena);
+}
+
 int CALLBACK
 WinMain(HINSTANCE hInstance,
         HINSTANCE hPrevInstance,
         LPSTR lpCmdLine,
         int32 nShowCmd)
 {
-    WNDCLASS              Window     = {};
-    time_data             Time       = {};
-    game_state            State      = {};
-    game_memory           GameMemory = {};
-    game_functions        Game       = {};
-    wgl_function_pointers WGLFunctions  = {};
-    gl_render_data        RenderData    = {};
+    WNDCLASS              Window         = {};
+    time_data             Time           = {};
+    game_state            State          = {};
+    transient_state       TransientState = {};
+    game_memory           GameMemory     = {};
+    game_functions        Game           = {};
+    wgl_function_pointers WGLFunctions   = {};
+    gl_render_data        RenderData     = {};
     
     // NOTE(Sleepster): Accumulator is for Delta Time
     real64 Accumulator = {};
@@ -382,18 +391,17 @@ WinMain(HINSTANCE hInstance,
             GameMemory.TransientStorage = VirtualAlloc(0, GameMemory.TransientStorageSize, MEM_COMMIT, PAGE_READWRITE);
             GameMemory.PermanentStorage = VirtualAlloc(0, GameMemory.PermanentStorageSize, MEM_COMMIT, PAGE_READWRITE);
             
-            InitializeArena(&RenderData.VertexArena,   sizeof(vertex) * TRUE_MAX_VERTICES, GameMemory.PermanentStorage);
-            InitializeArena(&RenderData.UIVertexArena, sizeof(vertex) * TRUE_MAX_VERTICES, (uint8 *)GameMemory.PermanentStorage + (sizeof(vertex) * TRUE_MAX_VERTICES));
+            GameMemory.pBufferOffset = InitializeArena(&RenderData.VertexArena,   sizeof(vertex) * TRUE_MAX_VERTICES, GameMemory.PermanentStorage);
+            GameMemory.pBufferOffset = InitializeArena(&RenderData.UIVertexArena, sizeof(vertex) * TRUE_MAX_VERTICES, GameMemory.pBufferOffset);
 
-            
-            memory_arena FileIOArena;
-            InitializeArena(&FileIOArena, Megabytes(200), GameMemory.PermanentStorage);
+            GameMemory.tBufferOffset = InitializeArena(&TransientState.FileIOArena, Megabytes(200), GameMemory.TransientStorage);
+            GameMemory.tBufferOffset = InitializeArena(&TransientState.StringArena, Kilobytes(100), GameMemory.tBufferOffset);
 
-            RenderData.DrawFrame.Vertices   = (vertex *)RenderData.VertexArena.Base;
-            RenderData.DrawFrame.UIVertices = (vertex *)RenderData.UIVertexArena.Base;
-
+            RenderData.DrawFrame.Vertices                     = (vertex *)RenderData.VertexArena.Base;
+            RenderData.DrawFrame.UIVertices                   = (vertex *)RenderData.UIVertexArena.Base;
             RenderData.DrawFrame.TransparentVertexBufferptr   = (vertex *)(RenderData.VertexArena.Base + (RenderData.VertexArena.Capacity / 2));
             RenderData.DrawFrame.TransparentUIVertexBufferptr = (vertex *)(RenderData.UIVertexArena.Base + (RenderData.UIVertexArena.Capacity / 2));
+
 #if 0
             Memory.TransientStorage = ArenaCreate(Megabytes(512));
             Memory.PermanentStorage = ArenaCreate(Megabytes(512));
@@ -450,7 +458,7 @@ WinMain(HINSTANCE hInstance,
             // VSYNC
             
 
-            CloverSetupRenderer(&FileIOArena, &RenderData);
+            CloverSetupRenderer(&TransientState.FileIOArena, &RenderData);
             Game = Win32LoadGameCode(STR("CloverGame.dll"));
             
             // NOTE(Sleepster): ImGui Setup 
@@ -487,9 +495,9 @@ WinMain(HINSTANCE hInstance,
             }
 
             InitAudio(&State.TestEngine);
-            loaded_sound Test = ReadWAVFile(&FileIOArena, &State.TestEngine, STR("../data/res/sounds/Test2.wav"));
+            CloverPlayWAVFile_IO(&TransientState.FileIOArena, &State.TestEngine, STR("../data/res/sounds/Test2.wav"));
 
-            Game.OnAwake(&GameMemory, &RenderData, &State);
+            Game.OnAwake(&GameMemory, &RenderData, &State, &TransientState);
             RenderData.CloverRender = CloverRender;
             
             Running = 1;
@@ -512,7 +520,7 @@ WinMain(HINSTANCE hInstance,
                     
                     // NOTE(Sleepster): Audio Engine setup, MiniAudio makes this REALLLLLLYYYYYYYY easy 
                     Time.CurrentTimeInSeconds = 0.0f;
-                    Game.OnAwake(&GameMemory, &RenderData, &State);
+                    Game.OnAwake(&GameMemory, &RenderData, &State, &TransientState);
                 }
 
                 // NOTE(Sleepster: Shader Reloading  
@@ -529,19 +537,19 @@ WinMain(HINSTANCE hInstance,
                 if(!CloverCompareFiletime(NewVertexShaderWriteTime,   RenderData.BasicShader.VertexShader.LastWriteTime) ||
                    !CloverCompareFiletime(NewFragmentShaderWriteTime, RenderData.BasicShader.FragmentShader.LastWriteTime))
                 {
-                    RebuildShader(&FileIOArena, &RenderData.BasicShader);
+                    RebuildShader(&TransientState.FileIOArena, &RenderData.BasicShader);
                 }
 
                 if(!CloverCompareFiletime(NewVertexShaderWriteTime,   RenderData.gBufferShader.VertexShader.LastWriteTime) ||
                    !CloverCompareFiletime(NewFragmentShaderWriteTime, RenderData.gBufferShader.FragmentShader.LastWriteTime))
                 {
-                    RebuildShader(&FileIOArena, &RenderData.gBufferShader); 
+                    RebuildShader(&TransientState.FileIOArena, &RenderData.gBufferShader); 
                 }
 
                 if(!CloverCompareFiletime(NewVertexShaderWriteTime,   RenderData.LightingShader.VertexShader.LastWriteTime) ||
                    !CloverCompareFiletime(NewFragmentShaderWriteTime, RenderData.LightingShader.FragmentShader.LastWriteTime))
                 {
-                    RebuildShader(&FileIOArena, &RenderData.LightingShader); 
+                    RebuildShader(&TransientState.FileIOArena, &RenderData.LightingShader); 
                 }
 #endif
 
@@ -552,7 +560,7 @@ WinMain(HINSTANCE hInstance,
                 Time.Current = (real32)CurrentTime;
                 while(Accumulator >= SIMRATE)
                 {
-                    Game.FixedUpdate(&GameMemory, &RenderData, &State, Time);
+                    Game.FixedUpdate(&GameMemory, &RenderData, &State, &TransientState, Time);
                     Accumulator -= Time.Delta;
                     Time.CurrentTimeInSeconds = real32(GetCurrentTimeInSeconds());
                 }
@@ -570,18 +578,16 @@ WinMain(HINSTANCE hInstance,
                 ImGui::NewFrame();
                 
                 RenderData.AspectRatio = (real32)SizeData.Width / (real32)SizeData.Height;
-                Game.UpdateAndDraw(&GameMemory, &RenderData, &State, Time, SizeData);
+                Game.UpdateAndDraw(&GameMemory, &RenderData, &State, &TransientState, Time, SizeData);
+                SDL_FlushAudioStream(State.TestEngine.SoundSampleBuffer);
                 
                 ImGui::Render();
-
                 CloverRender(&RenderData);
-                //CloverRenderTestGBuffer(&RenderData);
 
                 ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
                 SwapBuffers(WindowDC);
 
-                ClearArena(&State.StringArena);
-                ClearArena(&FileIOArena);
+                ClearTransientState(&TransientState);
                 
                 // DELTA
                 LARGE_INTEGER EndCounter;

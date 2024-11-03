@@ -244,8 +244,10 @@ struct gl_render_data
     memory_arena UIVertexArena;
     
     // DRAW FRAME DATA
+    // TODO(Sleepster): Do we really need this with TransientState? 
     struct
     {
+        // TODO(Sleepster): Fix the in world font renderering. 
         vertex *Vertices;
         vertex *VertexBufferptr;
         vertex *TransparentVertexBufferptr;

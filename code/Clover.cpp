@@ -897,11 +897,6 @@ GAME_ON_AWAKE(GameOnAwake)
     ResetGame(RenderData, State, Memory);
     LoadSpriteData(State);
     LoadItemData(State);
-
-    InitializeArena(&State->StringArena, Kilobytes(100), Memory->TransientStorage);
-    
-    // TODO(Sleepster): Write a proper implementation of Mini Audio's low level API so that 
-    //                  hotreloading the engine doesn't just crash the program
     
     real32 SizeScaler = WORLD_SIZE * 10;
     for(uint32 EntityIndex = 0;
@@ -978,6 +973,7 @@ GAME_ON_AWAKE(GameOnAwake)
     
     Player = CreateEntity(State);
     SetupPlayer(State, Player);
+
     
     State->DisplayPlayerHotbar = true;
 }
@@ -1006,6 +1002,12 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
         RenderData->GameUICamera.ProjectionMatrix     = mat4RHGLOrtho((real32)SizeData.Width * -0.5f, (real32)SizeData.Width * 0.5f, (real32)SizeData.Height * -0.5f, (real32)SizeData.Height * 0.5f, -1.0f, 1.0f); 
         RenderData->GameUICamera.ViewMatrix           = mat4Multiply(mat4Identity(1.0f), ScaleMatrix);
         RenderData->GameUICamera.ProjectionViewMatrix = mat4Multiply(RenderData->GameUICamera.ProjectionMatrix, RenderData->GameUICamera.ViewMatrix);
+
+        State->UIContext.UICameraViewMatrix       = RenderData->GameUICamera.ViewMatrix;
+        State->UIContext.UICameraProjectionMatrix = RenderData->GameUICamera.ProjectionMatrix;
+        State->UIContext.GameInput                = &State->GameInput;
+        State->UIContext.ActiveFont               = &RenderData->LoadedFonts[UBUNTU_MONO];
+        State->UIContext.ActiveFontIndex          = UBUNTU_MONO;
     }
     
     vec2 MouseToWorld  = TransformMouseCoords(RenderData->GameCamera.ViewMatrix, 
@@ -1079,12 +1081,6 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
     // NOTE(Sleepster): New Hotbar UI 
     if(State->DisplayPlayerHotbar)
     {
-        State->UIContext.UICameraViewMatrix       = RenderData->GameUICamera.ViewMatrix;
-        State->UIContext.UICameraProjectionMatrix = RenderData->GameUICamera.ProjectionMatrix;
-        State->UIContext.GameInput                = &State->GameInput;
-        State->UIContext.ActiveFont               = &RenderData->LoadedFonts[UBUNTU_MONO];
-        State->UIContext.ActiveFontIndex          = UBUNTU_MONO;
-        
         const real32 Width = SizeData.X * 0.25f;
         const real32 Padding = 4.0f;
         const real32 IconSize = 16.0f;
@@ -1194,7 +1190,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     
                     vec4 ItemCountTextPosition = SpriteXForm.Columns[3];
                     Position = vec2{ItemCountTextPosition.X, ItemCountTextPosition.Y};
-                    CloverUIMakeTextElement(&State->UIContext, sprints(&State->StringArena, STR("x%d"), Item->CurrentStack), {Position.X + 3, Position.Y}, 15, TEXT_ALIGNMENT_Center, GREEN);
+                    CloverUIMakeTextElement(&State->UIContext, sprints(&TransientState->StringArena, STR("x%d"), Item->CurrentStack), {Position.X + 3, Position.Y}, 15, TEXT_ALIGNMENT_Center, GREEN);
                 }
             }
             
@@ -1218,13 +1214,6 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
     const real32 InventoryYOffset = -70.0f;
     if(State->DisplayPlayerInventory)
     {
-        // TODO(Sleepster): This is all copy-pasted, clean it up and move common code into a seperate function 
-        State->UIContext.UICameraViewMatrix       = RenderData->GameUICamera.ViewMatrix;
-        State->UIContext.UICameraProjectionMatrix = RenderData->GameUICamera.ProjectionMatrix;
-        State->UIContext.GameInput                = &State->GameInput;
-        State->UIContext.ActiveFont               = &RenderData->LoadedFonts[UBUNTU_MONO];
-        State->UIContext.ActiveFontIndex          = UBUNTU_MONO;
-        
         const real32 Width = SizeData.X * 0.25f;
         const real32 Padding = 1.00f;
         const real32 IconSize = 16.0f;
@@ -1325,7 +1314,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     
                     vec4 ItemCountTextPosition = SpriteXForm.Columns[3];
                     Position = vec2{ItemCountTextPosition.X, ItemCountTextPosition.Y};
-                    CloverUIMakeTextElement(&State->UIContext, sprints(&State->StringArena, STR("x%d"), Item->CurrentStack), {Position.X + 3, Position.Y}, 15, TEXT_ALIGNMENT_Center, GREEN);
+                    CloverUIMakeTextElement(&State->UIContext, sprints(&TransientState->StringArena, STR("x%d"), Item->CurrentStack), {Position.X + 3, Position.Y}, 15, TEXT_ALIGNMENT_Center, GREEN);
                 }
             }
         }
@@ -1355,12 +1344,14 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             }
             
             // TODO(Sleepster): Render the Item count if it's needed 
-            /* if(Item->CurrentStack > 1 && Item->MaxStackCount > 1) */
-            /* { */
-            /*     mat4 TextXForm = InventoryElement->XForm; */
-            /*     vec2 TextPosition = TextXForm.Columns[3].XY; */
-            /*     DrawUIText(RenderData, sprints(&Memory->TemporaryStorage, STR("x%d"), Item->CurrentStack), {TextPosition.X, TextPosition.Y}, 10, UBUNTU_MONO, GREEN); */
-            /* } */ 
+            if(Item->CurrentStack > 1 && Item->MaxStackCount > 1)
+            {
+                /* mat4 TextXForm = InventoryElement->XForm; */
+                /* vec2 TextPosition = TextXForm.Columns[3].XY; */
+                /* CloverUIPushLayer(&State->UIContext, 5); */
+                /* CloverUIMakeTextElement(&State->UIContext, sprints(&TransientState->StringArena, STR("x%d"), Item->CurrentStack), {TextPosition.X, TextPosition.Y}, 10, TEXT_ALIGNMENT_Left, GREEN); */
+                /* CloverUIPushLayer(&State->UIContext, 0); */
+            } 
             
             // NOTE(Sleepster): Scale sprite if selected 
             if(InventoryIndexSlot == Player->Inventory.CurrentInventorySlot)
@@ -1551,7 +1542,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     
                     CloverUIPushLayer(&State->UIContext, 2);
                     CloverUISpriteElement(&State->UIContext, {0, 0}, {0, 0}, XForm, Sprite, WHITE);
-                    CloverUIMakeTextElement(&State->UIContext, sprints(&State->StringArena, STR("%d/%d"), InventoryCount[MaterialIndex], Material->RequiredCount), {10, NewYOffset + 5}, 10, TEXT_ALIGNMENT_Center, BLACK);
+                    CloverUIMakeTextElement(&State->UIContext, sprints(&TransientState->StringArena, STR("%d/%d"), InventoryCount[MaterialIndex], Material->RequiredCount), {10, NewYOffset + 5}, 10, TEXT_ALIGNMENT_Center, BLACK);
                     CloverUIPushLayer(&State->UIContext, 0);
                 }
                 
@@ -1855,7 +1846,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     
                     CloverUIPushLayer(&State->UIContext, 2);
                     CloverUISpriteElement(&State->UIContext, {0, 0}, {0, 0}, XForm, Sprite, WHITE);
-                    CloverUIMakeTextElement(&State->UIContext, sprints(&State->StringArena, STR("%d/%d"), InventoryCount[MaterialIndex], Material->RequiredCount), {55, NewYOffset - 5}, 10, TEXT_ALIGNMENT_Center, BLACK);
+                    CloverUIMakeTextElement(&State->UIContext, sprints(&TransientState->StringArena, STR("%d/%d"), InventoryCount[MaterialIndex], Material->RequiredCount), {55, NewYOffset - 5}, 10, TEXT_ALIGNMENT_Center, BLACK);
                     CloverUIPushLayer(&State->UIContext, 0);
                 }
                 
@@ -1927,12 +1918,12 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
     
     // TRANSPARENCY TEST
     {
-        /* mat4 Identity  = mat4Identity(1.0f); */
-        /* mat4 Translate = mat4Multiply(Identity, mat4Translate(vec3{10.0f, 10.0f, 0.0f})); */
-        /* mat4 Scale     = mat4Multiply(Identity, mat4MakeScale(vec3{100.0f, 100.0f, 1.0f})); */
+        mat4 Identity  = mat4Identity(1.0f);
+        mat4 Translate = mat4Multiply(Identity, mat4Translate(vec3{10.0f, 10.0f, 0.0f}));
+        mat4 Scale     = mat4Multiply(Identity, mat4MakeScale(vec3{100.0f, 100.0f, 1.0f}));
         
-        /* mat4 Total = Translate * Scale; */
-        /* DrawRectXForm(RenderData, Total, {16, 16}, 0, vec4{1.0f, 0.0f, 1.0f, 0.3f}); */
+        mat4 Total = Translate * Scale;
+        DrawRectXForm(RenderData, Total, {16, 16}, 0, vec4{1.0f, 0.0f, 1.0f, 0.3f});
     }
     
     

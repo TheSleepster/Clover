@@ -684,11 +684,6 @@ CloverRender(gl_render_data *RenderData)
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
-    /* glBindFramebuffer(GL_READ_FRAMEBUFFER, RenderData->gBuffer[0]); */
-    /* glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); */
-    /* glBlitFramebuffer(0, 0, SizeData.Width, SizeData.Height, 0, 0, SizeData.Width, SizeData.Height, GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT, GL_NEAREST); */
-    /* glBindFramebuffer(GL_FRAMEBUFFER, 0); */
-
     glUseProgram(RenderData->BasicShader.ShaderID);
     if(RenderData->DrawFrame.TransparentQuadCount > 0)
     {
@@ -725,6 +720,7 @@ CloverRender(gl_render_data *RenderData)
         }
     }
     
+    // TODO(Sleepster): Make Transparent Objects affected by the uBrightnessFactor of the game world 
     if(RenderData->DrawFrame.TransparentUIElementCount > 0)
     {
         GLintptr UIBufferOffset   = int32((RenderData->DrawFrame.OpaqueUIElementCount * 4) * sizeof(vertex));

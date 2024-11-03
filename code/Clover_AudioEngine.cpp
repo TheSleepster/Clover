@@ -15,18 +15,6 @@
 // NOTE(Sleepster): As of right now SDL is being used ONLY for the audio engine.
 #include "../data/deps/SDL3/include/SDL3/SDL.h"
 #include "../data/deps/SDL3/include/SDL3/SDL_audio.h"
-#if 0
-internal void
-LoadSound(memory_arena *Memory, audio_engine_info *InputEngine, string Filepath)
-{
-    uint8 *WAVBuffer = {};
-    uint32  BufferLength = {};
-    SDL_LoadWAV(CSTR(Filepath), &InputEngine->OutputSpec, &WAVBuffer, &BufferLength);
-    SDL_PutAudioStreamData(InputEngine->SoundSampleBuffer, (const void *)WAVBuffer, BufferLength);
-
-    SDL_FlushAudioStream(InputEngine->SoundSampleBuffer);
-}
-#endif
 
 // NOTE(Sleepster): This function is a mess, sorry
 internal void
@@ -103,7 +91,7 @@ GetType(riff_iterator Iter)
 }
 
 internal loaded_sound
-ReadWAVFile(memory_arena *Memory, audio_engine_info *InputEngine, string Filepath)
+CloverLoadWAVFile(memory_arena *Memory, audio_engine_info *InputEngine, string Filepath)
 {
     loaded_sound Result = {};
 
@@ -146,13 +134,8 @@ ReadWAVFile(memory_arena *Memory, audio_engine_info *InputEngine, string Filepat
         Result.ChannelCount = ChannelCount;
         Result.SampleCount  = SampleDataSize / (sizeof(uint8));
         Result.SampleCount  = (Result.SampleCount + 1) & ~1;
-        // NOTE(Sleepster): Mono 
-        if(ChannelCount == 1)
-        {
-            Result.Samples = SampleData;
-        }
-        // NOTE(Sleepster): Stereo 
-        else if(ChannelCount == 2)
+        // NOTE(Sleepster): Mono/Stereo 
+        if(ChannelCount == 1||ChannelCount == 2)
         {
             Result.Samples = SampleData;
         }
@@ -163,11 +146,16 @@ ReadWAVFile(memory_arena *Memory, audio_engine_info *InputEngine, string Filepat
         }
     }
 
-    if(!SDL_PutAudioStreamData(InputEngine->SoundSampleBuffer, (const void *)Result.Samples, Result.SampleCount))
+    return(Result);
+}
+
+internal inline void
+CloverPlayWAVFile_IO(memory_arena *Memory, audio_engine_info *InputEngine, string Filepath)
+{
+    loaded_sound Sound = CloverLoadWAVFile(Memory, InputEngine, Filepath);
+    if(!SDL_PutAudioStreamData(InputEngine->SoundSampleBuffer, (const void *)Sound.Samples, Sound.SampleCount))
     {
         printm("[ERROR]: SDL has failed to add audio stream data to our buffer. Error code: %s\n", SDL_GetError());
         Assert(1 == 0);
     }
-    SDL_FlushAudioStream(InputEngine->SoundSampleBuffer);
-    return(Result);
 }

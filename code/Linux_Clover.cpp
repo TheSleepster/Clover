@@ -9,8 +9,9 @@
 #include "util/Math.h"
 #include "util/Array.h"
 #include "util/FileIO.h"
-#include "util/CustomStrings.h"
+#include "util/String.h"
 #include "util/Pairs.h"
+#include "util/Arena.h"
 
 #include "Intrinsics.h"
 

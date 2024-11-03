@@ -88,13 +88,16 @@ struct scratch_memory
 #define PushStruct(Arena, type, ...)       (type *)PushSize_(Arena, sizeof(type), ##__VA_ARGS__)
 #define PushArray(Arena, type, Count, ...) (type *)PushSize_(Arena, sizeof(type) * (Count), ##__VA_ARGS__)
 
-internal inline void
+internal inline uint8*
 InitializeArena(memory_arena *Arena, memory_index Capacity, void *Base)
 {
     Arena->Capacity     = Capacity;
     Arena->Used         = 0;
     Arena->Base         = (uint8 *)Base;
     Arena->ScratchCount = 0;
+
+    // NOTE(Sleepster): Return the new offset 
+    return((uint8 *)(Arena->Base + Arena->Capacity));
 }
 
 internal void*

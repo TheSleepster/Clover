@@ -30,14 +30,22 @@ struct game_memory
     bool  IsInitialized;
 
     int64 PermanentStorageSize; 
-    int64 OccupiedPStorage;
-
-    void *PermanentStorage;
-
     int64 TransientStorageSize;
-    int64 OccupiedTStorage;
 
+    // NOTE(Sleepster): These aren't for allocation, they store the offset 
+    uint8 *pBufferOffset;
+    uint8 *tBufferOffset;
+
+    // NOTE(Sleepster): Actual allocation buffers;
+    void *PermanentStorage;
     void *TransientStorage;
+};
+
+// NOTE(Sleepster): This is reset at the end of every frame 
+struct transient_state
+{
+    memory_arena FileIOArena;
+    memory_arena StringArena;
 };
 
 struct time_data
@@ -233,12 +241,14 @@ struct entity
 
 struct game_world_data
 {
+    memory_arena WorldArena;
+
+    // TODO(Sleepster): Move these allocations to the arena 
     entity Entities[MAX_ENTITIES];  
     item   Items[1000];
     uint32 EntityCounter;
-
-    memory_arena WorldArena;
-    
+ 
+    // TODO(Sleepster): Do we really need this with TransientState? 
     struct 
     {
         entity *SelectedEntity;
@@ -266,12 +276,10 @@ struct game_state
     item   *ActiveBlueprint;
 
     audio_engine_info TestEngine;
-    loaded_sound  TestSound;
-    playing_sound FirstPlayingSound;
+    loaded_sound      TestSound;
+    playing_sound     FirstPlayingSound;
     
     game_world_data World;
-
-    memory_arena StringArena;
     
     struct 
     { 
@@ -426,19 +434,19 @@ SinBreathe(real32 Time, real32 Modifier)
     return(sinf(Time * Modifier));
 }
 
-#define GAME_ON_AWAKE(name) void name(game_memory *Memory, gl_render_data *RenderData, game_state *State)
+#define GAME_ON_AWAKE(name) void name(game_memory *Memory, gl_render_data *RenderData, game_state *State, transient_state *TransientState)
 typedef GAME_ON_AWAKE(game_on_awake);
 GAME_ON_AWAKE(GameOnAwakeStub)
 {
 }
 
-#define GAME_FIXED_UPDATE(name) void name(game_memory *Memory, gl_render_data *RenderData, game_state *State, time_data Time)
+#define GAME_FIXED_UPDATE(name) void name(game_memory *Memory, gl_render_data *RenderData, game_state *State, transient_state *TransientState, time_data Time)
 typedef GAME_FIXED_UPDATE(game_fixed_update);
 GAME_FIXED_UPDATE(GameFixedUpdateStub)
 {
 }
 
-#define GAME_UPDATE_AND_DRAW(name) void name(game_memory *Memory, gl_render_data *RenderData, game_state *State, time_data Time, ivec4 SizeDataIn)
+#define GAME_UPDATE_AND_DRAW(name) void name(game_memory *Memory, gl_render_data *RenderData, game_state *State, transient_state *TransientState, time_data Time, ivec4 SizeDataIn)
 typedef GAME_UPDATE_AND_DRAW(game_update_and_draw);
 GAME_UPDATE_AND_DRAW(GameUpdateAndDrawStub)
 {
