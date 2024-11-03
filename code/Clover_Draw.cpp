@@ -42,6 +42,7 @@ DrawImGui(game_state *State, gl_render_data *RenderData, time_data Time)
         ImGui::SeparatorText("GAME DEBUG INFO");
         ImGui::Text("Entity Count: %i", State->World.EntityCounter);
         ImGui::Text("Quad Count: %i", RenderData->LastFrameQuadCount);
+        ImGui::Text("Vertex Count: %i", RenderData->LastFrameQuadCount * 4);
 
         ImGui::End();
     }

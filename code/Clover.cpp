@@ -979,6 +979,11 @@ GAME_ON_AWAKE(GameOnAwake)
 }
 
 extern
+GAME_FIXED_UPDATE(GameFixedUpdate)
+{
+}
+
+extern
 GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
 {
     DrawImGui(State, RenderData, Time);
@@ -1190,7 +1195,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     
                     vec4 ItemCountTextPosition = SpriteXForm.Columns[3];
                     Position = vec2{ItemCountTextPosition.X, ItemCountTextPosition.Y};
-                    CloverUIMakeTextElement(&State->UIContext, sprints(&TransientState->StringArena, STR("x%d"), Item->CurrentStack), {Position.X + 3, Position.Y}, 15, TEXT_ALIGNMENT_Center, GREEN);
+                    CloverUIMakeTextElement(&State->UIContext, sprints(&TransientState->TransientArena, STR("x%d"), Item->CurrentStack), {Position.X + 3, Position.Y}, 15, TEXT_ALIGNMENT_Center, GREEN);
                 }
             }
             
@@ -1314,7 +1319,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     
                     vec4 ItemCountTextPosition = SpriteXForm.Columns[3];
                     Position = vec2{ItemCountTextPosition.X, ItemCountTextPosition.Y};
-                    CloverUIMakeTextElement(&State->UIContext, sprints(&TransientState->StringArena, STR("x%d"), Item->CurrentStack), {Position.X + 3, Position.Y}, 15, TEXT_ALIGNMENT_Center, GREEN);
+                    CloverUIMakeTextElement(&State->UIContext, sprints(&TransientState->TransientArena, STR("x%d"), Item->CurrentStack), {Position.X + 3, Position.Y}, 15, TEXT_ALIGNMENT_Center, GREEN);
                 }
             }
         }
@@ -1349,7 +1354,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                 /* mat4 TextXForm = InventoryElement->XForm; */
                 /* vec2 TextPosition = TextXForm.Columns[3].XY; */
                 /* CloverUIPushLayer(&State->UIContext, 5); */
-                /* CloverUIMakeTextElement(&State->UIContext, sprints(&TransientState->StringArena, STR("x%d"), Item->CurrentStack), {TextPosition.X, TextPosition.Y}, 10, TEXT_ALIGNMENT_Left, GREEN); */
+                /* CloverUIMakeTextElement(&State->UIContext, sprints(&TransientState->TransientArena, STR("x%d"), Item->CurrentStack), {TextPosition.X, TextPosition.Y}, 10, TEXT_ALIGNMENT_Left, GREEN); */
                 /* CloverUIPushLayer(&State->UIContext, 0); */
             } 
             
@@ -1542,7 +1547,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     
                     CloverUIPushLayer(&State->UIContext, 2);
                     CloverUISpriteElement(&State->UIContext, {0, 0}, {0, 0}, XForm, Sprite, WHITE);
-                    CloverUIMakeTextElement(&State->UIContext, sprints(&TransientState->StringArena, STR("%d/%d"), InventoryCount[MaterialIndex], Material->RequiredCount), {10, NewYOffset + 5}, 10, TEXT_ALIGNMENT_Center, BLACK);
+                    CloverUIMakeTextElement(&State->UIContext, sprints(&TransientState->TransientArena, STR("%d/%d"), InventoryCount[MaterialIndex], Material->RequiredCount), {10, NewYOffset + 5}, 10, TEXT_ALIGNMENT_Center, BLACK);
                     CloverUIPushLayer(&State->UIContext, 0);
                 }
                 
@@ -1846,7 +1851,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     
                     CloverUIPushLayer(&State->UIContext, 2);
                     CloverUISpriteElement(&State->UIContext, {0, 0}, {0, 0}, XForm, Sprite, WHITE);
-                    CloverUIMakeTextElement(&State->UIContext, sprints(&TransientState->StringArena, STR("%d/%d"), InventoryCount[MaterialIndex], Material->RequiredCount), {55, NewYOffset - 5}, 10, TEXT_ALIGNMENT_Center, BLACK);
+                    CloverUIMakeTextElement(&State->UIContext, sprints(&TransientState->TransientArena, STR("%d/%d"), InventoryCount[MaterialIndex], Material->RequiredCount), {55, NewYOffset - 5}, 10, TEXT_ALIGNMENT_Center, BLACK);
                     CloverUIPushLayer(&State->UIContext, 0);
                 }
                 
@@ -2041,6 +2046,10 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
 }
 
 extern
-GAME_FIXED_UPDATE(GameFixedUpdate)
+GAME_GET_SOUND_SAMPLES(GameGetSoundSamples)
 {
+    scratch_memory Temp = BeginScratchBlock(&TransientState->TransientArena);
+    real32 *MixerMemory = (real32 *)PushSize(&TransientState->TransientArena, sizeof(real32) * State->TestEngine.SampleRate);
+
+    EndScratchBlock(&Temp);
 }

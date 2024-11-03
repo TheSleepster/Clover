@@ -33,6 +33,7 @@ struct game_functions
     game_on_awake          *OnAwake;
     game_fixed_update      *FixedUpdate;
     game_update_and_draw   *UpdateAndDraw;
+    game_get_sound_samples *GetSoundSamples;
     
     bool IsLoaded;
     bool IsValid;

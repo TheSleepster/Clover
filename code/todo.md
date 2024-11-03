@@ -23,7 +23,6 @@
     }
         ```
 ---
-
 - ## Asset System
     - [ ] Create a system for tagging assets. 
     - [ ] Make Tags will include things like what KIND of asset it is 
@@ -66,14 +65,12 @@
         ```
 
 ---
-
 - ### Enhance Arenas 
     - [x] Transient State
     - [x] Better method of storing the current Base position for the next arena
     - [x] Storage for Transient Memory Arenas
 
 ---
-
 - #### Multithreading (if needed)
     - [ ] Job system
     - [ ] Multithreaded asset loading
@@ -81,7 +78,6 @@
     - [ ] Multithreaded game code execution
 
 ---
-
 - ##### Preprocessor for introspection of assets and other such runtime information 
     - [ ] Define a macro with which to designate items to parse
     - [ ] Parser for structs that spits out the data they contain and the data type
@@ -92,7 +88,17 @@
 ---
 
 ---
+- ###### Change how our hotreloading works
+    - [ ] Looped Live code editing
+    - [ ] Don't reset EVERYTHING in the game on reload. (Ex: Don't regenerate the world and set the player to 0)
+    - [ ] Store a persistant world state that doesn't change on reloading
+    - [ ] Make testing easier
 
-- ###### XInput Controller support on Windows
+---
+- ###### GPU Particles 
+    - [ ] Render the particles
+    - [ ] Create a particle system
+    - [ ] Allow the system to control the kind of particles and the rate with which they are output
+    - [ ] Allow images to be used on particles
 
 ---

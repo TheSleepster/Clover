@@ -16,6 +16,7 @@
 #include "../data/deps/SDL3/include/SDL3/SDL.h"
 #include "../data/deps/SDL3/include/SDL3/SDL_audio.h"
 
+#if 0
 // NOTE(Sleepster): This function is a mess, sorry
 internal void
 InitAudio(audio_engine_info *InputEngine)
@@ -27,11 +28,11 @@ InitAudio(audio_engine_info *InputEngine)
         if(SDL_GetAudioDeviceFormat(InputEngine->PrimaryDevice, &InputEngine->OutputSpec, 0))
         {
             InputEngine->OutputSpec     = {.format = SDL_AUDIO_S16LE, .channels = 2, .freq = SampleRate};
-            InputEngine->SoundSampleBuffer = SDL_CreateAudioStream(&InputEngine->InputSpec, &InputEngine->OutputSpec);
-            Check(InputEngine->SoundSampleBuffer != 0, 
+            InputEngine->SDLSoundBuffer = SDL_CreateAudioStream(&InputEngine->InputSpec, &InputEngine->OutputSpec);
+            Check(InputEngine->SDLSoundBuffer != 0, 
                   "[ERROR]: Failed to create an SDL_AudioStream. Error code: %s\n", SDL_GetError());
 
-            Check(SDL_BindAudioStream(InputEngine->PrimaryDevice, InputEngine->SoundSampleBuffer), 
+            Check(SDL_BindAudioStream(InputEngine->PrimaryDevice, InputEngine->SDLSoundBuffer), 
                   "[ERROR]: Failure to attach the sound buffer to the output deviec. Error code: %s\n", SDL_GetError());
         }
         else 
@@ -40,6 +41,7 @@ InitAudio(audio_engine_info *InputEngine)
     else 
     {Check(1 == 0, "[ERROR]: Failure to open the default output device. Error code: %s\n", SDL_GetError());}
 }
+#endif
 
 internal inline riff_iterator
 ParseChunkAt(void *At, void *End)
@@ -107,7 +109,7 @@ CloverLoadWAVFile(memory_arena *Memory, audio_engine_info *InputEngine, string F
 
         uint32 ChannelCount   = 0;
         uint32 SampleDataSize = 0;
-        uint8 *SampleData     = 0;
+        int16 *SampleData     = 0;
         for(riff_iterator Iter = ParseChunkAt(Header + 1, (uint8 *)(Header + 1) + Header->Size - 4);
             IsChunkValid(Iter);
             Iter = NextChunk(Iter))
@@ -125,7 +127,7 @@ CloverLoadWAVFile(memory_arena *Memory, audio_engine_info *InputEngine, string F
                 }break;
                 case WAVE_ChunkID_data:
                 {
-                    SampleData = (uint8 *)GetChunkData(Iter);
+                    SampleData = (int16 *)GetChunkData(Iter);
                     SampleDataSize = GetChunkDataSize(Iter);
                 }break;
             }
@@ -153,7 +155,7 @@ internal inline void
 CloverPlayWAVFile_IO(memory_arena *Memory, audio_engine_info *InputEngine, string Filepath)
 {
     loaded_sound Sound = CloverLoadWAVFile(Memory, InputEngine, Filepath);
-    if(!SDL_PutAudioStreamData(InputEngine->SoundSampleBuffer, (const void *)Sound.Samples, Sound.SampleCount))
+    if(!SDL_PutAudioStreamData(InputEngine->SDLSoundBuffer, (const void *)(uint8 *)Sound.Samples, Sound.SampleCount))
     {
         printm("[ERROR]: SDL has failed to add audio stream data to our buffer. Error code: %s\n", SDL_GetError());
         Assert(1 == 0);

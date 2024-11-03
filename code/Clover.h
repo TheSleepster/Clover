@@ -44,8 +44,7 @@ struct game_memory
 // NOTE(Sleepster): This is reset at the end of every frame 
 struct transient_state
 {
-    memory_arena FileIOArena;
-    memory_arena StringArena;
+    memory_arena TransientArena;
 };
 
 struct time_data
@@ -449,6 +448,12 @@ GAME_FIXED_UPDATE(GameFixedUpdateStub)
 #define GAME_UPDATE_AND_DRAW(name) void name(game_memory *Memory, gl_render_data *RenderData, game_state *State, transient_state *TransientState, time_data Time, ivec4 SizeDataIn)
 typedef GAME_UPDATE_AND_DRAW(game_update_and_draw);
 GAME_UPDATE_AND_DRAW(GameUpdateAndDrawStub)
+{
+}
+
+#define GAME_GET_SOUND_SAMPLES(name) void name(game_memory *Memory, game_state *State, transient_state *TransientState)
+typedef GAME_GET_SOUND_SAMPLES(game_get_sound_samples);
+GAME_GET_SOUND_SAMPLES(GameGetSoundSamplesStub)
 {
 }
 

@@ -74,7 +74,7 @@ struct loaded_sound
     uint16 ChannelCount;
     uint32 SampleCount;
     
-    uint8 *Samples;
+    int16 *Samples;
 };
 
 struct playing_sound
@@ -89,7 +89,7 @@ struct playing_sound
 struct audio_engine_info
 {
     SDL_AudioDeviceID  PrimaryDevice;
-    SDL_AudioStream   *SoundSampleBuffer;
+    SDL_AudioStream   *SDLSoundBuffer;
 
     SDL_AudioSpec      InputSpec;
     SDL_AudioSpec      OutputSpec;
