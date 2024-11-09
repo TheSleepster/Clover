@@ -3,10 +3,16 @@
 #ifndef CLOVER_INPUT_H
 #define CLOVER_INPUT_H
 
+#if 0
+#include "../data/deps/SDL3/include/SDL3/SDL.h"
+#include "../data/deps/SDL3/include/SDL3/SDL_gamepad.h"
+#include "../data/deps/SDL3/include/SDL3/SDL_joystick.h"
+#endif
+
 #include "Intrinsics.h"
 #include "util/Math.h"
 
-enum KeyCodeID 
+enum keycodeID 
 { 
     KEY_NONE,
     KEY_LEFT_MOUSE,
@@ -103,135 +109,151 @@ enum KeyBindings
     BINDING_COUNT,
 };
 
-struct Key 
+// NOTE(Sleepster): This is based off the Xbox One (2015) controler
+enum controller_buttonID
 {
-    bool8 JustPressed;
-    bool8 JustReleased;
-    bool8 IsDown;
+    DPAD_UP,
+    DPAD_DOWN,
+    DPAD_LEFT,
+    DPAD_RIGHT,
+
+    START_BUTTON,
+    BACK_BUTTON,
+
+    LEFT_THUMBSTICK_DOWN,
+    RIGHT_THUMBSTICK_DOWN,
+
+    LEFT_SHOULDER_BUTTON,
+    RIGHT_SHOULDER_BUTTON,
+
+    A_BUTTON,
+    B_BUTTON,
+    X_BUTTON,
+    Y_BUTTON,
+
+    GAMEPAD_BUTTON_COUNT = 14,
+    NULL_BUTTON,
+};
+
+#if 0
+
+struct action_button
+{
+    bool32 JustPressed;
+    bool32 JustReleased;
+    bool32 IsDown;
     uint8 HalfTransitionCount;
 };
 
-struct Keymapping 
+struct key_mapping 
 {
-    KeyCodeID MainKey;
-    KeyCodeID AltKey;
+    keycodeID MainKey;
+    keycodeID AltKey;
+
+    controller_buttonID PrimaryButton;
+    controller_buttonID SecondaryButton;
 };
 
-struct KeyboardInput 
+struct keyboard_input 
 {
     ivec2 LastMouse;
     ivec2 CurrentMouse;
     ivec2 DeltaMouse;
     
-    Key Keys[KEY_COUNT];
-    Keymapping Bindings[BINDING_COUNT];
+    action_button Keys[KEY_COUNT];
+    key_mapping Bindings[BINDING_COUNT];
 };
 
-struct Input 
+constexpr uint32 CONTROLLER_DEADZONE = 8000;
+struct controller_input
 {
-    KeyboardInput Keyboard;
+    action_button GamepadButtons[GAMEPAD_BUTTON_COUNT];
+
+    int16 LeftStickX;
+    int16 LeftStickY;
+
+    int16 RightStickX;
+    int16 RightStickY;
+
+    uint8 LeftTriggerValue;
+    uint8 RightTriggerValue;
+
+    int32 Rumble;
 };
 
-internal inline bool
-IsKeyPressed(KeyCodeID Keycode, Input *GameInput)
+struct player_controller
 {
-    Key InputKey = GameInput->Keyboard.Keys[Keycode];
-    return(InputKey.IsDown && InputKey.HalfTransitionCount >= 1);
-}
+    bool IsController;
 
-internal inline bool
-IsKeyReleased(KeyCodeID Keycode, Input *GameInput)
-{
-    Key InputKey = GameInput->Keyboard.Keys[Keycode];
-    return(!InputKey.IsDown && InputKey.HalfTransitionCount >= 1);
-}
+    controller_input Controller;
+    keyboard_input   Keyboard;
+};
 
-internal inline bool 
-IsKeyDown(KeyCodeID Keycode, Input *GameInput)
-{
-    return(GameInput->Keyboard.Keys[Keycode].IsDown);
-}
-
-internal inline void
-ConsumeKeyInput(KeyCodeID KeyCode, Input *GameInput)
-{
-    GameInput->Keyboard.Keys[KeyCode].HalfTransitionCount = 0;
-}
-
-internal inline bool 
-IsGameKeyDown(KeyBindings InputType, Input *GameInput)
-{
-    Key InputKey    = GameInput->Keyboard.Keys[GameInput->Keyboard.Bindings[InputType].MainKey];
-    Key AltInputKey = GameInput->Keyboard.Keys[GameInput->Keyboard.Bindings[InputType].AltKey];
-    return(InputKey.IsDown || AltInputKey.IsDown);
-}
-
-internal inline bool
-IsGameKeyPressed(KeyBindings InputType, Input *GameInput)
-{
-    Key InputKey    = GameInput->Keyboard.Keys[GameInput->Keyboard.Bindings[InputType].MainKey];
-    Key AltInputKey = GameInput->Keyboard.Keys[GameInput->Keyboard.Bindings[InputType].AltKey];
-    return((InputKey.IsDown && InputKey.HalfTransitionCount >= 1) || (AltInputKey.IsDown && AltInputKey.HalfTransitionCount >= 1));
-}
-
-
-internal inline bool
-IsGameKeyReleased(KeyBindings InputType, Input *GameInput)
-{
-    Key InputKey    = GameInput->Keyboard.Keys[GameInput->Keyboard.Bindings[InputType].MainKey];
-    Key AltInputKey = GameInput->Keyboard.Keys[GameInput->Keyboard.Bindings[InputType].AltKey];
-    return((!InputKey.IsDown && InputKey.HalfTransitionCount >= 1) || (!AltInputKey.IsDown && AltInputKey.HalfTransitionCount >= 1));
-}
-
-internal inline void
-ConsumeGameKeyInput(KeyBindings InputType, Input *GameInput)
-{
-    Key InputKey    = GameInput->Keyboard.Keys[GameInput->Keyboard.Bindings[InputType].MainKey];
-    Key AltInputKey = GameInput->Keyboard.Keys[GameInput->Keyboard.Bindings[InputType].AltKey];
-    
-    InputKey.HalfTransitionCount = 0;
-    InputKey.IsDown = 1;
-    InputKey.JustPressed = 1;
-    InputKey.JustReleased = 0;
-    
-    AltInputKey.HalfTransitionCount = 0;
-    AltInputKey.IsDown = 1;
-    AltInputKey.JustPressed = 1;
-    AltInputKey.JustReleased = 0;
-}
-
-
-// NOTE(Sleepster): OLD INPUT
-#if 0
-internal inline bool
-IsKeyDown(KeyCodeID KeyCode, Input *GameInput) 
-{
-    Key Key = GameInput->Keyboard.Keys[KeyCode];
-    if(Key.IsDown) return(1);
-    
-    return(0);
-}
-
-internal inline bool
-IsGameKeyDown(KeyBindings InputType, Input *GameInput) 
-{
-    KeyCodeID Keycode = GameInput->Keyboard.Bindings[InputType].MainKey;
-    Key LoadedKey = GameInput->Keyboard.Keys[Keycode];
-    if(LoadedKey.IsDown) return(1);
-    else return(0);
-}
-
-internal inline bool
-IsGameKeyPressed(KeyBindings InputType, Input *GameInput)
-{
-    KeyCodeID Keycode = GameInput->Keyboard.Bindings[InputType].MainKey;
-    Key LoadedKey = GameInput->Keyboard.Keys[Keycode];
-    
-    if(LoadedKey.JustPressed) return(1);
-    else return(0);
-}
 #endif
 
+struct action_button
+{
+    bool32 JustPressed;
+    bool32 JustReleased;
+    bool32 IsDown;
+    uint8 HalfTransitionCount;
+};
+
+constexpr uint32 CONTROLLER_DEADZONE = 8000;
+struct gamepad_input
+{
+    action_button GamepadButtons[GAMEPAD_BUTTON_COUNT];
+
+    ivec2 LeftStick;
+    ivec2 RightStick;
+
+    uint8 LeftTriggerValue;
+    uint8 RightTriggerValue;
+
+    uint16 LeftRumble;
+    uint16 RightRumble;
+
+    int32 ControllerIndex;
+};
+
+struct keyboard_key 
+{
+    bool32 JustPressed;
+    bool32 JustReleased;
+    bool32 IsDown;
+    uint8  HalfTransitionCount;
+};
+
+struct game_mapping 
+{
+    keycodeID MainKey;
+    keycodeID AltKey;
+
+    controller_buttonID PrimaryButton;
+    controller_buttonID SecondaryButton;
+};
+
+struct keyboard_input 
+{
+    ivec2 LastMouse;
+    ivec2 CurrentMouse;
+    ivec2 DeltaMouse;
+    
+    keyboard_key Keys[KEY_COUNT];
+};
+
+struct input
+{
+    bool IsAnalog;
+
+    keycodeID KeyCodeLookup[KEY_COUNT];
+    keyboard_input Keyboard;
+
+    uint16 ButtonLookup[GAMEPAD_BUTTON_COUNT];
+    gamepad_input  Controller;
+
+    game_mapping   Mappings[BINDING_COUNT];
+};
 
 #endif // _CLOVER_INPUT_H
 

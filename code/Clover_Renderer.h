@@ -9,8 +9,8 @@
 
 #include "Intrinsics.h"
 
-#ifndef GLAD_OPENGL_IMPL
 // GLAD
+#ifndef GLAD_OPENGL_IMPL
 #define GLAD_OPENGL_IMPL
 #include "../data/deps/OpenGL/glad/include/glad/glad.h"
 
@@ -27,8 +27,6 @@
 
 // IMGUI IMPl
 #include "../data/deps/ImGui/imgui.h"
-#include "../data/deps/ImGui/imgui_impl_win32.h"
-#include "../data/deps/ImGUI/imgui_impl_opengl3.h"
 
 #include "Clover.h"
 #include "shader/CommonShader.glh"

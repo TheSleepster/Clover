@@ -3,7 +3,6 @@
 #ifndef CLOVER_H
 #define CLOVER_H
 
-#include "Clover_AudioEngine.h"
 #include "Intrinsics.h"
 
 #include "util/Math.h"
@@ -15,7 +14,7 @@
 #include "Clover_Input.h"
 #include "Clover_Renderer.h"
 #include "Clover_UI.h"
-#include "Clover_AudioEngine.h"
+#include "Clover_Audio.h"
 
 #if 0
 struct game_memory
@@ -29,16 +28,8 @@ struct game_memory
 {
     bool  IsInitialized;
 
-    int64 PermanentStorageSize; 
-    int64 TransientStorageSize;
-
-    // NOTE(Sleepster): These aren't for allocation, they store the offset 
-    uint8 *pBufferOffset;
-    uint8 *tBufferOffset;
-
-    // NOTE(Sleepster): Actual allocation buffers;
-    void *PermanentStorage;
-    void *TransientStorage;
+    memory_block PermanentStorage;
+    memory_block TransientStorage;
 };
 
 // NOTE(Sleepster): This is reset at the end of every frame 
@@ -258,8 +249,7 @@ struct game_state
 {
     bool IsInitialized;
     
-    KeyCodeID KeyCodeLookup[KEY_COUNT];
-    Input GameInput;
+    input GameInput;
     
     clover_ui_context UIContext;
     game_ui_state     GameUIState;
@@ -274,7 +264,6 @@ struct game_state
     item   *ActiveRecipe;
     item   *ActiveBlueprint;
 
-    audio_engine_info TestEngine;
     loaded_sound      TestSound;
     playing_sound     FirstPlayingSound;
     
@@ -451,7 +440,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDrawStub)
 {
 }
 
-#define GAME_GET_SOUND_SAMPLES(name) void name(game_memory *Memory, game_state *State, transient_state *TransientState)
+#define GAME_GET_SOUND_SAMPLES(name) void name(game_memory *Memory, sound_buffer *SoundBuffer, game_state *State, transient_state *TransientState)
 typedef GAME_GET_SOUND_SAMPLES(game_get_sound_samples);
 GAME_GET_SOUND_SAMPLES(GameGetSoundSamplesStub)
 {

@@ -16,10 +16,6 @@
 
 #include "Intrinsics.h"
 
-// NOTE(Sleepster): As of right now SDL is being used ONLY for the audio engine.
-#include "../data/deps/SDL3/include/SDL3/SDL.h"
-#include "../data/deps/SDL3/include/SDL3/SDL_audio.h"
-
 constexpr uint32 SampleRate = 48000;
 
 #define RIFF_CODE(a, b, c, d) (((uint32)(a) << 0) | ((uint32)(b) << 8) | ((uint32)(c) << 16) | ((uint32)(d) << 24)) 
@@ -73,6 +69,7 @@ struct loaded_sound
     
     uint16 ChannelCount;
     uint32 SampleCount;
+    uint32 SamplesConsumed;
     
     int16 *Samples;
 };
@@ -86,21 +83,23 @@ struct playing_sound
     playing_sound *Next;
 };
 
-struct audio_engine_info
+struct sound_output_data
 {
-    SDL_AudioDeviceID  PrimaryDevice;
-    SDL_AudioStream   *SDLSoundBuffer;
-
-    SDL_AudioSpec      InputSpec;
-    SDL_AudioSpec      OutputSpec;
-
-    uint32             SampleRate;
-    uint32             ChannelCount;
+    int32  BytesPerSample;
+    int32  ToneFreq;
+    int32  ToneVolume;
+    int32  WavePeriod;
+    int32  BufferSize;
+    int32  SamplesPerSecond;
+    int32  LatencyCursor;
+    uint32 RunningSampleIndex;
 };
 
-struct clover_audio_engine
+struct sound_buffer
 {
-    audio_engine_info *Info;
+    int16 *SampleBuffer;
+    int32  SamplesPerSecond;
+    int32  SampleOutputCount;
 };
 
 #endif // CLOVER_AUDIOENGINE_H

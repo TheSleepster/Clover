@@ -1,17 +1,20 @@
-/* ========================================================================
-   $File: Clover.cpp $
+/* =======================================================================
+   $File: Clover.cpp$ 
    $Date: September 09 2024 04:51 pm $
    $Revision: $
    $Creator: Justin Lewis $
    ======================================================================== */
 
-// NOTE(Sleepster): As of right now SDL is being used ONLY for the audio engine.
-#include "../data/deps/SDL3/include/SDL3/SDL.h"
-#include "../data/deps/SDL3/include/SDL3/SDL_audio.h"
-
 // NOTE(Sleepster): Freetype must come first due to the #define internal static inside of the intrinsics header
 #include "../data/deps/Freetype/include/ft2build.h"
 #include FT_FREETYPE_H
+
+#if 0
+// NOTE(Sleepster: SDL Must come first as well 
+#include "../data/deps/SDL3/include/SDL3/SDL.h"
+#include "../data/deps/SDL3/include/SDL3/SDL_gamepad.h"
+#include "../data/deps/SDL3/include/SDL3/SDL_joystick.h"
+#endif
 
 #include "Intrinsics.h"
 
@@ -27,14 +30,13 @@
 #include "Clover_Globals.h"
 #include "Clover_Input.h" 
 #include "Clover_Renderer.h"
-#include "Clover_AudioEngine.h"
+#include "Clover_Audio.h"
 #include "shader/CommonShader.glh"
 
 // IMGUI IMPl
 #include "../data/deps/ImGui/imgui.h"
-#include "../data/deps/ImGui/imgui_impl_win32.h"
-#include "../data/deps/ImGUI/imgui_impl_opengl3.h"
 
+#include "Clover_Input.cpp"
 #include "Clover_Draw.cpp"
 #include "Clover_UI.cpp"
 
@@ -274,26 +276,32 @@ DeleteEntity(entity *Entity)
 internal void
 HandleInput(game_state *State, entity *PlayerIn, time_data Time)
 {
+    if(!State->GameInput.IsAnalog)
+    {
+        vec2 InputAxis = {};
+        if(IsGameKeyDown(MOVE_UP, &State->GameInput))
+        {
+            InputAxis.Y += 1.0f;
+        }
+        else if(IsGameKeyDown(MOVE_DOWN, &State->GameInput))
+        {
+            InputAxis.Y -= 1.0f;
+        }
+
+        if(IsGameKeyDown(MOVE_LEFT, &State->GameInput))
+        {
+            InputAxis.X -= 1.0f;
+        }
+        else if(IsGameKeyDown(MOVE_RIGHT, &State->GameInput))
+        {
+            InputAxis.X += 1.0f;
+        }
+    }
+    else
+    {
+    }
+
     // NOTE(Sleepster): Player Position 
-    vec2 InputAxis = {};
-    if(IsGameKeyDown(MOVE_UP, &State->GameInput))
-    {
-        InputAxis.Y += 1.0f;
-    }
-    else if(IsGameKeyDown(MOVE_DOWN, &State->GameInput))
-    {
-        InputAxis.Y -= 1.0f;
-    }
-    
-    if(IsGameKeyDown(MOVE_LEFT, &State->GameInput))
-    {
-        InputAxis.X -= 1.0f;
-    }
-    else if(IsGameKeyDown(MOVE_RIGHT, &State->GameInput))
-    {
-        InputAxis.X += 1.0f;
-    }
-    
     vec2 OldPlayerP = PlayerIn->Position;
     
     vec2 NextPos = {PlayerIn->Position.X + (PlayerIn->Position.X - OldPlayerP.X) + (PlayerIn->Speed * InputAxis.X) * (Time.Delta),
@@ -846,11 +854,11 @@ IsItemCraftable(int *ItemCounts, item *Craft)
 }
 
 internal void
-AddItemToPlayerInventory(game_state *State, entity *Player, entity *Temp)
+AddItemToPlayerInventory(game_state *State, entity *PlayerEntity, entity *Temp)
 {
     if((Temp->Flags & IS_ITEM) && (Temp->Flags & CAN_BE_PICKED_UP))
     {
-        real32 ItemDistance = fabsf(v2Distance(Temp->Position, Player->Position));
+        real32 ItemDistance = fabsf(v2Distance(Temp->Position, PlayerEntity->Position));
         if(ItemDistance <= ItemPickupDist)
         {
             for(uint32 InventoryIndex = 0;
@@ -858,11 +866,11 @@ AddItemToPlayerInventory(game_state *State, entity *Player, entity *Temp)
                 ++InventoryIndex)
             {
                 item NewItem = State->GameData.GameItems[Temp->DroppedFromInventoryItemID];
-                if(Player->Inventory.Items[InventoryIndex].ItemID == NewItem.ItemID && 
-                   Player->Inventory.Items[InventoryIndex].CurrentStack < 
-                   Player->Inventory.Items[InventoryIndex].MaxStackCount)
+                if(PlayerEntity->Inventory.Items[InventoryIndex].ItemID == NewItem.ItemID && 
+                   PlayerEntity->Inventory.Items[InventoryIndex].CurrentStack < 
+                   PlayerEntity->Inventory.Items[InventoryIndex].MaxStackCount)
                 {
-                    Player->Inventory.Items[InventoryIndex].CurrentStack++;
+                    PlayerEntity->Inventory.Items[InventoryIndex].CurrentStack++;
                     // NOTE(Sleepster): If two matching IDs are found, skip to the deletion 
                     DeleteEntity(Temp);
                     return;
@@ -874,15 +882,15 @@ AddItemToPlayerInventory(game_state *State, entity *Player, entity *Temp)
                 ++InventoryIndex)
             {
                 item NewItem = State->GameData.GameItems[Temp->DroppedFromInventoryItemID];
-                if(Player->Inventory.Items[InventoryIndex].ItemID == 0)
+                if(PlayerEntity->Inventory.Items[InventoryIndex].ItemID == 0)
                 {
                     NewItem.CurrentStack = Temp->DroppedFromInventoryItemCount;
                     if(NewItem.CurrentStack == 0)
                     {
                         NewItem.CurrentStack = 1;
                     }
-                    Player->Inventory.Items[InventoryIndex] = NewItem;
-                    Player->Inventory.Items[InventoryIndex].OccupiedInventorySlot = InventoryIndex;
+                    PlayerEntity->Inventory.Items[InventoryIndex] = NewItem;
+                    PlayerEntity->Inventory.Items[InventoryIndex].OccupiedInventorySlot = InventoryIndex;
                     DeleteEntity(Temp);
                     break;
                 }
@@ -970,10 +978,9 @@ GAME_ON_AWAKE(GameOnAwake)
     Pickaxe2->Position = {32, 150};
     Pickaxe2->Target = {32, 150};
     
-    
     Player = CreateEntity(State);
     SetupPlayer(State, Player);
-
+    
     
     State->DisplayPlayerHotbar = true;
 }
@@ -1007,7 +1014,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
         RenderData->GameUICamera.ProjectionMatrix     = mat4RHGLOrtho((real32)SizeData.Width * -0.5f, (real32)SizeData.Width * 0.5f, (real32)SizeData.Height * -0.5f, (real32)SizeData.Height * 0.5f, -1.0f, 1.0f); 
         RenderData->GameUICamera.ViewMatrix           = mat4Multiply(mat4Identity(1.0f), ScaleMatrix);
         RenderData->GameUICamera.ProjectionViewMatrix = mat4Multiply(RenderData->GameUICamera.ProjectionMatrix, RenderData->GameUICamera.ViewMatrix);
-
+        
         State->UIContext.UICameraViewMatrix       = RenderData->GameUICamera.ViewMatrix;
         State->UIContext.UICameraProjectionMatrix = RenderData->GameUICamera.ProjectionMatrix;
         State->UIContext.GameInput                = &State->GameInput;
@@ -2048,8 +2055,20 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
 extern
 GAME_GET_SOUND_SAMPLES(GameGetSoundSamples)
 {
-    scratch_memory Temp = BeginScratchBlock(&TransientState->TransientArena);
-    real32 *MixerMemory = (real32 *)PushSize(&TransientState->TransientArena, sizeof(real32) * State->TestEngine.SampleRate);
+    int16 *SampleOut = SoundBuffer->SampleBuffer;
+    for(int32 SampleIndex = 0;
+        SampleIndex < SoundBuffer->SampleOutputCount;
+        ++SampleIndex)
+    {
+        int16 Volume = 1;
 
-    EndScratchBlock(&Temp);
+        int32 SampleOffset     = (State->TestSound.SamplesConsumed + SampleIndex) % State->TestSound.SampleCount;
+        int16 LeftSampleValue  = State->TestSound.Samples[SampleOffset * 2];
+        int16 RightSampleValue  = State->TestSound.Samples[(SampleOffset * 2) + 1];
+        
+        *SampleOut++ = LeftSampleValue * Volume;
+        *SampleOut++ = RightSampleValue * Volume;
+    }
+    
+    State->TestSound.SamplesConsumed += SoundBuffer->SampleOutputCount;
 }

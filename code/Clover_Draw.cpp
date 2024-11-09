@@ -23,7 +23,6 @@
 
 #include "shader/CommonShader.glh"
 #include "Clover_Globals.h"
-#include "Win32_Clover.h"
 
 // RENDERING INTERFACE FUNCTIONS
 

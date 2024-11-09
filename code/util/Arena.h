@@ -12,6 +12,13 @@
 #include <string.h>
 
 #if 0
+
+struct game_memory
+{
+    memory_arena PermanentStorage;
+    memory_arena TransientStorage;
+};
+
 // OLD API
 struct memory_arena
 {
@@ -68,6 +75,14 @@ ArenaDestroy(memory_arena *Memory)
 
 typedef size_t memory_index;
 
+struct memory_block
+{
+    void  *MemoryBlock;
+    uint8 *BlockOffset; 
+
+    memory_index BlockSize;
+};
+
 struct memory_arena
 {
     memory_index  Capacity;
@@ -88,16 +103,15 @@ struct scratch_memory
 #define PushStruct(Arena, type, ...)       (type *)PushSize_(Arena, sizeof(type), ##__VA_ARGS__)
 #define PushArray(Arena, type, Count, ...) (type *)PushSize_(Arena, sizeof(type) * (Count), ##__VA_ARGS__)
 
-internal inline uint8*
-InitializeArena(memory_arena *Arena, memory_index Capacity, void *Base)
+internal inline void 
+InitializeArena(memory_arena *Arena, memory_index Capacity, memory_block *BlockBuffer)
 {
     Arena->Capacity     = Capacity;
     Arena->Used         = 0;
-    Arena->Base         = (uint8 *)Base;
+    Arena->Base         = (uint8 *)BlockBuffer->BlockOffset;
     Arena->ScratchCount = 0;
 
-    // NOTE(Sleepster): Return the new offset 
-    return((uint8 *)(Arena->Base + Arena->Capacity));
+    BlockBuffer->BlockOffset += Arena->Capacity;
 }
 
 internal void*
@@ -145,7 +159,6 @@ EndScratchBlock(scratch_memory *Scratch)
 internal inline void
 ClearArena(memory_arena *Arena)
 {
-    InitializeArena(Arena, Arena->Capacity, Arena->Base);
     Arena->Used = 0;
 }
 

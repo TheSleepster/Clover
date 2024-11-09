@@ -9,7 +9,11 @@
 #include "../data/deps/Freetype/include/ft2build.h"
 #include FT_FREETYPE_H
 
-#include <SDL3/SDL.h>
+#if 0
+#include "../data/deps/SDL3/include/SDL3/SDL.h"
+#include "../data/deps/SDL3/include/SDL3/SDL_gamepad.h"
+#include "../data/deps/SDL3/include/SDL3/SDL_joystick.h"
+#endif
 
 // INTRINSICS
 #include "Intrinsics.h"
@@ -34,16 +38,22 @@
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "../data/deps/stb/stb_image.h"
-#include "../data/deps/stb/stb_image_write.h"
-
-// MINIAUDIO ENGINE
-#define MINIAUDIO_IMPLEMENTATION   
-#include "../data/deps/MiniAudio/miniaudio.h"
 
 // WINDOWS
+#pragma warning(disable:4005)
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#include <dbt.h>
+
+// DSOUND
+#include <mmreg.h>
+#include <dsound.h>
+
+// XINPUT
+
+#include <xinput.h>
+#pragma warning(default:4005)
 
 // OPENGL HEADERS
 #include "../data/deps/OpenGL/glext.h"
@@ -56,12 +66,12 @@
 #include "Clover_Renderer.h"
 #include "Clover_Input.h"
 #include "Win32_Clover.h"
-#include "Clover_AudioEngine.h"
+#include "Clover_Audio.h"
 
 // FILES FOR UNITY BUILD
 #include "Clover_Renderer.cpp"
 #include "Clover_Input.cpp"
-#include "Clover_AudioEngine.cpp"
+#include "Clover_Audio.cpp"
 
 
 // NOTE(Sleepster): ImGui WNDPROC. It uses this for input
@@ -89,6 +99,171 @@ GetCurrentTimeInSeconds(void)
     return((real64)Counter.QuadPart / PerfCountFrequency);
 }
 
+internal inline FILETIME
+Win32MaxFiletime(FILETIME A, FILETIME B)
+{
+    if(CompareFileTime(&A, &B) != 0)
+    {
+        return(A);
+    }
+    return(B);
+}
+
+internal FILETIME
+Win32GetLastWriteTime(string Filename)
+{
+    FILETIME LastWriteTime = {};
+    
+    WIN32_FIND_DATA FindData;
+    HANDLE FindHandle = FindFirstFileA((const char *)Filename.Data, &FindData);
+    if(FindHandle != INVALID_HANDLE_VALUE)
+    {
+        LastWriteTime = FindData.ftLastWriteTime;
+        FindClose(FindHandle);
+    }
+    
+    return(LastWriteTime);
+}
+
+internal void 
+Win32LoadKeyData(game_state *State) 
+{ 
+    State->GameInput.KeyCodeLookup[VK_LBUTTON] = KEY_LEFT_MOUSE;
+    State->GameInput.KeyCodeLookup[VK_MBUTTON] = KEY_MIDDLE_MOUSE;
+    State->GameInput.KeyCodeLookup[VK_RBUTTON] = KEY_RIGHT_MOUSE;
+    
+    State->GameInput.KeyCodeLookup['A'] = KEY_A;
+    State->GameInput.KeyCodeLookup['B'] = KEY_B;
+    State->GameInput.KeyCodeLookup['C'] = KEY_C;
+    State->GameInput.KeyCodeLookup['D'] = KEY_D;
+    State->GameInput.KeyCodeLookup['E'] = KEY_E;
+    State->GameInput.KeyCodeLookup['F'] = KEY_F;
+    State->GameInput.KeyCodeLookup['G'] = KEY_G;
+    State->GameInput.KeyCodeLookup['H'] = KEY_H;
+    State->GameInput.KeyCodeLookup['I'] = KEY_I;
+    State->GameInput.KeyCodeLookup['J'] = KEY_J;
+    State->GameInput.KeyCodeLookup['K'] = KEY_K;
+    State->GameInput.KeyCodeLookup['L'] = KEY_L;
+    State->GameInput.KeyCodeLookup['M'] = KEY_M;
+    State->GameInput.KeyCodeLookup['N'] = KEY_N;
+    State->GameInput.KeyCodeLookup['O'] = KEY_O;
+    State->GameInput.KeyCodeLookup['P'] = KEY_P;
+    State->GameInput.KeyCodeLookup['Q'] = KEY_Q;
+    State->GameInput.KeyCodeLookup['R'] = KEY_R;
+    State->GameInput.KeyCodeLookup['S'] = KEY_S;
+    State->GameInput.KeyCodeLookup['T'] = KEY_T;
+    State->GameInput.KeyCodeLookup['U'] = KEY_U;
+    State->GameInput.KeyCodeLookup['V'] = KEY_V;
+    State->GameInput.KeyCodeLookup['W'] = KEY_W;
+    State->GameInput.KeyCodeLookup['X'] = KEY_X;
+    State->GameInput.KeyCodeLookup['Y'] = KEY_Y;
+    State->GameInput.KeyCodeLookup['Z'] = KEY_Z;
+    State->GameInput.KeyCodeLookup['0'] = KEY_0;
+    State->GameInput.KeyCodeLookup['1'] = KEY_1;
+    State->GameInput.KeyCodeLookup['2'] = KEY_2;
+    State->GameInput.KeyCodeLookup['3'] = KEY_3;
+    State->GameInput.KeyCodeLookup['4'] = KEY_4;
+    State->GameInput.KeyCodeLookup['5'] = KEY_5;
+    State->GameInput.KeyCodeLookup['6'] = KEY_6;
+    State->GameInput.KeyCodeLookup['7'] = KEY_7;
+    State->GameInput.KeyCodeLookup['8'] = KEY_8;
+    State->GameInput.KeyCodeLookup['9'] = KEY_9;
+    
+    State->GameInput.KeyCodeLookup[VK_SPACE]      = KEY_SPACE,
+    State->GameInput.KeyCodeLookup[VK_OEM_3]      = KEY_TICK,
+    State->GameInput.KeyCodeLookup[VK_OEM_MINUS]  = KEY_MINUS,
+    
+    State->GameInput.KeyCodeLookup[VK_OEM_PLUS]   = KEY_EQUAL,
+    State->GameInput.KeyCodeLookup[VK_OEM_4]      = KEY_LEFT_BRACKET,
+    State->GameInput.KeyCodeLookup[VK_OEM_6]      = KEY_RIGHT_BRACKET,
+    State->GameInput.KeyCodeLookup[VK_OEM_1]      = KEY_SEMICOLON,
+    State->GameInput.KeyCodeLookup[VK_OEM_7]      = KEY_QUOTE,
+    State->GameInput.KeyCodeLookup[VK_OEM_COMMA]  = KEY_COMMA,
+    State->GameInput.KeyCodeLookup[VK_OEM_PERIOD] = KEY_PERIOD,
+    State->GameInput.KeyCodeLookup[VK_OEM_2]      = KEY_FORWARD_SLASH,
+    State->GameInput.KeyCodeLookup[VK_OEM_5]      = KEY_BACKWARD_SLASH,
+    State->GameInput.KeyCodeLookup[VK_TAB]        = KEY_TAB,
+    State->GameInput.KeyCodeLookup[VK_ESCAPE]     = KEY_ESCAPE,
+    State->GameInput.KeyCodeLookup[VK_PAUSE]      = KEY_PAUSE,
+    State->GameInput.KeyCodeLookup[VK_UP]         = KEY_UP,
+    State->GameInput.KeyCodeLookup[VK_DOWN]       = KEY_DOWN,
+    State->GameInput.KeyCodeLookup[VK_LEFT]       = KEY_LEFT,
+    State->GameInput.KeyCodeLookup[VK_RIGHT]      = KEY_RIGHT,
+    State->GameInput.KeyCodeLookup[VK_BACK]       = KEY_BACKSPACE,
+    State->GameInput.KeyCodeLookup[VK_RETURN]     = KEY_RETURN,
+    State->GameInput.KeyCodeLookup[VK_DELETE]     = KEY_DELETE,
+    State->GameInput.KeyCodeLookup[VK_INSERT]     = KEY_INSERT,
+    State->GameInput.KeyCodeLookup[VK_HOME]       = KEY_HOME,
+    State->GameInput.KeyCodeLookup[VK_END]        = KEY_END,
+    State->GameInput.KeyCodeLookup[VK_PRIOR]      = KEY_PAGE_UP,
+    State->GameInput.KeyCodeLookup[VK_NEXT]       = KEY_PAGE_DOWN,
+    State->GameInput.KeyCodeLookup[VK_CAPITAL]    = KEY_CAPS_LOCK,
+    State->GameInput.KeyCodeLookup[VK_NUMLOCK]    = KEY_NUM_LOCK,
+    State->GameInput.KeyCodeLookup[VK_SCROLL]     = KEY_SCROLL_LOCK,
+    State->GameInput.KeyCodeLookup[VK_APPS]       = KEY_MENU,
+    
+    State->GameInput.KeyCodeLookup[VK_SHIFT]      = KEY_SHIFT,
+    State->GameInput.KeyCodeLookup[VK_LSHIFT]     = KEY_SHIFT,
+    State->GameInput.KeyCodeLookup[VK_RSHIFT]     = KEY_SHIFT,
+    
+    State->GameInput.KeyCodeLookup[VK_CONTROL]    = KEY_CONTROL,
+    State->GameInput.KeyCodeLookup[VK_LCONTROL]   = KEY_CONTROL,
+    State->GameInput.KeyCodeLookup[VK_RCONTROL]   = KEY_CONTROL,
+    
+    State->GameInput.KeyCodeLookup[VK_MENU]       = KEY_ALT,
+    State->GameInput.KeyCodeLookup[VK_LMENU]      = KEY_ALT,
+    State->GameInput.KeyCodeLookup[VK_RMENU]      = KEY_ALT,
+    
+    State->GameInput.KeyCodeLookup[VK_F1]  = KEY_F1;
+    State->GameInput.KeyCodeLookup[VK_F2]  = KEY_F2;
+    State->GameInput.KeyCodeLookup[VK_F3]  = KEY_F3;
+    State->GameInput.KeyCodeLookup[VK_F4]  = KEY_F4;
+    State->GameInput.KeyCodeLookup[VK_F5]  = KEY_F5;
+    State->GameInput.KeyCodeLookup[VK_F6]  = KEY_F6;
+    State->GameInput.KeyCodeLookup[VK_F7]  = KEY_F7;
+    State->GameInput.KeyCodeLookup[VK_F8]  = KEY_F8;
+    State->GameInput.KeyCodeLookup[VK_F9]  = KEY_F9;
+    State->GameInput.KeyCodeLookup[VK_F10] = KEY_F10;
+    State->GameInput.KeyCodeLookup[VK_F11] = KEY_F11;
+    State->GameInput.KeyCodeLookup[VK_F12] = KEY_F12;
+    
+    State->GameInput.KeyCodeLookup[VK_NUMPAD0] = KEY_NUMPAD_0;
+    State->GameInput.KeyCodeLookup[VK_NUMPAD1] = KEY_NUMPAD_1;
+    State->GameInput.KeyCodeLookup[VK_NUMPAD2] = KEY_NUMPAD_2;
+    State->GameInput.KeyCodeLookup[VK_NUMPAD3] = KEY_NUMPAD_3;
+    State->GameInput.KeyCodeLookup[VK_NUMPAD4] = KEY_NUMPAD_4;
+    State->GameInput.KeyCodeLookup[VK_NUMPAD5] = KEY_NUMPAD_5;
+    State->GameInput.KeyCodeLookup[VK_NUMPAD6] = KEY_NUMPAD_6;
+    State->GameInput.KeyCodeLookup[VK_NUMPAD7] = KEY_NUMPAD_7;
+    State->GameInput.KeyCodeLookup[VK_NUMPAD8] = KEY_NUMPAD_8;
+    State->GameInput.KeyCodeLookup[VK_NUMPAD9] = KEY_NUMPAD_9;
+}
+
+internal void
+Win32LoadDefaultBindings(input *GameInput)
+{
+    GameInput->Mappings[BINDING_NONE]    = AddGameMapping(KEY_NONE, KEY_NONE, NULL_BUTTON, NULL_BUTTON);
+    GameInput->Mappings[MOVE_UP]         = AddGameMapping(KEY_W, KEY_UP, A_BUTTON, NULL_BUTTON);
+    GameInput->Mappings[MOVE_DOWN]       = AddGameMapping(KEY_S, KEY_DOWN, NULL_BUTTON, NULL_BUTTON);
+    GameInput->Mappings[MOVE_LEFT]       = AddGameMapping(KEY_A, KEY_LEFT, NULL_BUTTON, NULL_BUTTON);
+    GameInput->Mappings[MOVE_RIGHT]      = AddGameMapping(KEY_D, KEY_RIGHT, NULL_BUTTON, NULL_BUTTON);
+    GameInput->Mappings[ATTACK]          = AddGameMapping(KEY_LEFT_MOUSE, KEY_SPACE, NULL_BUTTON, NULL_BUTTON);
+    GameInput->Mappings[INTERACT]        = AddGameMapping(KEY_F, KEY_F, NULL_BUTTON, NULL_BUTTON);
+    GameInput->Mappings[INVENTORY]       = AddGameMapping(KEY_ESCAPE, KEY_ESCAPE, NULL_BUTTON, NULL_BUTTON);
+    GameInput->Mappings[SHOW_HOTBAR]     = AddGameMapping(KEY_TAB, KEY_TAB, NULL_BUTTON, NULL_BUTTON);
+    GameInput->Mappings[HOTBAR_01]       = AddGameMapping(KEY_1, KEY_NUMPAD_1, NULL_BUTTON, NULL_BUTTON);
+    GameInput->Mappings[HOTBAR_02]       = AddGameMapping(KEY_2, KEY_NUMPAD_2, NULL_BUTTON, NULL_BUTTON);
+    GameInput->Mappings[HOTBAR_03]       = AddGameMapping(KEY_3, KEY_NUMPAD_3, NULL_BUTTON, NULL_BUTTON);
+    GameInput->Mappings[HOTBAR_04]       = AddGameMapping(KEY_4, KEY_NUMPAD_4, NULL_BUTTON, NULL_BUTTON);
+    GameInput->Mappings[HOTBAR_05]       = AddGameMapping(KEY_5, KEY_NUMPAD_5, NULL_BUTTON, NULL_BUTTON);
+    GameInput->Mappings[HOTBAR_06]       = AddGameMapping(KEY_6, KEY_NUMPAD_6, NULL_BUTTON, NULL_BUTTON);
+    GameInput->Mappings[HOTBAR_07]       = AddGameMapping(KEY_7, KEY_NUMPAD_7, NULL_BUTTON, NULL_BUTTON);
+    GameInput->Mappings[DROP_HELD]       = AddGameMapping(KEY_Q, KEY_Q, NULL_BUTTON, NULL_BUTTON);
+    GameInput->Mappings[DROP_ITEM]       = AddGameMapping(KEY_RIGHT_MOUSE, KEY_RIGHT_MOUSE, NULL_BUTTON, NULL_BUTTON);
+    GameInput->Mappings[CRAFTING]        = AddGameMapping(KEY_E, KEY_E, NULL_BUTTON, NULL_BUTTON);
+    GameInput->Mappings[BUILD_MENU]      = AddGameMapping(KEY_B, KEY_B, NULL_BUTTON, NULL_BUTTON);
+}
+
 LRESULT CALLBACK
 Win32MainWindowCallback(HWND WindowHandle, UINT Message,
                         WPARAM wParam, LPARAM lParam)
@@ -111,12 +286,16 @@ Win32MainWindowCallback(HWND WindowHandle, UINT Message,
             DestroyWindow(WindowHandle);
             PostQuitMessage(0);
             return(0);
-        }
+        };
         case WM_DESTROY:
         {
             DestroyWindow(WindowHandle);
             PostQuitMessage(0);
             return(0);
+        }break;
+
+        case WM_DEVICECHANGE:
+        {
         }break;
         default:
         {
@@ -138,6 +317,13 @@ Win32ProcessInputMessages(MSG Message, HWND WindowHandle, game_state *State)
     {
         State->GameInput.Keyboard.Keys[KeycodeIndex].HalfTransitionCount = 0;
     }
+
+    for(int32 ButtonIndex = 0;
+        ButtonIndex < GAMEPAD_BUTTON_COUNT;
+        ++ButtonIndex)
+    {
+        State->GameInput.Controller.GamepadButtons[ButtonIndex].HalfTransitionCount = 0;
+    }
     
     while(PeekMessageA(&Message, WindowHandle, 0, 0, PM_REMOVE))
     {
@@ -154,8 +340,8 @@ Win32ProcessInputMessages(MSG Message, HWND WindowHandle, game_state *State)
                     uint32 VKCode = (uint32)Message.wParam;
                     bool8 IsDown  = ((Message.lParam & (1 << 31)) == 0);
                     
-                    KeyCodeID KeyCode  = State->KeyCodeLookup[Message.wParam];
-                    Key *Key = &State->GameInput.Keyboard.Keys[KeyCode];
+                    keycodeID KeyCode  = State->GameInput.KeyCodeLookup[Message.wParam];
+                    keyboard_key *Key = &State->GameInput.Keyboard.Keys[KeyCode];
                     Key->JustPressed   = !Key->JustPressed && !Key->IsDown && IsDown;
                     Key->JustReleased  = !Key->JustReleased && Key->IsDown && !IsDown;
                     Key->IsDown        = IsDown;
@@ -190,14 +376,14 @@ Win32ProcessInputMessages(MSG Message, HWND WindowHandle, game_state *State)
                     (Message.message == WM_XBUTTONDOWN || Message.message == WM_XBUTTONUP) ? 
                     (GET_XBUTTON_WPARAM(Message.wParam) == XBUTTON1 ? VK_XBUTTON1 : VK_XBUTTON2) : 0;
                     
-                    KeyCodeID KeyCode  = State->KeyCodeLookup[MouseCode];
-                    Key *Key = &State->GameInput.Keyboard.Keys[KeyCode];
+                    keycodeID KeyCode  = State->GameInput.KeyCodeLookup[MouseCode];
+                    keyboard_key *Key = &State->GameInput.Keyboard.Keys[KeyCode];
                     Key->JustPressed   = !Key->JustPressed && !Key->IsDown && IsDown;
                     Key->JustReleased  = !Key->JustReleased && Key->IsDown && !IsDown;
                     Key->IsDown        = IsDown;
                     Key->HalfTransitionCount++;
                 }break;
-                
+
                 case WM_MOUSEMOVE:
                 {
                     POINT MousePoint;
@@ -207,9 +393,8 @@ Win32ProcessInputMessages(MSG Message, HWND WindowHandle, game_state *State)
                     State->GameInput.Keyboard.LastMouse    = State->GameInput.Keyboard.CurrentMouse;
                     State->GameInput.Keyboard.CurrentMouse = ivec2{MousePoint.x, MousePoint.y};
                     State->GameInput.Keyboard.DeltaMouse   = State->GameInput.Keyboard.CurrentMouse - State->GameInput.Keyboard.LastMouse;
-
                 }break;
-                
+
                 default:
                 {
                     TranslateMessage(&Message);
@@ -333,6 +518,202 @@ ClearTransientState(transient_state *TransientState)
     ClearArena(&TransientState->TransientArena);
 }
 
+internal win32_sound_data
+Win32InitDSound(HWND WindowHandle, int32 SamplesPerSecond, int32 BufferSize)
+{
+    win32_sound_data Result = {};
+    HRESULT DSoundError = {};
+    
+    HMODULE DSoundLib = LoadLibraryA("dsound.dll");
+    if(!DSoundLib)
+    {
+        Check(0, "No Dsound :(\n");
+    }
+    
+    direct_sound_create *DirectSoundCreate = (direct_sound_create *)GetProcAddress(DSoundLib, "DirectSoundCreate");
+    DSoundError = DirectSoundCreate(0, &Result.DirectSoundObject, 0);
+    if(SUCCEEDED(DSoundError))
+    {
+        Result.DirectSoundBufferFormat.wFormatTag      = WAVE_FORMAT_PCM;
+        Result.DirectSoundBufferFormat.nChannels       = 2;
+        Result.DirectSoundBufferFormat.nSamplesPerSec  = SamplesPerSecond;
+        Result.DirectSoundBufferFormat.wBitsPerSample  = 16;
+        Result.DirectSoundBufferFormat.nBlockAlign     = (Result.DirectSoundBufferFormat.nChannels * Result.DirectSoundBufferFormat.wBitsPerSample) / 8;
+        Result.DirectSoundBufferFormat.nAvgBytesPerSec = Result.DirectSoundBufferFormat.nSamplesPerSec * Result.DirectSoundBufferFormat.nBlockAlign;
+        Result.DirectSoundBufferFormat.cbSize = 0;
+        
+        DSoundError = Result.DirectSoundObject->SetCooperativeLevel(WindowHandle, DSSCL_PRIORITY);
+        if(SUCCEEDED(DSoundError))
+        {
+            DSBUFFERDESC        DSBufferDesc = {};
+            DSBufferDesc.dwSize  = sizeof(DSBUFFERDESC);
+            DSBufferDesc.dwFlags = DSBCAPS_PRIMARYBUFFER;
+            
+            DSoundError = Result.DirectSoundObject->CreateSoundBuffer(&DSBufferDesc, &Result.PrimaryBuffer, 0);
+            if(SUCCEEDED(DSoundError))
+            {
+                if(SUCCEEDED(Result.PrimaryBuffer->SetFormat(&Result.DirectSoundBufferFormat)))
+                {
+                    cl_Info("DSound Primary Buffer Created\n");
+                }
+                else
+                {
+                    cl_Error("Failure to set the primary buffer's format. Code: %lu", DSoundError);
+                }
+            }
+            else
+            {
+                cl_Error("Failure to create the DSound primary sound buffer. Code: %lu", DSoundError);
+            }
+        }
+        else
+        {
+            cl_Error("Failure to set Direct Sound's cooperative level. Code: %lu", DSoundError);
+        }
+        
+        DSBUFFERDESC DSBufferDesc = {};
+        DSBufferDesc.dwSize  = sizeof(DSBufferDesc);
+        DSBufferDesc.dwFlags = 0;
+        DSBufferDesc.dwBufferBytes = BufferSize;
+        DSBufferDesc.lpwfxFormat = &Result.DirectSoundBufferFormat;
+        
+        DSoundError = Result.DirectSoundObject->CreateSoundBuffer(&DSBufferDesc, &Result.SecondaryBuffer, 0);
+        if(SUCCEEDED(DSoundError))
+        {
+            cl_Info("DSound Secondary Buffer Created\n");
+        }
+        else
+        {
+            cl_Error("Failure to create the DSound secondary sound buffer. Code: %lu", DSoundError);
+        }
+    }
+    else
+    {
+        cl_Error("Failure to get the DSound Object. Code: %lu", DSoundError);
+    }
+    
+    return(Result);
+}
+
+internal void 
+Win32ClearSoundBuffer(win32_sound_data *DSound, sound_output_data *SoundOutput)
+{
+    VOID *Region1 = 0;
+    DWORD Region1Size = 0;
+    VOID *Region2 = 0;
+    DWORD Region2Size = 0;
+    if(SUCCEEDED(DSound->SecondaryBuffer->Lock(0,
+                                               SoundOutput->BufferSize,
+                                               &Region1, &Region1Size,
+                                               &Region2, &Region2Size,
+                                               0)))
+    {
+        uint8 *DestSample = (uint8 *)Region1;
+        for(DWORD ByteIndex = 0;
+            ByteIndex < Region1Size;
+            ++ByteIndex)
+        {
+            *DestSample++ = 0;
+        }
+        
+        DestSample = (uint8 *)Region2;
+        for(DWORD ByteIndex = 0;
+            ByteIndex < Region2Size;
+            ++ByteIndex)
+        {
+            *DestSample++ = 0;
+        }
+    }
+    DSound->SecondaryBuffer->Unlock(Region1, Region1Size, Region2, Region2Size);
+}
+
+internal void 
+Win32FillSoundBuffer(win32_sound_data *DSound, sound_output_data *SoundOutput, sound_buffer *SourceBuffer, 
+                     int32 BytesToLock, int32 BytesToWrite)
+{
+    VOID *Region1 = 0;
+    DWORD Region1Size = 0;
+    VOID *Region2 = 0;
+    DWORD Region2Size = 0;
+    if(SUCCEEDED(DSound->SecondaryBuffer->Lock(BytesToLock,
+                                               BytesToWrite,
+                                               &Region1, &Region1Size,
+                                               &Region2, &Region2Size,
+                                               0)))
+    {
+        Assert(Region1Size % 2 == 0);
+        Assert(Region2Size % 2 == 0);
+        
+        int16 *DestSample = (int16 *)Region1;
+        int16 *SrcSample  = SourceBuffer->SampleBuffer;
+        DWORD Region1SampleCount = Region1Size / SoundOutput->BytesPerSample; 
+        for(DWORD SampleIndex = 0;
+            SampleIndex < Region1SampleCount;
+            ++SampleIndex)
+        {
+            *DestSample++ = *SrcSample++;
+            *DestSample++ = *SrcSample++;
+            
+            SoundOutput->RunningSampleIndex++;
+        }
+        
+        DestSample = (int16 *)Region2;
+        DWORD Region2SampleCount = Region2Size / SoundOutput->BytesPerSample;
+        for(DWORD SampleIndex = 0;
+            SampleIndex < Region2SampleCount;
+            ++SampleIndex)
+        {
+            *DestSample++ = *SrcSample++;
+            *DestSample++ = *SrcSample++;
+            
+            SoundOutput->RunningSampleIndex++;
+        }
+    }
+    DSound->SecondaryBuffer->Unlock(Region1, Region1Size, Region2, Region2Size);
+}
+
+internal void
+Win32SetupXInput(game_state *State)
+{
+    HMODULE XInput = LoadLibraryA("xinput1_4.dll");
+    if(XInput)
+    {
+        XInputGetState = (xinput_get_state *)GetProcAddress(XInput, "XInputGetState");
+        XInputSetState = (xinput_set_state *)GetProcAddress(XInput, "XInputSetState");
+        if(XInputGetState && XInputSetState)
+        {
+            //State->GameInput.ButtonLookup = ButtonLookup;
+            State->GameInput.ButtonLookup[DPAD_UP]               = XINPUT_GAMEPAD_DPAD_UP;
+            State->GameInput.ButtonLookup[DPAD_DOWN]             = XINPUT_GAMEPAD_DPAD_DOWN;
+            State->GameInput.ButtonLookup[DPAD_LEFT]             = XINPUT_GAMEPAD_DPAD_LEFT;
+            State->GameInput.ButtonLookup[DPAD_RIGHT]            = XINPUT_GAMEPAD_DPAD_RIGHT;
+            State->GameInput.ButtonLookup[START_BUTTON]          = XINPUT_GAMEPAD_START;
+            State->GameInput.ButtonLookup[BACK_BUTTON]           = XINPUT_GAMEPAD_BACK;
+            State->GameInput.ButtonLookup[LEFT_THUMBSTICK_DOWN]  = XINPUT_GAMEPAD_LEFT_THUMB;
+            State->GameInput.ButtonLookup[RIGHT_THUMBSTICK_DOWN] = XINPUT_GAMEPAD_RIGHT_THUMB;
+            State->GameInput.ButtonLookup[LEFT_SHOULDER_BUTTON]  = XINPUT_GAMEPAD_LEFT_SHOULDER;
+            State->GameInput.ButtonLookup[RIGHT_SHOULDER_BUTTON] = XINPUT_GAMEPAD_RIGHT_SHOULDER;
+            State->GameInput.ButtonLookup[A_BUTTON]              = XINPUT_GAMEPAD_A;
+            State->GameInput.ButtonLookup[B_BUTTON]              = XINPUT_GAMEPAD_B;
+            State->GameInput.ButtonLookup[X_BUTTON]              = XINPUT_GAMEPAD_X;
+            State->GameInput.ButtonLookup[Y_BUTTON]              = XINPUT_GAMEPAD_Y;
+        }
+        else
+        {
+            cl_Info("Failure to get XInput\n");
+            return;
+        }
+    }
+    else
+    {
+        XInputGetState = XInputGetStateStub;
+        XInputSetState = XInputSetStateStub;
+
+        cl_Info("Failed to load XInput1.4, there will be no controller support.\n");
+        return;
+    }
+}
+
 int CALLBACK
 WinMain(HINSTANCE hInstance,
         HINSTANCE hPrevInstance,
@@ -388,33 +769,46 @@ WinMain(HINSTANCE hInstance,
         {
             HDC WindowDC = GetDC(WindowHandle);
             
-            GameMemory.PermanentStorageSize = Megabytes(512);
-            GameMemory.TransientStorageSize = Megabytes(512);
-            GameMemory.TransientStorage = VirtualAlloc(0, GameMemory.TransientStorageSize, MEM_COMMIT, PAGE_READWRITE);
-            GameMemory.PermanentStorage = VirtualAlloc(0, GameMemory.PermanentStorageSize, MEM_COMMIT, PAGE_READWRITE);
+            GameMemory.PermanentStorage.BlockSize    = Megabytes(512);
+            GameMemory.PermanentStorage.MemoryBlock  = VirtualAlloc(0, GameMemory.PermanentStorage.BlockSize, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
+            GameMemory.PermanentStorage.BlockOffset  = (uint8 *)GameMemory.PermanentStorage.MemoryBlock;
             
-            GameMemory.pBufferOffset = InitializeArena(&RenderData.VertexArena,   sizeof(vertex) * TRUE_MAX_VERTICES, GameMemory.PermanentStorage);
-            GameMemory.pBufferOffset = InitializeArena(&RenderData.UIVertexArena, sizeof(vertex) * TRUE_MAX_VERTICES, GameMemory.pBufferOffset);
-            GameMemory.tBufferOffset = InitializeArena(&TransientState.TransientArena, Megabytes(200), GameMemory.TransientStorage);
-
+            GameMemory.TransientStorage.BlockSize    = Megabytes(512);
+            GameMemory.TransientStorage.MemoryBlock  = VirtualAlloc(0, GameMemory.TransientStorage.BlockSize, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
+            GameMemory.TransientStorage.BlockOffset  = (uint8 *)GameMemory.TransientStorage.MemoryBlock;
+            
+            InitializeArena(&RenderData.VertexArena,        sizeof(vertex) * TRUE_MAX_VERTICES, &GameMemory.PermanentStorage);
+            InitializeArena(&RenderData.UIVertexArena,      sizeof(vertex) * TRUE_MAX_VERTICES, &GameMemory.PermanentStorage);
+            InitializeArena(&TransientState.TransientArena, Megabytes(200),                     &GameMemory.TransientStorage);
+            
             RenderData.DrawFrame.Vertices                     = (vertex *)RenderData.VertexArena.Base;
             RenderData.DrawFrame.UIVertices                   = (vertex *)RenderData.UIVertexArena.Base;
-            RenderData.DrawFrame.TransparentVertexBufferptr   = (vertex *)(RenderData.VertexArena.Base + (RenderData.VertexArena.Capacity / 2));
+            RenderData.DrawFrame.TransparentVertexBufferptr   = (vertex *)(RenderData.VertexArena.Base   + (RenderData.VertexArena.Capacity / 2));
             RenderData.DrawFrame.TransparentUIVertexBufferptr = (vertex *)(RenderData.UIVertexArena.Base + (RenderData.UIVertexArena.Capacity / 2));
-
+            
+            sound_output_data SoundOutput  = {};
+            SoundOutput.ToneVolume         = 50;
+            SoundOutput.ToneFreq           = 512;
+            SoundOutput.SamplesPerSecond   = 48000;
+            SoundOutput.WavePeriod         = SoundOutput.SamplesPerSecond / SoundOutput.ToneFreq;
+            SoundOutput.BytesPerSample     = sizeof(int16) * 2; 
+            SoundOutput.BufferSize         = SoundOutput.SamplesPerSecond * (sizeof(int16) * 2);
+            SoundOutput.LatencyCursor      = SoundOutput.SamplesPerSecond / 15; 
+            SoundOutput.RunningSampleIndex = 0;
+            
+            int16 *SampleBufferStorage = (int16 *)VirtualAlloc(0, SoundOutput.BufferSize, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
 #if 0
             Memory.TransientStorage = ArenaCreate(Megabytes(512));
             Memory.PermanentStorage = ArenaCreate(Megabytes(512));
-
+            
             RenderData.DrawFrame.Vertices = (vertex *)ArenaAlloc(&Memory.PermanentStorage, sizeof(vertex) * TRUE_MAX_VERTICES);
             RenderData.DrawFrame.UIVertices = (vertex *)ArenaAlloc(&Memory.PermanentStorage, sizeof(vertex) * TRUE_MAX_VERTICES);
 #endif
-
             CloverResetRendererState(&RenderData);
-            
             Win32LoadKeyData(&State);
             Win32LoadDefaultBindings(&State.GameInput);
-
+            Win32SetupXInput(&State);
+            
             const int32 PixelAttributes[] =
             {
                 WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
@@ -453,12 +847,15 @@ WinMain(HINSTANCE hInstance,
             wglMakeCurrent(WindowDC, MainRenderingContext);
             gladLoadGL();
             
+            
             // VSYNC
             WGLFunctions.wglSwapIntervalEXT(0);
             // VSYNC
             
-
+            
             CloverSetupRenderer(&TransientState.TransientArena, &RenderData);
+            RenderData.CloverRender = CloverRender;
+            
             Game = Win32LoadGameCode(STR("CloverGame.dll"));
             
             // NOTE(Sleepster): ImGui Setup 
@@ -474,43 +871,73 @@ WinMain(HINSTANCE hInstance,
             io.WantCaptureMouse = 1;
             io.DeltaTime = Time.Delta > 0 ? SIMRATE : Time.Delta;
             
-
-            // Choose Dear ImGui style
             ImGui::StyleColorsDark();
-            
-            // Setup Platform/Renderer backends
             ImGui_ImplWin32_InitForOpenGL(WindowHandle);
             ImGui_ImplOpenGL3_Init();
             
             
-            // NOTE(Sleepster): Audio Engine setup, MiniAudio makes this REALLLLLLYYYYYYYY easy 
-            /* State.SFXData.AudioEngine = {}; */
-            /* Assert(ma_engine_init(0, &State.SFXData.AudioEngine) == MA_SUCCESS); */
-            /* Assert(ma_engine_set_volume(&State.SFXData.AudioEngine, 0.1f) == MA_SUCCESS); */
+            win32_sound_data DSound = Win32InitDSound(WindowHandle, SoundOutput.SamplesPerSecond, SoundOutput.BufferSize);
+            Win32ClearSoundBuffer(&DSound, &SoundOutput);
+            DSound.SecondaryBuffer->Play(0, 0, DSBPLAY_LOOPING);
             
-            if(SDL_Init(SDL_INIT_AUDIO) == 0)
-            {
-                printm("[ERROR]: SDL has failed to Init. Error code: %s\n", SDL_GetError());
-                Assert(1 == 0);
-            }
-
-            InitAudio(&State.TestEngine);
-            CloverPlayWAVFile_IO(&TransientState.TransientArena, &State.TestEngine, STR("../data/res/sounds/Test.wav"));
-
             Game.OnAwake(&GameMemory, &RenderData, &State, &TransientState);
-            RenderData.CloverRender = CloverRender;
             
-            Running = 1;
             LARGE_INTEGER LastCounter;
             QueryPerformanceCounter(&LastCounter);
             
+            State.TestSound = CloverLoadWAVFile(&TransientState.TransientArena, STR("../data/res/sounds/Test2.wav")); 
             real64 CurrentTime = GetLastTime();
+            
+            Running = 1;
             while(Running)
             {
                 MSG Message = {};
                 Win32ProcessInputMessages(Message, WindowHandle, &State);
-                //DATA RELOADING
 
+                State.GameInput.IsAnalog = false;
+                for(uint32 ControllerIndex = 0;
+                    ControllerIndex < 1;
+                    ++ControllerIndex)
+                {
+                    XINPUT_STATE Controller;
+                    if(XInputGetState(ControllerIndex, &Controller) == ERROR_SUCCESS)
+                    {
+                        State.GameInput.IsAnalog = true;
+                        XINPUT_GAMEPAD *Gamepad = &Controller.Gamepad;
+                        for(uint32 ButtonIndex = 0;
+                            ButtonIndex < GAMEPAD_BUTTON_COUNT;
+                            ++ButtonIndex)
+                        {
+                            action_button *Button = &State.GameInput.Controller.GamepadButtons[ButtonIndex];
+                            bool32 IsDown = (Gamepad->wButtons & ButtonLookup[ButtonIndex]);
+
+                            Button->JustPressed  = !Button->JustPressed && !Button->IsDown &&  IsDown;
+                            Button->JustReleased = !Button->JustPressed &&  Button->IsDown && !IsDown;
+                            Button->IsDown       = IsDown; 
+
+                            // TODO(Sleepster): We might need to seperate these 
+                            if(IsDown || Button->JustReleased)
+                            {
+                                Button->HalfTransitionCount++;
+                            }
+                        }
+
+                        State.GameInput.Controller.LeftStick  = {Gamepad->sThumbLX, Gamepad->sThumbLY};
+                        State.GameInput.Controller.RightStick = {Gamepad->sThumbRX, Gamepad->sThumbRY};
+
+                        State.GameInput.Controller.LeftTriggerValue = Gamepad->bLeftTrigger;
+                        State.GameInput.Controller.RightTriggerValue = Gamepad->bRightTrigger;
+
+                        XINPUT_VIBRATION Rumble = 
+                        {
+                            .wLeftMotorSpeed = State.GameInput.Controller.LeftRumble, 
+                            .wRightMotorSpeed = State.GameInput.Controller.RightRumble
+                        };
+                        XInputSetState(ControllerIndex, &Rumble);
+                    }
+                }
+
+                //DATA RELOADING
 #if CLOVER_SLOW
                 FILETIME NewDLLWriteTime = Win32GetLastWriteTime(STR("CloverGame.dll"));
                 if(CompareFileTime(&Game.LastWriteTime, &NewDLLWriteTime) != 0)
@@ -522,40 +949,40 @@ WinMain(HINSTANCE hInstance,
                     Time.CurrentTimeInSeconds = 0.0f;
                     Game.OnAwake(&GameMemory, &RenderData, &State, &TransientState);
                 }
-
+                
                 // NOTE(Sleepster: Shader Reloading  
                 filetime NewTextureWriteTime        = FileGetLastWriteTime(RenderData.GameAtlas.Filepath);    
                 filetime NewVertexShaderWriteTime   = FileGetLastWriteTime(RenderData.BasicShader.VertexShader.Filepath);
                 filetime NewFragmentShaderWriteTime = FileGetLastWriteTime(RenderData.BasicShader.FragmentShader.Filepath);
-
+                
                 if(!CloverCompareFiletime(NewTextureWriteTime, RenderData.GameAtlas.LastWriteTime))
                 {
                     CloverReloadTexture(&RenderData, &RenderData.GameAtlas, 0);
                     Sleep(100);
                 }
-
+                
                 if(!CloverCompareFiletime(NewVertexShaderWriteTime,   RenderData.BasicShader.VertexShader.LastWriteTime) ||
                    !CloverCompareFiletime(NewFragmentShaderWriteTime, RenderData.BasicShader.FragmentShader.LastWriteTime))
                 {
                     RebuildShader(&TransientState.TransientArena, &RenderData.BasicShader);
                 }
-
+                
                 if(!CloverCompareFiletime(NewVertexShaderWriteTime,   RenderData.gBufferShader.VertexShader.LastWriteTime) ||
                    !CloverCompareFiletime(NewFragmentShaderWriteTime, RenderData.gBufferShader.FragmentShader.LastWriteTime))
                 {
                     RebuildShader(&TransientState.TransientArena, &RenderData.gBufferShader); 
                 }
-
+                
                 if(!CloverCompareFiletime(NewVertexShaderWriteTime,   RenderData.LightingShader.VertexShader.LastWriteTime) ||
                    !CloverCompareFiletime(NewFragmentShaderWriteTime, RenderData.LightingShader.FragmentShader.LastWriteTime))
                 {
                     RebuildShader(&TransientState.TransientArena, &RenderData.LightingShader); 
                 }
 #endif
-
+                
                 real64 NewTime     = GetLastTime();
                 CurrentTime        = NewTime;
-
+                
                 Time.Delta = (real32)GetLastTime();
                 Time.Current = (real32)CurrentTime;
                 while(Accumulator >= SIMRATE)
@@ -566,7 +993,7 @@ WinMain(HINSTANCE hInstance,
                 }
                 
                 Accumulator += Time.Delta;
-
+                
                 glViewport(0, 0, SizeData.Width, SizeData.Height);
                 glClearColor(RenderData.ClearColor.R, RenderData.ClearColor.G, RenderData.ClearColor.B, RenderData.ClearColor.A);
                 glClearDepth(0.0f);
@@ -579,14 +1006,51 @@ WinMain(HINSTANCE hInstance,
                 
                 RenderData.AspectRatio = (real32)SizeData.Width / (real32)SizeData.Height;
                 Game.UpdateAndDraw(&GameMemory, &RenderData, &State, &TransientState, Time, SizeData);
-                SDL_FlushAudioStream(State.TestEngine.SDLSoundBuffer);
+                
+                DWORD BytesToWrite = 0;
+                DWORD BytesToLock = 0;
+                DWORD TargetCursor;
+                DWORD PlayCursorPosition;
+                DWORD WriteCursorPosition;
+                bool SoundIsValid = false;
+                
+                if(SUCCEEDED(DSound.SecondaryBuffer->GetCurrentPosition(&PlayCursorPosition, &WriteCursorPosition)))
+                {
+                    BytesToWrite = 0;
+                    BytesToLock  = (SoundOutput.RunningSampleIndex * SoundOutput.BytesPerSample) % SoundOutput.BufferSize;
+                    TargetCursor = (PlayCursorPosition + (SoundOutput.LatencyCursor * SoundOutput.BytesPerSample)) % SoundOutput.BufferSize;
+                    
+                    if(BytesToLock > TargetCursor)
+                    {
+                        BytesToWrite  = (SoundOutput.BufferSize - BytesToLock); 
+                        BytesToWrite += TargetCursor;
+                    }
+                    else
+                    {
+                        BytesToWrite = TargetCursor - BytesToLock; 
+                    }
+                    
+                    SoundIsValid = true; 
+                }
+                
+                sound_buffer SoundBufferData      = {};
+                SoundBufferData.SamplesPerSecond  = 48000;
+                SoundBufferData.SampleOutputCount = BytesToWrite / SoundOutput.BytesPerSample; 
+                SoundBufferData.SampleBuffer      = SampleBufferStorage; 
+                
+                Game.GetSoundSamples(&GameMemory, &SoundBufferData, &State, &TransientState);
+                if(SoundIsValid)
+                {
+                    Win32FillSoundBuffer(&DSound, &SoundOutput, &SoundBufferData, BytesToLock, BytesToWrite);
+                }
                 
                 ImGui::Render();
                 CloverRender(&RenderData);
-
+                
+                
                 ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
                 SwapBuffers(WindowDC);
-
+                
                 ClearTransientState(&TransientState);
                 
                 // DELTA

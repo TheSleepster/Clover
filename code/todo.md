@@ -3,6 +3,8 @@
 > There's still more
 
 
+
+- WASAPI??? XAudio2???
 - # Sound Mixer
     - [ ] Control how audio is mixed
     - [ ] Control and determine how a sound is playing
@@ -63,6 +65,10 @@
         return(Result);
     }
         ```
+---
+- # Sound API
+    - [ ] Provide a way for the engine to play a sound, probably by creating a pair between a string and a SoundID that's loaded
+    - [ ] With the Asset System, handle the sounds
 
 ---
 - ### Enhance Arenas 
@@ -100,5 +106,3 @@
     - [ ] Create a particle system
     - [ ] Allow the system to control the kind of particles and the rate with which they are output
     - [ ] Allow images to be used on particles
-
----

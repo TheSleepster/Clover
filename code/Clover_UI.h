@@ -114,7 +114,7 @@ struct clover_ui_context
     mat4 UICameraViewMatrix;
     mat4 UICameraProjectionMatrix;
     
-    Input     *GameInput;
+    input     *GameInput;
     font_data *ActiveFont;
     font_index ActiveFontIndex;
     real32     LastActiveFontSize;

@@ -53,7 +53,7 @@ global_variable real32 CurrentWorldBrightness = 0.2f;
 // GAME GLOBALS
 constexpr uint32 MAX_SOUNDS      = 128;
 constexpr uint32 MAX_TRACKS      = 12;
-constexpr uint32 MAX_ENTITIES    = 10000;
+constexpr uint32 MAX_ENTITIES    = 1000;
 constexpr uint32 MAX_UI_ELEMENTS = 1000;
 
 constexpr real32 WORLD_SIZE   = 100;
