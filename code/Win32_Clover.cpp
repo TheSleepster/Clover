@@ -44,7 +44,7 @@
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
-#include <dbt.h>
+#include <emmintrin.h>
 
 // DSOUND
 #include <mmreg.h>
@@ -511,12 +511,6 @@ Win32UnloadGameCode(game_functions *GameCode)
     GameCode->GetSoundSamples = GameGetSoundSamplesStub;
 }
 
-internal inline void
-ClearTransientState(transient_state *TransientState)
-{
-    ClearArena(&TransientState->TransientArena);
-}
-
 internal win32_sound_data
 Win32InitDSound(HWND WindowHandle, int32 SamplesPerSecond, int32 BufferSize)
 {
@@ -713,11 +707,72 @@ Win32SetupXInput(game_state *State)
     }
 }
 
+internal void
+CollectGarbage(memory_arena *Trash)
+{
+    ClearArena(Trash);
+}
+
+struct job_queue
+{
+    uint32 volatile JobCount;
+    uint32 volatile NextJob;
+    uint32 volatile TotalJobsCompleted;
+
+    HANDLE Semaphore;
+};
+
+struct job_queue_entry
+{
+    char *TextToPrint;
+};
+
+struct win32_thread_info
+{
+    int32 LogicalThreadIndex;
+};
+
+global_variable job_queue JobQueue = {};
+job_queue_entry Entries[256] = {};
+
+internal void
+PushEntry(char *String)
+{ 
+    Assert(JobQueue.JobCount < ArrayCount(Entries));
+    job_queue_entry *Job = Entries + JobQueue.JobCount;
+    Job->TextToPrint = String;
+
+    WriteBarrier;
+    ++JobQueue.JobCount;
+    ReleaseSemaphore(JobQueue.Semaphore, 1, 0);
+}
+
+internal void
+CompleteJob(job_queue_entry *Entry)
+{
+}
+
 DWORD WINAPI
 ThreadProc(void *lpParam)
 {
+    win32_thread_info *ThreadInfo = (win32_thread_info *)lpParam;
     for(;;)
     {
+        if(JobQueue.NextJob < JobQueue.JobCount)
+        {
+            int EntryIndex         = InterlockedIncrement(&JobQueue.NextJob) - 1;
+            job_queue_entry *Entry = Entries + EntryIndex;
+
+            char Buffer[256];
+            wsprintf(Buffer, "Thread %u: %s\n", ThreadInfo->LogicalThreadIndex, Entry->TextToPrint);
+            cl_Info(Buffer);
+
+            InterlockedIncrement(&JobQueue.TotalJobsCompleted);
+        }
+        else
+        {
+            WaitForSingleObjectEx(JobQueue.Semaphore, INFINITE, FALSE);
+        }
     }
 }
 
@@ -727,6 +782,67 @@ WinMain(HINSTANCE hInstance,
         LPSTR lpCmdLine,
         int32 nShowCmd)
 {
+    // NOTE(Sleepster): THREADING 
+    {
+        win32_thread_info TestThreads[11];
+
+        JobQueue.Semaphore = CreateSemaphoreExA(0, 0, ArrayCount(TestThreads), 0, 0, SEMAPHORE_ALL_ACCESS);
+        for(uint32 ThreadIndex = 0;
+            ThreadIndex < ArrayCount(TestThreads);
+            ++ThreadIndex)
+        {
+            win32_thread_info *TestThread = TestThreads + ThreadIndex;
+            TestThread->LogicalThreadIndex = ThreadIndex;
+
+            DWORD ThreadID;
+            HANDLE ThreadHandle = CreateThread(0, 0, ThreadProc, (LPVOID *)TestThread, 0, &ThreadID); 
+            CloseHandle(ThreadHandle);
+        }
+
+        PushEntry("String A0");
+        PushEntry("String A1");
+        PushEntry("String A2");
+        PushEntry("String A3");
+        PushEntry("String A4");
+        PushEntry("String A5");
+        PushEntry("String A6");
+        PushEntry("String A7");
+        PushEntry("String A8");
+        PushEntry("String A9");
+        PushEntry("String A10");
+        PushEntry("String A11");
+
+        Sleep(2000);
+
+        PushEntry("String B0");
+        PushEntry("String B1");
+        PushEntry("String B2");
+        PushEntry("String B3");
+        PushEntry("String B4");
+        PushEntry("String B5");
+        PushEntry("String B6");
+        PushEntry("String B7");
+        PushEntry("String B8");
+        PushEntry("String B9");
+        PushEntry("String B10");
+        PushEntry("String B11");
+
+        Sleep(2000);
+
+        PushEntry("String C0");
+        PushEntry("String C1");
+        PushEntry("String C2");
+        PushEntry("String C3");
+        PushEntry("String C4");
+        PushEntry("String C5");
+        PushEntry("String C6");
+        PushEntry("String C7");
+        PushEntry("String C8");
+        PushEntry("String C9");
+        PushEntry("String C10");
+        PushEntry("String C11");
+    }
+
     WNDCLASS              Window         = {};
     time_data             Time           = {};
     game_state            State          = {};
@@ -795,17 +911,18 @@ WinMain(HINSTANCE hInstance,
                 
                 InitializeArena(&RenderData.VertexArena,        sizeof(vertex) * TRUE_MAX_VERTICES, &GameMemory.PermanentStorage);
                 InitializeArena(&RenderData.UIVertexArena,      sizeof(vertex) * TRUE_MAX_VERTICES, &GameMemory.PermanentStorage);
-                InitializeArena(&TransientState.TransientArena, Megabytes(200),                     &GameMemory.TransientStorage);
+                InitializeArena(&TransientState.TransientArena, Megabytes(100),                     &GameMemory.TransientStorage);
+                InitializeArena(&TransientState.Garbage,        Megabytes(100),                     &GameMemory.TransientStorage);
 
                 // TODO(Sleepster): Think about reworking TransientStorage;  
                 InitializeArena(&State.World.WorldArena,       (sizeof(struct entity) * MAX_ENTITIES) + sizeof(struct item) * MAX_ITEMS, &GameMemory.PermanentStorage);
                 State.World.Entities = PushArray(&State.World.WorldArena, entity, MAX_ENTITIES);
                 State.World.Items    = PushArray(&State.World.WorldArena, item,   MAX_ITEMS);
                 
-                RenderData.DrawFrame.Vertices                     = (vertex *)RenderData.VertexArena.Base;
-                RenderData.DrawFrame.UIVertices                   = (vertex *)RenderData.UIVertexArena.Base;
-                RenderData.DrawFrame.TransparentVertexBufferptr   = (vertex *)(RenderData.VertexArena.Base   + (RenderData.VertexArena.Capacity / 2));
-                RenderData.DrawFrame.TransparentUIVertexBufferptr = (vertex *)(RenderData.UIVertexArena.Base + (RenderData.UIVertexArena.Capacity / 2));
+                TransientState.DrawFrameData.Vertices                     = (vertex *)RenderData.VertexArena.Base;
+                TransientState.DrawFrameData.UIVertices                   = (vertex *)RenderData.UIVertexArena.Base;
+                TransientState.DrawFrameData.TransparentVertexBufferptr   = (vertex *)(RenderData.VertexArena.Base   + (RenderData.VertexArena.Capacity / 2));
+                TransientState.DrawFrameData.TransparentUIVertexBufferptr = (vertex *)(RenderData.UIVertexArena.Base + (RenderData.UIVertexArena.Capacity / 2));
             }
 
             // NOTE(Sleepster): DSOUND INIT 
@@ -831,7 +948,7 @@ WinMain(HINSTANCE hInstance,
 
             // NOTE(Sleepster): INIT OPENGL 
             {
-                CloverResetRendererState(&RenderData);
+                CloverResetRendererState(&RenderData, &TransientState);
                 const int32 PixelAttributes[] =
                 {
                     WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
@@ -873,7 +990,7 @@ WinMain(HINSTANCE hInstance,
                 WGLFunctions.wglSwapIntervalEXT(0);
                 // VSYNC
                 
-                CloverSetupRenderer(&TransientState.TransientArena, &RenderData);
+                CloverSetupRenderer(&TransientState.Garbage, &RenderData);
                 RenderData.CloverRender = CloverRender;
             } 
 
@@ -907,14 +1024,7 @@ WinMain(HINSTANCE hInstance,
             {
                 Game = Win32LoadGameCode(STR("CloverGame.dll"));
                 Game.OnAwake(&GameMemory, &RenderData, &State, &TransientState);
-                State.TestSound = CloverLoadWAVFile(&TransientState.TransientArena, STR("../data/res/sounds/Test.wav")); 
-            }
-
-            // NOTE(Sleepster): THREADING 
-            {
-                win32_thread_context TestThread;
-                TestThread.ThreadData = (void *)&State;
-                TestThread.Handle     = CreateThread(0, 0, ThreadProc, TestThread.ThreadData, 0, &TestThread.ID); 
+                State.TestSound = CloverLoadWAVFile(&TransientState.Garbage, STR("../data/res/sounds/Test.wav")); 
             }
 
             // NOTE(Sleepster): CLOCK 
@@ -999,19 +1109,19 @@ WinMain(HINSTANCE hInstance,
                 if(!CloverCompareFiletime(NewVertexShaderWriteTime,   RenderData.BasicShader.VertexShader.LastWriteTime) ||
                    !CloverCompareFiletime(NewFragmentShaderWriteTime, RenderData.BasicShader.FragmentShader.LastWriteTime))
                 {
-                    RebuildShader(&TransientState.TransientArena, &RenderData.BasicShader);
+                    RebuildShader(&TransientState.Garbage, &RenderData.BasicShader);
                 }
                 
                 if(!CloverCompareFiletime(NewVertexShaderWriteTime,   RenderData.gBufferShader.VertexShader.LastWriteTime) ||
                    !CloverCompareFiletime(NewFragmentShaderWriteTime, RenderData.gBufferShader.FragmentShader.LastWriteTime))
                 {
-                    RebuildShader(&TransientState.TransientArena, &RenderData.gBufferShader); 
+                    RebuildShader(&TransientState.Garbage, &RenderData.gBufferShader); 
                 }
                 
                 if(!CloverCompareFiletime(NewVertexShaderWriteTime,   RenderData.LightingShader.VertexShader.LastWriteTime) ||
                    !CloverCompareFiletime(NewFragmentShaderWriteTime, RenderData.LightingShader.FragmentShader.LastWriteTime))
                 {
-                    RebuildShader(&TransientState.TransientArena, &RenderData.LightingShader); 
+                    RebuildShader(&TransientState.Garbage, &RenderData.LightingShader); 
                 }
 #endif
                 // NOTE(Sleepster): DELTA TIME 
@@ -1085,12 +1195,12 @@ WinMain(HINSTANCE hInstance,
                         ImGui::NewFrame();
 
                         ImGui::Render();
-                        CloverRender(&RenderData);
+                        CloverRender(&RenderData, &TransientState);
                         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
                         SwapBuffers(WindowDC);
                     }
-                    // NOTE(Sleepster): Clear TransientState; 
-                    ClearTransientState(&TransientState);
+                    CloverResetRendererState(&RenderData, &TransientState);
+                    CollectGarbage(&TransientState.Garbage);
                 }
                 
                 LARGE_INTEGER EndCounter;
@@ -1119,5 +1229,6 @@ WinMain(HINSTANCE hInstance,
     {
         Check(0, "Failure to Register the WindowClass\n");
     }
-    return(0);
+
+    ExitProcess(0);
 }

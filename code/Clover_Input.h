@@ -164,7 +164,6 @@ struct keyboard_input
     key_mapping Bindings[BINDING_COUNT];
 };
 
-constexpr uint32 CONTROLLER_DEADZONE = 8000;
 struct controller_input
 {
     action_button GamepadButtons[GAMEPAD_BUTTON_COUNT];

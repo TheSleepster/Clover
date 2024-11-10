@@ -1003,7 +1003,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
 {
     DrawImGui(State, RenderData, Time);
     
-    State->World.WorldFrame = {};
+    TransientState->GameFrameData.SelectedEntity = {};
     // MATRICES
     {
         // NOTE(Sleepster): GAME 
@@ -1054,9 +1054,9 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             real32 PlayerToObjectDistance = fabsf(v2Distance(Temp->Position, Player->Position));
             if(Distance <= SelectionDistance && PlayerToObjectDistance <= MaxHitRange)
             {
-                if(!State->World.WorldFrame.SelectedEntity || (Distance < MinimumDistance) || (Temp->EntityID != State->World.WorldFrame.SelectedEntity->EntityID))
+                if(!TransientState->GameFrameData.SelectedEntity || (Distance < MinimumDistance) || (Temp->EntityID != TransientState->GameFrameData.SelectedEntity->EntityID))
                 {
-                    State->World.WorldFrame.SelectedEntity = Temp;
+                    TransientState->GameFrameData.SelectedEntity = Temp;
                     MinimumDistance = Distance;
                 }
                 
@@ -1088,7 +1088,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                         }
                         
                         //PlaySound(&Memory->TemporaryStorage, State, STR("boop.wav"), 1);
-                        State->World.WorldFrame.SelectedEntity = {};
+                        TransientState->GameFrameData.SelectedEntity = {};
                         DeleteEntity(Temp);
                     }
                 }
@@ -1147,7 +1147,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                 {
                     XForm = mat4Multiply(XForm, mat4MakeScale(vec3{1.2, 1.2, 1.0}));
                 }
-                DrawUISpriteXForm(RenderData, XForm, Sprite, 0, WHITE);
+                DrawUISpriteXForm(TransientState, XForm, Sprite, 0, WHITE);
             }
             
             if(HotbarSlotState.IsHot)
@@ -1191,18 +1191,18 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     mat4 SpriteXForm = UIXForm;
                     UIXForm = mat4Multiply(UIXForm, mat4Translate(vec3{0, NewUIYOffset, 0}));
                     UIXForm = mat4Multiply(UIXForm, mat4MakeScale(v2Expand(UIBoxSize + ItemDescData->Size, 1.0f)));
-                    DrawUISpriteXForm(RenderData, UIXForm, GetSprite(State, SPRITE_Nil), 0, vec4{0.2f, 0.2f, 0.2f, 0.2f});
+                    DrawUISpriteXForm(TransientState, UIXForm, GetSprite(State, SPRITE_Nil), 0, vec4{0.2f, 0.2f, 0.2f, 0.2f});
                     
                     SpriteXForm = mat4Multiply(SpriteXForm, mat4Translate(vec3{UIBoxSize.X + ItemDescData->Size.X * -0.5f, SpriteYOffset, 0}));
                     SpriteXForm = mat4Multiply(SpriteXForm, mat4MakeScale(vec3{IconSize, IconSize, 1.0f}));
-                    DrawUISpriteXForm(RenderData, SpriteXForm, SpriteData, 0, WHITE);
+                    DrawUISpriteXForm(TransientState, SpriteXForm, SpriteData, 0, WHITE);
                     
                     SpriteXForm = mat4Multiply(SpriteXForm, mat4MakeScale(vec3{1 / IconSize, 1 / IconSize, 1.0f}));
                     SpriteXForm = mat4Multiply(SpriteXForm, mat4Translate(vec3{-(UIBoxSize.X + ItemDescData->Size.X * -0.5f), 0, 0}));
                     SpriteXForm = mat4Multiply(SpriteXForm, mat4Translate(vec3{(UIBoxSize.X + ItemDescData->Size.X * -0.5f), 19, 0}));
                     SpriteXForm = mat4Multiply(SpriteXForm, mat4Translate(vec3{-7, 0, 0}));
                     SpriteXForm = mat4Multiply(SpriteXForm, mat4MakeScale(vec3{16, 16, 1.0f}));
-                    DrawUISpriteXForm(RenderData, SpriteXForm, GetSprite(State, SPRITE_Nil), 0, vec4{0.1f, 0.1f, 0.1f, 0.4f});
+                    DrawUISpriteXForm(TransientState, SpriteXForm, GetSprite(State, SPRITE_Nil), 0, vec4{0.1f, 0.1f, 0.1f, 0.4f});
                     
                     SpriteXForm = mat4Multiply(SpriteXForm, mat4MakeScale(vec3{1 / IconSize, 1 / IconSize, 1.0f}));
                     SpriteXForm = mat4Multiply(SpriteXForm, mat4Translate(vec3{2, -6, 0}));
@@ -1210,7 +1210,8 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     
                     vec4 ItemCountTextPosition = SpriteXForm.Columns[3];
                     Position = vec2{ItemCountTextPosition.X, ItemCountTextPosition.Y};
-                    CloverUIMakeTextElement(&State->UIContext, sprints(&TransientState->TransientArena, STR("x%d"), Item->CurrentStack), {Position.X + 3, Position.Y}, 15, TEXT_ALIGNMENT_Center, GREEN);
+
+                    CloverUIMakeTextElement(&State->UIContext, sprints(&TransientState->Garbage, STR("x%d"), Item->CurrentStack), {Position.X + 3, Position.Y}, 15, TEXT_ALIGNMENT_Center, GREEN);
                 }
             }
             
@@ -1271,7 +1272,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             if(Sprite != State->GameData.Sprites[SPRITE_Nil] && !HotbarSlotState.IsHot)
             {
                 XForm = mat4Multiply(XForm, mat4MakeScale(vec3{0.65, 0.65, 1.0}));
-                DrawUISpriteXForm(RenderData, XForm, Sprite, 0, WHITE);
+                DrawUISpriteXForm(TransientState, XForm, Sprite, 0, WHITE);
             }
             
             if(HotbarSlotState.IsHot)
@@ -1280,7 +1281,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                 if(Item->Sprite != SPRITE_Nil)
                 {
                     XForm = mat4Multiply(XForm, mat4MakeScale(vec3{1.0, 1.0, 1.0}));
-                    DrawUISpriteXForm(RenderData, XForm, Sprite, 0, WHITE);
+                    DrawUISpriteXForm(TransientState, XForm, Sprite, 0, WHITE);
                     
                     real32 NewUIYOffset;
                     real32 NewUIYDescOffset;
@@ -1315,18 +1316,18 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     mat4 SpriteXForm = UIXForm;
                     UIXForm = mat4Multiply(UIXForm, mat4Translate(vec3{0, NewUIYOffset, 0}));
                     UIXForm = mat4Multiply(UIXForm, mat4MakeScale(v2Expand(UIBoxSize + ItemDescData->Size, 1.0f)));
-                    DrawUISpriteXForm(RenderData, UIXForm, GetSprite(State, SPRITE_Nil), 0, vec4{0.2f, 0.2f, 0.2f, 0.2f});
+                    DrawUISpriteXForm(TransientState, UIXForm, GetSprite(State, SPRITE_Nil), 0, vec4{0.2f, 0.2f, 0.2f, 0.2f});
                     
                     SpriteXForm = mat4Multiply(SpriteXForm, mat4Translate(vec3{UIBoxSize.X + ItemDescData->Size.X * -0.5f, SpriteYOffset, 0}));
                     SpriteXForm = mat4Multiply(SpriteXForm, mat4MakeScale(vec3{IconSize, IconSize, 1.0f}));
-                    DrawUISpriteXForm(RenderData, SpriteXForm, SpriteData, 0, WHITE);
+                    DrawUISpriteXForm(TransientState, SpriteXForm, SpriteData, 0, WHITE);
                     
                     SpriteXForm = mat4Multiply(SpriteXForm, mat4MakeScale(vec3{1 / IconSize, 1 / IconSize, 1.0f}));
                     SpriteXForm = mat4Multiply(SpriteXForm, mat4Translate(vec3{-(UIBoxSize.X + ItemDescData->Size.X * -0.5f), 0, 0}));
                     SpriteXForm = mat4Multiply(SpriteXForm, mat4Translate(vec3{(UIBoxSize.X + ItemDescData->Size.X * -0.5f), 19, 0}));
                     SpriteXForm = mat4Multiply(SpriteXForm, mat4Translate(vec3{-7, 0, 0}));
                     SpriteXForm = mat4Multiply(SpriteXForm, mat4MakeScale(vec3{16, 16, 1.0f}));
-                    DrawUISpriteXForm(RenderData, SpriteXForm, GetSprite(State, SPRITE_Nil), 0, vec4{0.1f, 0.1f, 0.1f, 0.4f});
+                    DrawUISpriteXForm(TransientState, SpriteXForm, GetSprite(State, SPRITE_Nil), 0, vec4{0.1f, 0.1f, 0.1f, 0.4f});
                     
                     SpriteXForm = mat4Multiply(SpriteXForm, mat4MakeScale(vec3{1 / IconSize, 1 / IconSize, 1.0f}));
                     SpriteXForm = mat4Multiply(SpriteXForm, mat4Translate(vec3{2, -6, 0}));
@@ -1334,7 +1335,8 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     
                     vec4 ItemCountTextPosition = SpriteXForm.Columns[3];
                     Position = vec2{ItemCountTextPosition.X, ItemCountTextPosition.Y};
-                    CloverUIMakeTextElement(&State->UIContext, sprints(&TransientState->TransientArena, STR("x%d"), Item->CurrentStack), {Position.X + 3, Position.Y}, 15, TEXT_ALIGNMENT_Center, GREEN);
+
+                    CloverUIMakeTextElement(&State->UIContext, sprints(&TransientState->Garbage, STR("x%d"), Item->CurrentStack), {Position.X + 3, Position.Y}, 15, TEXT_ALIGNMENT_Center, GREEN);
                 }
             }
         }
@@ -1456,7 +1458,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
     }
     
     // NOTE(Sleepster): UI Rendering 
-    CloverUIDrawWidgets(RenderData, &State->UIContext);
+    CloverUIDrawWidgets(RenderData, TransientState, &State->UIContext);
     CloverUIResetState(&State->UIContext); 
     
     // NOTE(Sleepster): Building
@@ -1521,7 +1523,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                 XForm = mat4Multiply(XForm, mat4MakeScale(vec3{BoxWidth, 2, 1}));
                 
                 CloverUIPushLayer(&State->UIContext, 1);
-                DrawUISpriteXForm(RenderData, XForm, GetSprite(State, SPRITE_Nil), 0, vec4{0.0, 0.0, 0.0, 0.8f});
+                DrawUISpriteXForm(TransientState, XForm, GetSprite(State, SPRITE_Nil), 0, vec4{0.0, 0.0, 0.0, 0.8f});
                 CloverUIPushLayer(&State->UIContext, 0);
                 
                 int InventoryCount[MAX_CRAFTING_ELEMENTS] = {};
@@ -1562,7 +1564,9 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     
                     CloverUIPushLayer(&State->UIContext, 2);
                     CloverUISpriteElement(&State->UIContext, {0, 0}, {0, 0}, XForm, Sprite, WHITE);
-                    CloverUIMakeTextElement(&State->UIContext, sprints(&TransientState->TransientArena, STR("%d/%d"), InventoryCount[MaterialIndex], Material->RequiredCount), {10, NewYOffset + 5}, 10, TEXT_ALIGNMENT_Center, BLACK);
+
+                    CloverUIMakeTextElement(&State->UIContext, sprints(&TransientState->Garbage, STR("%d/%d"), InventoryCount[MaterialIndex], Material->RequiredCount), {10, NewYOffset + 5}, 10, TEXT_ALIGNMENT_Center, BLACK);
+                    
                     CloverUIPushLayer(&State->UIContext, 0);
                 }
                 
@@ -1636,8 +1640,8 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             XForm = mat4Multiply(XForm, mat4Translate(v2Expand(BoxPosition, 0)));
             XForm = mat4Multiply(XForm, mat4MakeScale(vec3{BoxWidth, BoxHeight, 1}));
             
-            DrawUISpriteXForm(RenderData, XForm, GetSprite(State, SPRITE_Nil), 0, vec4{0.0, 0.0, 0.0, 0.8f});
-            DrawUIText(RenderData, STR("Building..."), {-IconSize, 20}, 15, UBUNTU_MONO, WHITE);
+            DrawUISpriteXForm(TransientState, XForm, GetSprite(State, SPRITE_Nil), 0, vec4{0.0, 0.0, 0.0, 0.8f});
+            DrawUIText(TransientState, RenderData, STR("Building..."), {-IconSize, 20}, 15, UBUNTU_MONO, WHITE);
         }
         
         // NOTE(Sleepster): Building From Inventory/Hotbar
@@ -1663,7 +1667,14 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                 };
             }
             
-            if((HotbarItem && (HotbarItem->Flags & IS_BUILDABLE)) || (InventoryItem && (InventoryItem->Flags & IS_BUILDABLE)))
+            // NOTE(Sleepster): PLACING 
+            vec2 MousePos = TransformMouseCoords(RenderData->GameCamera.ViewMatrix, 
+                                              RenderData->GameCamera.ProjectionMatrix, 
+                                              State->GameInput.Keyboard.CurrentMouse, 
+                                              SizeData);
+            real32 PlayerDist = v2Distance(Player->Position, MousePos);
+            if((HotbarItem && PlayerDist < (ItemPickupDist * 2) && 
+               (HotbarItem->Flags & IS_BUILDABLE)) || (InventoryItem && (InventoryItem->Flags & IS_BUILDABLE)))
             {
                 vec2 MousePosition = RoundToTile(vec2{MouseToWorld.X + (TILE_SIZE * 0.5f), MouseToWorld.Y});
                 static_sprite_data HotbarSprite = GetSprite(State, HotbarItem->Sprite);
@@ -1671,7 +1682,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                 mat4 XForm = mat4Identity(1.0f);
                 XForm = mat4Multiply(XForm, mat4Translate(vec3{MousePosition.X, MousePosition.Y  + (TILE_SIZE * 0.5f), 0}));
                 XForm = mat4Multiply(XForm, mat4MakeScale(v2Expand(v2Cast(HotbarSprite.SpriteSize), 1)));
-                DrawSpriteXForm(RenderData, XForm, HotbarSprite, 0, vec4{0.2, 0.2, 0.2, 0.3f});
+                DrawSpriteXForm(TransientState, XForm, HotbarSprite, 0, vec4{0.2, 0.2, 0.2, 0.3f});
                 
                 if(IsGameKeyPressed(INTERACT, &State->GameInput))
                 {
@@ -1728,7 +1739,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     if(Temp->Flags & IS_PLACED)
                     {
                         real32 Distance = v2Distance(Player->Position, Temp->Position);
-                        if(Distance <= ItemPickupDist && State->World.WorldFrame.SelectedEntity) 
+                        if(Distance <= ItemPickupDist && TransientState->GameFrameData.SelectedEntity) 
                         {
                             State->GameUIState = UI_State_Crafting;
                             State->ActiveCraftingStation = Temp;
@@ -1772,7 +1783,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             XForm = mat4Scale(XForm, vec3{BoxWidth, BoxHeight, 1});
             CloverUISpriteElement(&State->UIContext, {0, 0}, {0, 0}, XForm, GetSprite(State, SPRITE_Nil), BoxColor);
             
-            DrawUIText(RenderData, STR("Crafting"), {-55, 40}, 15, UBUNTU_MONO, WHITE);
+            DrawUIText(TransientState, RenderData, STR("Crafting"), {-55, 40}, 15, UBUNTU_MONO, WHITE);
             for(uint32 Element = 0;
                 Element < ITEM_IDCount;
                 Element++)
@@ -1866,7 +1877,9 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     
                     CloverUIPushLayer(&State->UIContext, 2);
                     CloverUISpriteElement(&State->UIContext, {0, 0}, {0, 0}, XForm, Sprite, WHITE);
-                    CloverUIMakeTextElement(&State->UIContext, sprints(&TransientState->TransientArena, STR("%d/%d"), InventoryCount[MaterialIndex], Material->RequiredCount), {55, NewYOffset - 5}, 10, TEXT_ALIGNMENT_Center, BLACK);
+
+                    CloverUIMakeTextElement(&State->UIContext, sprints(&TransientState->Garbage, STR("%d/%d"), InventoryCount[MaterialIndex], Material->RequiredCount), {55, NewYOffset - 5}, 10, TEXT_ALIGNMENT_Center, BLACK);
+
                     CloverUIPushLayer(&State->UIContext, 0);
                 }
                 
@@ -1943,7 +1956,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
         mat4 Scale     = mat4Multiply(Identity, mat4MakeScale(vec3{100.0f, 100.0f, 1.0f}));
         
         mat4 Total = Translate * Scale;
-        DrawRectXForm(RenderData, Total, {16, 16}, 0, vec4{1.0f, 0.0f, 1.0f, 0.3f});
+        DrawRectXForm(TransientState, Total, {16, 16}, 0, vec4{1.0f, 0.0f, 1.0f, 0.3f});
     }
     
     
@@ -1963,9 +1976,9 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             real32 PlayerToObjectDistance = fabsf(v2Distance(Temp->Position, Player->Position));
             if(Distance <= SelectionDistance && PlayerToObjectDistance <= MaxHitRange)
             {
-                if(!State->World.WorldFrame.SelectedEntity || (Distance < MinimumDistance))
+                if(!TransientState->GameFrameData.SelectedEntity || (Distance < MinimumDistance))
                 {
-                    State->World.WorldFrame.SelectedEntity = Temp;
+                    TransientState->GameFrameData.SelectedEntity = Temp;
                     MinimumDistance = Distance;
                 }
             }
@@ -1993,7 +2006,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     RenderData->GameCamera.Target = Temp->Position;
                     
                     v2Approach(&RenderData->GameCamera.Position, RenderData->GameCamera.Target, 5.0f, Time.Delta);
-                    DrawEntity(RenderData, State, Temp, Temp->Position, WHITE);
+                    DrawEntity(TransientState, State, Temp, Temp->Position, WHITE);
                 }break;
                 default:
                 {
@@ -2007,13 +2020,13 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                         }
                     }
                     
-                    if(State->World.WorldFrame.SelectedEntity == Temp && !(Temp->Flags & IS_ITEM))
+                    if(TransientState->GameFrameData.SelectedEntity == Temp && !(Temp->Flags & IS_ITEM))
                     {
-                        State->World.WorldFrame.SelectedEntity = Temp;
+                        TransientState->GameFrameData.SelectedEntity = Temp;
                         static_sprite_data SelectionBoxSprite = GetSprite(State, SPRITE_SelectionBox);
                         static_sprite_data EntitySprite = GetSprite(State, Temp->Sprite);
                         
-                        DrawSprite(RenderData, 
+                        DrawSprite(TransientState, 
                                    SelectionBoxSprite, 
                                    Temp->Position 
                                    - vec2{0, real32(EntitySprite.SpriteSize.Y * 0.25f)},
@@ -2022,7 +2035,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                                    0, 
                                    0);
                     }
-                    DrawEntity(RenderData, State, Temp, Temp->Position, WHITE);
+                    DrawEntity(TransientState, State, Temp, Temp->Position, WHITE);
                 }break;
             }
         }
@@ -2044,20 +2057,20 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             {
                 real32 X = TileX * TILE_SIZE;
                 real32 Y = TileY * TILE_SIZE;
-                DrawQuadTextured(RenderData, {X, Y - (TILE_SIZE)}, vec2{16, 16}, ivec2{0, 0}, ivec2{16, 16}, 0, DARK_GRAY, 0, 0);
+                DrawQuadTextured(TransientState, {X, Y - (TILE_SIZE)}, vec2{16, 16}, ivec2{0, 0}, ivec2{16, 16}, 0, DARK_GRAY, 0, 0);
             }
             else
             {
                 real32 X = TileX * TILE_SIZE;
                 real32 Y = TileY * TILE_SIZE;
-                DrawQuadTextured(RenderData, {X, Y - (TILE_SIZE)}, vec2{16, 16}, ivec2{0, 0}, ivec2{16, 16}, 0, DARKER_GRAY, 0, 0);
+                DrawQuadTextured(TransientState, {X, Y - (TILE_SIZE)}, vec2{16, 16}, ivec2{0, 0}, ivec2{16, 16}, 0, DARKER_GRAY, 0, 0);
             }
         }
     }
     
     attenuation_data TestLightData = {.Constant = 0.05, .Linear = 0.0009, .Quadratic = 0.001};
-    CreatePointLight(RenderData, vec2{ 80, 80}, 2.0, 100, &TestLightData, RED);
-    CreatePointLight(RenderData, vec2{-80, 80}, 2.0, 100, &TestLightData, WHITE);
+    CreatePointLight(TransientState, vec2{ 80, 80}, 2.0, 100, &TestLightData, RED);
+    CreatePointLight(TransientState, vec2{-80, 80}, 2.0, 100, &TestLightData, WHITE);
 
     if(IsGamepadButtonDown(A_BUTTON, &State->GameInput))
     {

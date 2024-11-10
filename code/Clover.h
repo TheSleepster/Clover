@@ -32,12 +32,6 @@ struct game_memory
     memory_block TransientStorage;
 };
 
-// NOTE(Sleepster): This is reset at the end of every frame 
-struct transient_state
-{
-    memory_arena TransientArena;
-};
-
 struct time_data
 {
     real32 Delta;
@@ -236,12 +230,46 @@ struct game_world_data
     entity *Entities;  
     item   *Items;
     uint32 EntityCounter;
- 
-    // TODO(Sleepster): Do we really need this with TransientState? 
+};
+
+struct transient_state
+{
+    memory_arena TransientArena;
+    memory_arena Garbage;
+
+    // RENDERER
+    struct
+    {
+        vertex *Vertices;
+        vertex *VertexBufferptr;
+        vertex *TransparentVertexBufferptr;
+
+        uint32  OpaqueQuadCount;
+        uint32  TransparentQuadCount;
+        uint32  LastFrameQuadCount;
+
+        vertex *UIVertices;
+        vertex *UIVertexBufferptr;
+        vertex *TransparentUIVertexBufferptr;
+
+        uint32  OpaqueUIElementCount;
+        uint32  TransparentUIElementCount;
+
+        uint32  TotalQuadCount;
+        uint32  TotalUIElementCount;
+
+        point_light PointLights[MAX_POINT_LIGHTS];
+        spot_light  SpotLights [MAX_SPOT_LIGHTS];
+
+        int32 PointLightCount;
+        int32 SpotLightCount;
+    }DrawFrameData;
+
+    // GAME
     struct 
     {
         entity *SelectedEntity;
-    }WorldFrame;
+    }GameFrameData;
 };
 
 struct game_state

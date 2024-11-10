@@ -80,8 +80,13 @@ typedef double   real64;
 #define SECOND_ARG(arg1, arg2, ...) arg2
 
 #if _MSC_VER
-#define alignas(x) __declspec(align(x))
-#define inline     __forceinline
+#define alignas(x)       __declspec(align(x))
+#define inline           __forceinline
+
+// TODO(Sleepster): Double check this stuff
+#define WriteBarrier     _WriteBarrier(); _mm_sfence()
+#define ReadBarrier      _ReadBarrier()
+#define ReadWriteBarrier _ReadWriteBarrier()
 #endif
 
 #endif // INTRINSICS_H

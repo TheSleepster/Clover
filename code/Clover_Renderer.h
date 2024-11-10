@@ -28,9 +28,11 @@
 // IMGUI IMPl
 #include "../data/deps/ImGui/imgui.h"
 
-#include "Clover.h"
 #include "shader/CommonShader.glh"
 #include "Clover_Globals.h"
+#include "Clover.h"
+
+struct transient_state;
 
 enum bound_texture_index
 {
@@ -232,7 +234,7 @@ struct gl_render_data
     GLuint  LightingShaderUserBrightnessUID;
     GLuint  LightingShaderWorldBrightnessUID;
 
-    void(*CloverRender)(gl_render_data *RenderData);
+    void(*CloverRender)(gl_render_data *RenderData, transient_state *TransientState);
 
     // IMGUI STUFF
     ImGuiContext *CurrentImGuiContext;
@@ -240,36 +242,10 @@ struct gl_render_data
 
     memory_arena   VertexArena;
     memory_arena UIVertexArena;
-    
-    // DRAW FRAME DATA
-    // TODO(Sleepster): Do we really need this with TransientState? 
-    struct
-    {
-        // TODO(Sleepster): Fix the in world font renderering. 
-        vertex *Vertices;
-        vertex *VertexBufferptr;
-        vertex *TransparentVertexBufferptr;
-
-        uint32  OpaqueQuadCount;
-        uint32  TransparentQuadCount;
-        
-        vertex *UIVertices;
-        vertex *UIVertexBufferptr;
-        vertex *TransparentUIVertexBufferptr;
-
-        uint32  OpaqueUIElementCount;
-        uint32  TransparentUIElementCount;
-
-        uint32  TotalQuadCount;
-        uint32  TotalUIElementCount;
-
-        point_light PointLights[MAX_POINT_LIGHTS];
-        spot_light  SpotLights [MAX_SPOT_LIGHTS];
-
-        int32 PointLightCount;
-        int32 SpotLightCount;
-    }DrawFrame;
 };
+
+#define CLOVER_OGL_RENDER(name) void name(gl_render_data *RenderData, transient_state *TransientState)
+typedef CLOVER_OGL_RENDER(clover_ogl_render);
 
 internal vec4 
 HexToRGBA(int64 hex) 
