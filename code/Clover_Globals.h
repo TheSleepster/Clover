@@ -77,6 +77,10 @@ constexpr uint32 MAX_CRAFTING_ELEMENTS = 9;
 constexpr uint32 MAX_ENTITY_DROPS      = 4;
 constexpr uint32 TOTAL_INVENTORY_SIZE = PLAYER_HOTBAR_COUNT + PLAYER_INVENTORY_SIZE;
 
+constexpr uint32 GAMEPAD_LEFT_THUMB_DEADZONE  = 7849;
+constexpr uint32 GAMEPAD_RIGHT_THUMB_DEADZONE = 8689;
+constexpr uint32 GAMEPAD_TRIGGER_THRESHOLD    = 30;
+
 constexpr real32 PickupEpsilon = 5.0f;
 
 #define NULLSLOT 100

@@ -199,7 +199,6 @@ struct action_button
     uint8 HalfTransitionCount;
 };
 
-constexpr uint32 CONTROLLER_DEADZONE = 8000;
 struct gamepad_input
 {
     action_button GamepadButtons[GAMEPAD_BUTTON_COUNT];
@@ -244,8 +243,6 @@ struct keyboard_input
 
 struct input
 {
-    bool IsAnalog;
-
     keycodeID KeyCodeLookup[KEY_COUNT];
     keyboard_input Keyboard;
 

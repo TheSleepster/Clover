@@ -10,6 +10,27 @@
 #include "util/Arena.h"
 #include "util/String.h"
 
+internal inline bool
+IsGamepadButtonPressed(controller_buttonID ButtonID, input *GameInput)
+{
+    action_button PrimaryButton = GameInput->Controller.GamepadButtons[ButtonID];
+    return(PrimaryButton.JustPressed && PrimaryButton.HalfTransitionCount >= 1);
+}
+
+internal inline bool
+IsGamepadButtonJustReleased(controller_buttonID ButtonID, input *GameInput)
+{
+    action_button PrimaryButton = GameInput->Controller.GamepadButtons[ButtonID];
+    return(!PrimaryButton.IsDown && PrimaryButton.HalfTransitionCount >= 1);
+}
+
+internal inline bool
+IsGamepadButtonDown(controller_buttonID ButtonID, input *GameInput)
+{
+    action_button PrimaryButton = GameInput->Controller.GamepadButtons[ButtonID];
+    return(PrimaryButton.IsDown);
+}
+
 internal inline game_mapping
 AddGameMapping(keycodeID MainKey, keycodeID AltKey, 
                controller_buttonID PrimaryButton,

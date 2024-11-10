@@ -276,34 +276,33 @@ DeleteEntity(entity *Entity)
 internal void
 HandleInput(game_state *State, entity *PlayerIn, time_data Time)
 {
-    if(!State->GameInput.IsAnalog)
+    vec2 InputAxis = {};
+    if(IsGameKeyDown(MOVE_UP, &State->GameInput))
     {
-        vec2 InputAxis = {};
-        if(IsGameKeyDown(MOVE_UP, &State->GameInput))
-        {
-            InputAxis.Y += 1.0f;
-        }
-        else if(IsGameKeyDown(MOVE_DOWN, &State->GameInput))
-        {
-            InputAxis.Y -= 1.0f;
-        }
-
-        if(IsGameKeyDown(MOVE_LEFT, &State->GameInput))
-        {
-            InputAxis.X -= 1.0f;
-        }
-        else if(IsGameKeyDown(MOVE_RIGHT, &State->GameInput))
-        {
-            InputAxis.X += 1.0f;
-        }
+        InputAxis.Y += 1.0f;
     }
-    else
+    else if(IsGameKeyDown(MOVE_DOWN, &State->GameInput))
     {
+        InputAxis.Y -= 1.0f;
+    }
+
+    if(IsGameKeyDown(MOVE_LEFT, &State->GameInput))
+    {
+        InputAxis.X -= 1.0f;
+    }
+    else if(IsGameKeyDown(MOVE_RIGHT, &State->GameInput))
+    {
+        InputAxis.X += 1.0f;
+    }
+
+    {
+        InputAxis.X = (abs(State->GameInput.Controller.LeftStick.X) > GAMEPAD_LEFT_THUMB_DEADZONE) ? (State->GameInput.Controller.LeftStick.X / 32766.0f) : InputAxis.X;
+        InputAxis.Y = (abs(State->GameInput.Controller.LeftStick.Y) > GAMEPAD_RIGHT_THUMB_DEADZONE) ? (State->GameInput.Controller.LeftStick.Y / 32767.0f) : InputAxis.Y;
+        InputAxis.Y *= 1.0f;
     }
 
     // NOTE(Sleepster): Player Position 
     vec2 OldPlayerP = PlayerIn->Position;
-    
     vec2 NextPos = {PlayerIn->Position.X + (PlayerIn->Position.X - OldPlayerP.X) + (PlayerIn->Speed * InputAxis.X) * (Time.Delta),
         PlayerIn->Position.Y + (PlayerIn->Position.Y - OldPlayerP.Y) + (PlayerIn->Speed * InputAxis.Y) * (Time.Delta)};
     PlayerIn->Position = v2Lerp(NextPos, Time.Delta, OldPlayerP);
@@ -398,6 +397,15 @@ HandleInput(game_state *State, entity *PlayerIn, time_data Time)
     if(IsKeyPressed(KEY_HOME, &State->GameInput))
     {
         State->DrawDebug = !State->DrawDebug;
+    }
+
+    if(IsGamepadButtonPressed(DPAD_LEFT, &State->GameInput))
+    {
+        if(Player->Inventory.CurrentInventorySlot > 0) Player->Inventory.CurrentInventorySlot--;
+    }
+    if(IsGamepadButtonPressed(DPAD_RIGHT, &State->GameInput))
+    {
+        if(Player->Inventory.CurrentInventorySlot < PLAYER_HOTBAR_COUNT) Player->Inventory.CurrentInventorySlot++;
     }
 }
 
@@ -2050,6 +2058,12 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
     attenuation_data TestLightData = {.Constant = 0.05, .Linear = 0.0009, .Quadratic = 0.001};
     CreatePointLight(RenderData, vec2{ 80, 80}, 2.0, 100, &TestLightData, RED);
     CreatePointLight(RenderData, vec2{-80, 80}, 2.0, 100, &TestLightData, WHITE);
+
+    if(IsGamepadButtonDown(A_BUTTON, &State->GameInput))
+    {
+        State->GameInput.Controller.LeftRumble = 1000;
+        State->GameInput.Controller.RightRumble = 1000;
+    }
 }
 
 extern

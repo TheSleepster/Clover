@@ -243,12 +243,12 @@ internal void
 Win32LoadDefaultBindings(input *GameInput)
 {
     GameInput->Mappings[BINDING_NONE]    = AddGameMapping(KEY_NONE, KEY_NONE, NULL_BUTTON, NULL_BUTTON);
-    GameInput->Mappings[MOVE_UP]         = AddGameMapping(KEY_W, KEY_UP, A_BUTTON, NULL_BUTTON);
+    GameInput->Mappings[MOVE_UP]         = AddGameMapping(KEY_W, KEY_UP, NULL_BUTTON, NULL_BUTTON);
     GameInput->Mappings[MOVE_DOWN]       = AddGameMapping(KEY_S, KEY_DOWN, NULL_BUTTON, NULL_BUTTON);
     GameInput->Mappings[MOVE_LEFT]       = AddGameMapping(KEY_A, KEY_LEFT, NULL_BUTTON, NULL_BUTTON);
     GameInput->Mappings[MOVE_RIGHT]      = AddGameMapping(KEY_D, KEY_RIGHT, NULL_BUTTON, NULL_BUTTON);
-    GameInput->Mappings[ATTACK]          = AddGameMapping(KEY_LEFT_MOUSE, KEY_SPACE, NULL_BUTTON, NULL_BUTTON);
-    GameInput->Mappings[INTERACT]        = AddGameMapping(KEY_F, KEY_F, NULL_BUTTON, NULL_BUTTON);
+    GameInput->Mappings[ATTACK]          = AddGameMapping(KEY_LEFT_MOUSE, KEY_SPACE, B_BUTTON, NULL_BUTTON);
+    GameInput->Mappings[INTERACT]        = AddGameMapping(KEY_F, KEY_F, Y_BUTTON, NULL_BUTTON);
     GameInput->Mappings[INVENTORY]       = AddGameMapping(KEY_ESCAPE, KEY_ESCAPE, NULL_BUTTON, NULL_BUTTON);
     GameInput->Mappings[SHOW_HOTBAR]     = AddGameMapping(KEY_TAB, KEY_TAB, NULL_BUTTON, NULL_BUTTON);
     GameInput->Mappings[HOTBAR_01]       = AddGameMapping(KEY_1, KEY_NUMPAD_1, NULL_BUTTON, NULL_BUTTON);
@@ -258,7 +258,7 @@ Win32LoadDefaultBindings(input *GameInput)
     GameInput->Mappings[HOTBAR_05]       = AddGameMapping(KEY_5, KEY_NUMPAD_5, NULL_BUTTON, NULL_BUTTON);
     GameInput->Mappings[HOTBAR_06]       = AddGameMapping(KEY_6, KEY_NUMPAD_6, NULL_BUTTON, NULL_BUTTON);
     GameInput->Mappings[HOTBAR_07]       = AddGameMapping(KEY_7, KEY_NUMPAD_7, NULL_BUTTON, NULL_BUTTON);
-    GameInput->Mappings[DROP_HELD]       = AddGameMapping(KEY_Q, KEY_Q, NULL_BUTTON, NULL_BUTTON);
+    GameInput->Mappings[DROP_HELD]       = AddGameMapping(KEY_Q, KEY_Q, X_BUTTON, NULL_BUTTON);
     GameInput->Mappings[DROP_ITEM]       = AddGameMapping(KEY_RIGHT_MOUSE, KEY_RIGHT_MOUSE, NULL_BUTTON, NULL_BUTTON);
     GameInput->Mappings[CRAFTING]        = AddGameMapping(KEY_E, KEY_E, NULL_BUTTON, NULL_BUTTON);
     GameInput->Mappings[BUILD_MENU]      = AddGameMapping(KEY_B, KEY_B, NULL_BUTTON, NULL_BUTTON);
@@ -269,7 +269,6 @@ Win32MainWindowCallback(HWND WindowHandle, UINT Message,
                         WPARAM wParam, LPARAM lParam)
 {
     LRESULT Result = {};
-    
     switch(Message)
     {
         case WM_SIZE:
@@ -893,8 +892,8 @@ WinMain(HINSTANCE hInstance,
             {
                 MSG Message = {};
                 Win32ProcessInputMessages(Message, WindowHandle, &State);
+                State.GameInput.ButtonLookup[LEFT_THUMBSTICK_DOWN]  = XINPUT_GAMEPAD_LEFT_THUMB;
 
-                State.GameInput.IsAnalog = false;
                 for(uint32 ControllerIndex = 0;
                     ControllerIndex < 1;
                     ++ControllerIndex)
@@ -902,7 +901,6 @@ WinMain(HINSTANCE hInstance,
                     XINPUT_STATE Controller;
                     if(XInputGetState(ControllerIndex, &Controller) == ERROR_SUCCESS)
                     {
-                        State.GameInput.IsAnalog = true;
                         XINPUT_GAMEPAD *Gamepad = &Controller.Gamepad;
                         for(uint32 ButtonIndex = 0;
                             ButtonIndex < GAMEPAD_BUTTON_COUNT;
@@ -934,6 +932,9 @@ WinMain(HINSTANCE hInstance,
                             .wRightMotorSpeed = State.GameInput.Controller.RightRumble
                         };
                         XInputSetState(ControllerIndex, &Rumble);
+
+                        State.GameInput.Controller.LeftRumble = 0;
+                        State.GameInput.Controller.RightRumble = 0;
                     }
                 }
 
@@ -1013,7 +1014,6 @@ WinMain(HINSTANCE hInstance,
                 DWORD PlayCursorPosition;
                 DWORD WriteCursorPosition;
                 bool SoundIsValid = false;
-                
                 if(SUCCEEDED(DSound.SecondaryBuffer->GetCurrentPosition(&PlayCursorPosition, &WriteCursorPosition)))
                 {
                     BytesToWrite = 0;
@@ -1046,8 +1046,6 @@ WinMain(HINSTANCE hInstance,
                 
                 ImGui::Render();
                 CloverRender(&RenderData);
-                
-                
                 ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
                 SwapBuffers(WindowDC);
                 
