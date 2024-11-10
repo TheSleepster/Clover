@@ -776,7 +776,13 @@ WinMain(HINSTANCE hInstance,
         if(WindowHandle)
         {
             HDC WindowDC = GetDC(WindowHandle);
+#if 0
+            Memory.TransientStorage = ArenaCreate(Megabytes(512));
+            Memory.PermanentStorage = ArenaCreate(Megabytes(512));
             
+            RenderData.DrawFrame.Vertices = (vertex *)ArenaAlloc(&Memory.PermanentStorage, sizeof(vertex) * TRUE_MAX_VERTICES);
+            RenderData.DrawFrame.UIVertices = (vertex *)ArenaAlloc(&Memory.PermanentStorage, sizeof(vertex) * TRUE_MAX_VERTICES);
+#endif
             // NOTE(Sleepster): ARENA INITIALZIATION 
             {
                 GameMemory.PermanentStorage.BlockSize    = Megabytes(512);
@@ -790,6 +796,11 @@ WinMain(HINSTANCE hInstance,
                 InitializeArena(&RenderData.VertexArena,        sizeof(vertex) * TRUE_MAX_VERTICES, &GameMemory.PermanentStorage);
                 InitializeArena(&RenderData.UIVertexArena,      sizeof(vertex) * TRUE_MAX_VERTICES, &GameMemory.PermanentStorage);
                 InitializeArena(&TransientState.TransientArena, Megabytes(200),                     &GameMemory.TransientStorage);
+
+                // TODO(Sleepster): Think about reworking TransientStorage;  
+                InitializeArena(&State.World.WorldArena,       (sizeof(struct entity) * MAX_ENTITIES) + sizeof(struct item) * MAX_ITEMS, &GameMemory.PermanentStorage);
+                State.World.Entities = PushArray(&State.World.WorldArena, entity, MAX_ENTITIES);
+                State.World.Items    = PushArray(&State.World.WorldArena, item,   MAX_ITEMS);
                 
                 RenderData.DrawFrame.Vertices                     = (vertex *)RenderData.VertexArena.Base;
                 RenderData.DrawFrame.UIVertices                   = (vertex *)RenderData.UIVertexArena.Base;
@@ -815,16 +826,8 @@ WinMain(HINSTANCE hInstance,
 
                 DSound.SecondaryBuffer->Play(0, 0, DSBPLAY_LOOPING);
             }
-            // NOTE(Sleepster): This is the DSound buffer, we just allocate it like this so I never have to touch it again. 
+            // NOTE(Sleepster): This is the DSound buffer, we just allocate it like this so we never have to touch it again. 
             int16 *SampleBufferStorage    = (int16 *)VirtualAlloc(0, SoundOutput.BufferSize, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
-
-#if 0
-            Memory.TransientStorage = ArenaCreate(Megabytes(512));
-            Memory.PermanentStorage = ArenaCreate(Megabytes(512));
-            
-            RenderData.DrawFrame.Vertices = (vertex *)ArenaAlloc(&Memory.PermanentStorage, sizeof(vertex) * TRUE_MAX_VERTICES);
-            RenderData.DrawFrame.UIVertices = (vertex *)ArenaAlloc(&Memory.PermanentStorage, sizeof(vertex) * TRUE_MAX_VERTICES);
-#endif
 
             // NOTE(Sleepster): INIT OPENGL 
             {
@@ -904,7 +907,7 @@ WinMain(HINSTANCE hInstance,
             {
                 Game = Win32LoadGameCode(STR("CloverGame.dll"));
                 Game.OnAwake(&GameMemory, &RenderData, &State, &TransientState);
-                State.TestSound = CloverLoadWAVFile(&TransientState.TransientArena, STR("../data/res/sounds/Test2.wav")); 
+                State.TestSound = CloverLoadWAVFile(&TransientState.TransientArena, STR("../data/res/sounds/Test.wav")); 
             }
 
             // NOTE(Sleepster): THREADING 
@@ -1034,26 +1037,25 @@ WinMain(HINSTANCE hInstance,
                     {
                         DWORD BytesToWrite = 0;
                         DWORD BytesToLock = 0;
-                        DWORD TargetCursor;
+                        DWORD TargetCursorPosition;
                         DWORD PlayCursorPosition;
                         DWORD WriteCursorPosition;
                         bool SoundIsValid = false;
                         if(SUCCEEDED(DSound.SecondaryBuffer->GetCurrentPosition(&PlayCursorPosition, &WriteCursorPosition)))
                         {
-                            BytesToWrite = 0;
-                            BytesToLock  = (SoundOutput.RunningSampleIndex * SoundOutput.BytesPerSample) % SoundOutput.BufferSize;
-                            TargetCursor = (PlayCursorPosition + (SoundOutput.LatencyCursor * SoundOutput.BytesPerSample)) % SoundOutput.BufferSize;
+                            BytesToWrite         = 0;
+                            BytesToLock          = (SoundOutput.RunningSampleIndex * SoundOutput.BytesPerSample) % SoundOutput.BufferSize;
+                            TargetCursorPosition = (PlayCursorPosition + (SoundOutput.LatencyCursor * SoundOutput.BytesPerSample)) % SoundOutput.BufferSize;
                             
-                            if(BytesToLock > TargetCursor)
+                            if(BytesToLock > TargetCursorPosition)
                             {
                                 BytesToWrite  = (SoundOutput.BufferSize - BytesToLock); 
-                                BytesToWrite += TargetCursor;
+                                BytesToWrite += TargetCursorPosition;
                             }
                             else
                             {
-                                BytesToWrite = TargetCursor - BytesToLock; 
+                                BytesToWrite = TargetCursorPosition - BytesToLock; 
                             }
-                            
                             SoundIsValid = true; 
                         }
                         
@@ -1061,7 +1063,7 @@ WinMain(HINSTANCE hInstance,
                         SoundBufferData.SamplesPerSecond  = 48000;
                         SoundBufferData.SampleOutputCount = BytesToWrite / SoundOutput.BytesPerSample; 
                         SoundBufferData.SampleBuffer      = SampleBufferStorage; 
-                        
+
                         Game.GetSoundSamples(&GameMemory, &SoundBufferData, &State, &TransientState);
                         if(SoundIsValid)
                         {
@@ -1087,6 +1089,7 @@ WinMain(HINSTANCE hInstance,
                         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
                         SwapBuffers(WindowDC);
                     }
+                    // NOTE(Sleepster): Clear TransientState; 
                     ClearTransientState(&TransientState);
                 }
                 

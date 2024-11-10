@@ -233,9 +233,8 @@ struct game_world_data
 {
     memory_arena WorldArena;
 
-    // TODO(Sleepster): Move these allocations to the arena 
-    entity Entities[MAX_ENTITIES];  
-    item   Items[1000];
+    entity *Entities;  
+    item   *Items;
     uint32 EntityCounter;
  
     // TODO(Sleepster): Do we really need this with TransientState? 
@@ -321,7 +320,6 @@ internal inline vec2
 MakeCentered(vec2 Position, vec2 Size)
 {
     vec2 Centered = {};
-    
     Centered.X = Position.X + (Size.X * 0.5f);
     Centered.Y = Position.Y + (Size.Y * 0.5f);
     
@@ -332,7 +330,6 @@ internal inline range_v2
 RangeMakeCentered(vec2 Size)
 {
     range_v2 CenteredRange = {};
-    
     CenteredRange.Max = Size;
     CenteredRange = RangeShift(CenteredRange, vec2{Size.X * -0.5f, 0.0f});
     
@@ -343,7 +340,6 @@ internal inline vec2
 RangeSize(range_v2 Range)
 {
     vec2 Size = {};
-    
     Size = Range.Min - Range.Max;
     Size.X = fabsf(Size.X);
     Size.Y = fabsf(Size.Y);
@@ -362,7 +358,6 @@ internal inline range_v2
 RangeFromQuad(quad *Quad)
 {
     range_v2 Result = {};
-    
     Result.Min = Quad->TopLeft.Position.XY;
     Result.Max = Quad->TopRight.Position.XY;
     
@@ -402,11 +397,11 @@ GetRandomReal32_Range(real32 Minimum, real32 Maximum)
     return((Maximum - Minimum)*GetRandomReal32() + Minimum);
 }
 
-
+// NOTE(Sleepster): EASINGS
 internal inline real32
 EaseOutQuad(real32 X)
 {
-    return 1 - (1 - X) * (1 - X);
+    return(1 - (1 - X) * (1 - X));
 }
 
 internal inline real32
@@ -420,6 +415,15 @@ internal inline real32
 SinBreathe(real32 Time, real32 Modifier)
 {
     return(sinf(Time * Modifier));
+}
+
+bool
+operator!=(static_sprite_data A, static_sprite_data B)
+{
+    bool Result = {};
+    v2Cast(A.AtlasOffset) != v2Cast(B.AtlasOffset) ? Result = true : Result = false;
+    
+    return(Result);
 }
 
 #define GAME_ON_AWAKE(name) void name(game_memory *Memory, gl_render_data *RenderData, game_state *State, transient_state *TransientState)
@@ -444,15 +448,6 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDrawStub)
 typedef GAME_GET_SOUND_SAMPLES(game_get_sound_samples);
 GAME_GET_SOUND_SAMPLES(GameGetSoundSamplesStub)
 {
-}
-
-bool
-operator!=(static_sprite_data A, static_sprite_data B)
-{
-    bool Result = {};
-    v2Cast(A.AtlasOffset) != v2Cast(B.AtlasOffset) ? Result = true : Result = false;
-    
-    return(Result);
 }
 
 #endif // _CLOVER_H

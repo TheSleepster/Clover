@@ -6,7 +6,7 @@ REM remove -Zi
 Set opts=-DCLOVER_SLOW=1 -DENGINE=1 -DCLOVER_PROFILE=0 
 
 Set CommonCompilerFlags=-W4 -std:c++20 -permissive -fp:fast -Fm -GR- -EHa- -Od -Oi -Zi -wd4996 -wd4100 -wd4505
-Set CommonLinkerFlags=-ignore:4099 -STACK:50000000 -incremental:no shell32.lib kernel32.lib user32.lib gdi32.lib opengl32.lib "../data/deps/ImGUI/ImGuiDEBUG.lib" "../data/deps/Freetype/freetype.lib" "../data/deps/OpenGL/glad/src/Glad.lib"
+Set CommonLinkerFlags=-ignore:4099 -incremental:no shell32.lib kernel32.lib user32.lib gdi32.lib opengl32.lib "../data/deps/ImGUI/ImGuiDEBUG.lib" "../data/deps/Freetype/freetype.lib" "../data/deps/OpenGL/glad/src/Glad.lib"
 Set CommonIncludes=-I"../data/deps" -I"../data/deps/Freetype/include/"
 
 Set Exports=-EXPORT:GameOnAwake -EXPORT:GameUpdateAndDraw -EXPORT:GameFixedUpdate -EXPORT:GameGetSoundSamples

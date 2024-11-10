@@ -22,8 +22,8 @@ struct string
 };
 
 #define STR(s)  (string{GetStringLength((const char *)s), (uint8 *)s})
-#define NULLSTR (NULL_STRING)
 #define CSTR(s) ((const char *)s.Data)
+#define NULLSTR (NULL_STRING)
 
 const string NULL_STRING = {};
 
@@ -161,7 +161,6 @@ FormatStringToBuffer(char *Buffer, uint64 Count, const char* fmt, va_list args)
             else
             {
                 // NOTE(Sleepster): Standard vsnprintf 
-                
                 char TempFallback[512] = {};
                 char FormatSpecifier[64] = {};
                 int32 SpecifierLength = 0;
@@ -267,7 +266,7 @@ sprints(memory_arena *Memory, const string Text, ...)
     return(S);
 }
 
-// NOTE(Sleepster): This is literally the same thing, but will instead just straight up take a char *
+// NOTE(Sleepster): This is literally the same thing, but instead will just straight up take a char *
 internal string
 sprintd(memory_arena *Memory, const char *Text, ...)
 {

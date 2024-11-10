@@ -197,8 +197,7 @@ CloverLoadSDFFont(memory_arena *Memory, gl_render_data *RenderData, string Filep
             Error = FT_Render_Glyph(CurrentSlot, FT_RENDER_MODE_SDF);
             Check(Error == 0, "Issues here\n");
             
-            RenderData->LoadedFonts[FontName].FontHeight   = MAX((Font.FontFace->size->metrics.ascender - Font.FontFace->size->metrics.descender) >> 6,
-                                                                 (int32)RenderData->LoadedFonts[GlyphIndex].FontHeight);
+            RenderData->LoadedFonts[FontName].FontHeight = MAX((Font.FontFace->size->metrics.ascender - Font.FontFace->size->metrics.descender) >> 6, 0);
             for(uint32 YIndex = 0;
                 YIndex < Font.FontFace->glyph->bitmap.rows;
                 ++YIndex)
