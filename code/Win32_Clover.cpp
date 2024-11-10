@@ -713,6 +713,14 @@ Win32SetupXInput(game_state *State)
     }
 }
 
+DWORD WINAPI
+ThreadProc(void *lpParam)
+{
+    for(;;)
+    {
+    }
+}
+
 int CALLBACK
 WinMain(HINSTANCE hInstance,
         HINSTANCE hPrevInstance,
@@ -731,6 +739,7 @@ WinMain(HINSTANCE hInstance,
     // NOTE(Sleepster): Accumulator is for Delta Time
     real64 Accumulator = {};
     real32 FPSTimer = 0;
+           Running  = 1;
     
     LARGE_INTEGER PerfCountFrequencyResult;
     QueryPerformanceFrequency(&PerfCountFrequencyResult);
@@ -768,34 +777,47 @@ WinMain(HINSTANCE hInstance,
         {
             HDC WindowDC = GetDC(WindowHandle);
             
-            GameMemory.PermanentStorage.BlockSize    = Megabytes(512);
-            GameMemory.PermanentStorage.MemoryBlock  = VirtualAlloc(0, GameMemory.PermanentStorage.BlockSize, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
-            GameMemory.PermanentStorage.BlockOffset  = (uint8 *)GameMemory.PermanentStorage.MemoryBlock;
-            
-            GameMemory.TransientStorage.BlockSize    = Megabytes(512);
-            GameMemory.TransientStorage.MemoryBlock  = VirtualAlloc(0, GameMemory.TransientStorage.BlockSize, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
-            GameMemory.TransientStorage.BlockOffset  = (uint8 *)GameMemory.TransientStorage.MemoryBlock;
-            
-            InitializeArena(&RenderData.VertexArena,        sizeof(vertex) * TRUE_MAX_VERTICES, &GameMemory.PermanentStorage);
-            InitializeArena(&RenderData.UIVertexArena,      sizeof(vertex) * TRUE_MAX_VERTICES, &GameMemory.PermanentStorage);
-            InitializeArena(&TransientState.TransientArena, Megabytes(200),                     &GameMemory.TransientStorage);
-            
-            RenderData.DrawFrame.Vertices                     = (vertex *)RenderData.VertexArena.Base;
-            RenderData.DrawFrame.UIVertices                   = (vertex *)RenderData.UIVertexArena.Base;
-            RenderData.DrawFrame.TransparentVertexBufferptr   = (vertex *)(RenderData.VertexArena.Base   + (RenderData.VertexArena.Capacity / 2));
-            RenderData.DrawFrame.TransparentUIVertexBufferptr = (vertex *)(RenderData.UIVertexArena.Base + (RenderData.UIVertexArena.Capacity / 2));
-            
-            sound_output_data SoundOutput  = {};
-            SoundOutput.ToneVolume         = 50;
-            SoundOutput.ToneFreq           = 512;
-            SoundOutput.SamplesPerSecond   = 48000;
-            SoundOutput.WavePeriod         = SoundOutput.SamplesPerSecond / SoundOutput.ToneFreq;
-            SoundOutput.BytesPerSample     = sizeof(int16) * 2; 
-            SoundOutput.BufferSize         = SoundOutput.SamplesPerSecond * (sizeof(int16) * 2);
-            SoundOutput.LatencyCursor      = SoundOutput.SamplesPerSecond / 15; 
-            SoundOutput.RunningSampleIndex = 0;
-            
-            int16 *SampleBufferStorage = (int16 *)VirtualAlloc(0, SoundOutput.BufferSize, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
+            // NOTE(Sleepster): ARENA INITIALZIATION 
+            {
+                GameMemory.PermanentStorage.BlockSize    = Megabytes(512);
+                GameMemory.PermanentStorage.MemoryBlock  = VirtualAlloc(0, GameMemory.PermanentStorage.BlockSize, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
+                GameMemory.PermanentStorage.BlockOffset  = (uint8 *)GameMemory.PermanentStorage.MemoryBlock;
+                
+                GameMemory.TransientStorage.BlockSize    = Megabytes(512);
+                GameMemory.TransientStorage.MemoryBlock  = VirtualAlloc(0, GameMemory.TransientStorage.BlockSize, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
+                GameMemory.TransientStorage.BlockOffset  = (uint8 *)GameMemory.TransientStorage.MemoryBlock;
+                
+                InitializeArena(&RenderData.VertexArena,        sizeof(vertex) * TRUE_MAX_VERTICES, &GameMemory.PermanentStorage);
+                InitializeArena(&RenderData.UIVertexArena,      sizeof(vertex) * TRUE_MAX_VERTICES, &GameMemory.PermanentStorage);
+                InitializeArena(&TransientState.TransientArena, Megabytes(200),                     &GameMemory.TransientStorage);
+                
+                RenderData.DrawFrame.Vertices                     = (vertex *)RenderData.VertexArena.Base;
+                RenderData.DrawFrame.UIVertices                   = (vertex *)RenderData.UIVertexArena.Base;
+                RenderData.DrawFrame.TransparentVertexBufferptr   = (vertex *)(RenderData.VertexArena.Base   + (RenderData.VertexArena.Capacity / 2));
+                RenderData.DrawFrame.TransparentUIVertexBufferptr = (vertex *)(RenderData.UIVertexArena.Base + (RenderData.UIVertexArena.Capacity / 2));
+            }
+
+            // NOTE(Sleepster): DSOUND INIT 
+            sound_output_data SoundOutput = {};
+            win32_sound_data  DSound      = {};
+            {
+                SoundOutput.ToneVolume         = 50;
+                SoundOutput.ToneFreq           = 512;
+                SoundOutput.SamplesPerSecond   = 48000;
+                SoundOutput.WavePeriod         = SoundOutput.SamplesPerSecond / SoundOutput.ToneFreq;
+                SoundOutput.BytesPerSample     = sizeof(int16) * 2; 
+                SoundOutput.BufferSize         = SoundOutput.SamplesPerSecond * (sizeof(int16) * 2);
+                SoundOutput.LatencyCursor      = SoundOutput.SamplesPerSecond / 15; 
+                SoundOutput.RunningSampleIndex = 0;
+
+                DSound = Win32InitDSound(WindowHandle, SoundOutput.SamplesPerSecond, SoundOutput.BufferSize);
+                Win32ClearSoundBuffer(&DSound, &SoundOutput);
+
+                DSound.SecondaryBuffer->Play(0, 0, DSBPLAY_LOOPING);
+            }
+            // NOTE(Sleepster): This is the DSound buffer, we just allocate it like this so I never have to touch it again. 
+            int16 *SampleBufferStorage    = (int16 *)VirtualAlloc(0, SoundOutput.BufferSize, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
+
 #if 0
             Memory.TransientStorage = ArenaCreate(Megabytes(512));
             Memory.PermanentStorage = ArenaCreate(Megabytes(512));
@@ -803,94 +825,104 @@ WinMain(HINSTANCE hInstance,
             RenderData.DrawFrame.Vertices = (vertex *)ArenaAlloc(&Memory.PermanentStorage, sizeof(vertex) * TRUE_MAX_VERTICES);
             RenderData.DrawFrame.UIVertices = (vertex *)ArenaAlloc(&Memory.PermanentStorage, sizeof(vertex) * TRUE_MAX_VERTICES);
 #endif
-            CloverResetRendererState(&RenderData);
-            Win32LoadKeyData(&State);
-            Win32LoadDefaultBindings(&State.GameInput);
-            Win32SetupXInput(&State);
-            
-            const int32 PixelAttributes[] =
+
+            // NOTE(Sleepster): INIT OPENGL 
             {
-                WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
-                WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
-                WGL_DOUBLE_BUFFER_ARB,  GL_TRUE,
-                WGL_SWAP_METHOD_ARB,    WGL_SWAP_COPY_ARB,
-                WGL_PIXEL_TYPE_ARB,     WGL_TYPE_RGBA_ARB,
-                WGL_ACCELERATION_ARB,   WGL_FULL_ACCELERATION_ARB,
-                WGL_COLOR_BITS_ARB,     32,
-                WGL_ALPHA_BITS_ARB,     8,
-                WGL_DEPTH_BITS_ARB,     24,
-                0
-            };
-            
-            const int32 ContextAttributes[] =
+                CloverResetRendererState(&RenderData);
+                const int32 PixelAttributes[] =
+                {
+                    WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
+                    WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
+                    WGL_DOUBLE_BUFFER_ARB,  GL_TRUE,
+                    WGL_SWAP_METHOD_ARB,    WGL_SWAP_COPY_ARB,
+                    WGL_PIXEL_TYPE_ARB,     WGL_TYPE_RGBA_ARB,
+                    WGL_ACCELERATION_ARB,   WGL_FULL_ACCELERATION_ARB,
+                    WGL_COLOR_BITS_ARB,     32,
+                    WGL_ALPHA_BITS_ARB,     8,
+                    WGL_DEPTH_BITS_ARB,     24,
+                    0
+                };
+                
+                const int32 ContextAttributes[] =
+                {
+                    WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
+                    WGL_CONTEXT_MINOR_VERSION_ARB, 3,
+                    WGL_CONTEXT_PROFILE_MASK_ARB,  WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+                    WGL_CONTEXT_FLAGS_ARB,         WGL_CONTEXT_DEBUG_BIT_ARB,
+                    0
+                };
+                
+                UINT NumPixelFormats;
+                int32 PixelFormat = 0;
+                if(!WGLFunctions.wglChoosePixelFormatARB(WindowDC, PixelAttributes, 0, 1, &PixelFormat, &NumPixelFormats))
+                {
+                    Check(false, "Failed to choose the Main Pixel Format!\n");
+                }
+                
+                PIXELFORMATDESCRIPTOR MainPixelFormat;
+                DescribePixelFormat(WindowDC, PixelFormat, sizeof(PIXELFORMATDESCRIPTOR), &MainPixelFormat);
+                SetPixelFormat(WindowDC, PixelFormat, &MainPixelFormat);
+                
+                HGLRC MainRenderingContext = WGLFunctions.wglCreateContextAttribsARB(WindowDC, 0, ContextAttributes);
+                wglMakeCurrent(WindowDC, MainRenderingContext);
+                gladLoadGL();
+                // VSYNC
+                WGLFunctions.wglSwapIntervalEXT(0);
+                // VSYNC
+                
+                CloverSetupRenderer(&TransientState.TransientArena, &RenderData);
+                RenderData.CloverRender = CloverRender;
+            } 
+
+            // NOTE(Sleepster): IMGUI SETUP
             {
-                WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
-                WGL_CONTEXT_MINOR_VERSION_ARB, 3,
-                WGL_CONTEXT_PROFILE_MASK_ARB,  WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
-                WGL_CONTEXT_FLAGS_ARB,         WGL_CONTEXT_DEBUG_BIT_ARB,
-                0
-            };
-            
-            UINT NumPixelFormats;
-            int32 PixelFormat = 0;
-            if(!WGLFunctions.wglChoosePixelFormatARB(WindowDC, PixelAttributes, 0, 1, &PixelFormat, &NumPixelFormats))
+                IMGUI_CHECKVERSION();
+                RenderData.CurrentImGuiContext = ImGui::CreateContext();
+                ImGui::SetCurrentContext(RenderData.CurrentImGuiContext);
+                
+                ImGuiIO& io = ImGui::GetIO(); (void)io;
+                io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;   // Enable Keyboard Controls
+                io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;    // Enable Gamepad Controls
+                
+                io.WantCaptureKeyboard = 1;
+                io.WantCaptureMouse = 1;
+                io.DeltaTime = Time.Delta > 0 ? SIMRATE : Time.Delta;
+                
+                ImGui::StyleColorsDark();
+                ImGui_ImplWin32_InitForOpenGL(WindowHandle);
+                ImGui_ImplOpenGL3_Init();
+            }
+
+            // NOTE(Sleepster): INPUT INIT 
             {
-                Check(false, "Failed to choose the Main Pixel Format!\n");
+                Win32LoadKeyData(&State);
+                Win32LoadDefaultBindings(&State.GameInput);
+                Win32SetupXInput(&State);
             }
             
-            PIXELFORMATDESCRIPTOR MainPixelFormat;
-            DescribePixelFormat(WindowDC, PixelFormat, sizeof(PIXELFORMATDESCRIPTOR), &MainPixelFormat);
-            SetPixelFormat(WindowDC, PixelFormat, &MainPixelFormat);
-            
-            HGLRC MainRenderingContext = WGLFunctions.wglCreateContextAttribsARB(WindowDC, 0, ContextAttributes);
-            wglMakeCurrent(WindowDC, MainRenderingContext);
-            gladLoadGL();
-            
-            
-            // VSYNC
-            WGLFunctions.wglSwapIntervalEXT(0);
-            // VSYNC
-            
-            
-            CloverSetupRenderer(&TransientState.TransientArena, &RenderData);
-            RenderData.CloverRender = CloverRender;
-            
-            Game = Win32LoadGameCode(STR("CloverGame.dll"));
-            
-            // NOTE(Sleepster): ImGui Setup 
-            IMGUI_CHECKVERSION();
-            RenderData.CurrentImGuiContext = ImGui::CreateContext();
-            ImGui::SetCurrentContext(RenderData.CurrentImGuiContext);
-            
-            ImGuiIO& io = ImGui::GetIO(); (void)io;
-            io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;   // Enable Keyboard Controls
-            io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;    // Enable Gamepad Controls
-            
-            io.WantCaptureKeyboard = 1;
-            io.WantCaptureMouse = 1;
-            io.DeltaTime = Time.Delta > 0 ? SIMRATE : Time.Delta;
-            
-            ImGui::StyleColorsDark();
-            ImGui_ImplWin32_InitForOpenGL(WindowHandle);
-            ImGui_ImplOpenGL3_Init();
-            
-            
-            win32_sound_data DSound = Win32InitDSound(WindowHandle, SoundOutput.SamplesPerSecond, SoundOutput.BufferSize);
-            Win32ClearSoundBuffer(&DSound, &SoundOutput);
-            DSound.SecondaryBuffer->Play(0, 0, DSBPLAY_LOOPING);
-            
-            Game.OnAwake(&GameMemory, &RenderData, &State, &TransientState);
-            
+            // NOTE(Sleepster): GAME INIT 
+            {
+                Game = Win32LoadGameCode(STR("CloverGame.dll"));
+                Game.OnAwake(&GameMemory, &RenderData, &State, &TransientState);
+                State.TestSound = CloverLoadWAVFile(&TransientState.TransientArena, STR("../data/res/sounds/Test2.wav")); 
+            }
+
+            // NOTE(Sleepster): THREADING 
+            {
+                win32_thread_context TestThread;
+                TestThread.ThreadData = (void *)&State;
+                TestThread.Handle     = CreateThread(0, 0, ThreadProc, TestThread.ThreadData, 0, &TestThread.ID); 
+            }
+
+            // NOTE(Sleepster): CLOCK 
+            real64 CurrentTime = GetLastTime();
             LARGE_INTEGER LastCounter;
             QueryPerformanceCounter(&LastCounter);
-            
-            State.TestSound = CloverLoadWAVFile(&TransientState.TransientArena, STR("../data/res/sounds/Test2.wav")); 
-            real64 CurrentTime = GetLastTime();
-            
-            Running = 1;
             while(Running)
             {
                 MSG Message = {};
+
+                // NOTE(Sleepster): INPUT UPDATING 
                 Win32ProcessInputMessages(Message, WindowHandle, &State);
                 State.GameInput.ButtonLookup[LEFT_THUMBSTICK_DOWN]  = XINPUT_GAMEPAD_LEFT_THUMB;
 
@@ -938,16 +970,15 @@ WinMain(HINSTANCE hInstance,
                     }
                 }
 
-                //DATA RELOADING
+                // NOTE(Sleepster): DATA RELOADING
 #if CLOVER_SLOW
                 FILETIME NewDLLWriteTime = Win32GetLastWriteTime(STR("CloverGame.dll"));
                 if(CompareFileTime(&Game.LastWriteTime, &NewDLLWriteTime) != 0)
                 {
                     Win32UnloadGameCode(&Game);
-                    Game = Win32LoadGameCode(STR("CloverGame.dll"));
-                    
-                    // NOTE(Sleepster): Audio Engine setup, MiniAudio makes this REALLLLLLYYYYYYYY easy 
                     Time.CurrentTimeInSeconds = 0.0f;
+
+                    Game = Win32LoadGameCode(STR("CloverGame.dll"));
                     Game.OnAwake(&GameMemory, &RenderData, &State, &TransientState);
                 }
                 
@@ -980,85 +1011,92 @@ WinMain(HINSTANCE hInstance,
                     RebuildShader(&TransientState.TransientArena, &RenderData.LightingShader); 
                 }
 #endif
-                
-                real64 NewTime     = GetLastTime();
-                CurrentTime        = NewTime;
-                
-                Time.Delta = (real32)GetLastTime();
-                Time.Current = (real32)CurrentTime;
-                while(Accumulator >= SIMRATE)
+                // NOTE(Sleepster): DELTA TIME 
                 {
-                    Game.FixedUpdate(&GameMemory, &RenderData, &State, &TransientState, Time);
-                    Accumulator -= Time.Delta;
-                    Time.CurrentTimeInSeconds = real32(GetCurrentTimeInSeconds());
-                }
-                
-                Accumulator += Time.Delta;
-                
-                glViewport(0, 0, SizeData.Width, SizeData.Height);
-                glClearColor(RenderData.ClearColor.R, RenderData.ClearColor.G, RenderData.ClearColor.B, RenderData.ClearColor.A);
-                glClearDepth(0.0f);
-                glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-                
-                // Start the Dear ImGui frame
-                ImGui_ImplOpenGL3_NewFrame();
-                ImGui_ImplWin32_NewFrame();
-                ImGui::NewFrame();
-                
-                RenderData.AspectRatio = (real32)SizeData.Width / (real32)SizeData.Height;
-                Game.UpdateAndDraw(&GameMemory, &RenderData, &State, &TransientState, Time, SizeData);
-                
-                DWORD BytesToWrite = 0;
-                DWORD BytesToLock = 0;
-                DWORD TargetCursor;
-                DWORD PlayCursorPosition;
-                DWORD WriteCursorPosition;
-                bool SoundIsValid = false;
-                if(SUCCEEDED(DSound.SecondaryBuffer->GetCurrentPosition(&PlayCursorPosition, &WriteCursorPosition)))
-                {
-                    BytesToWrite = 0;
-                    BytesToLock  = (SoundOutput.RunningSampleIndex * SoundOutput.BytesPerSample) % SoundOutput.BufferSize;
-                    TargetCursor = (PlayCursorPosition + (SoundOutput.LatencyCursor * SoundOutput.BytesPerSample)) % SoundOutput.BufferSize;
+                    real64 NewTime     = GetLastTime();
+                    CurrentTime        = NewTime;
                     
-                    if(BytesToLock > TargetCursor)
+                    Time.Delta = (real32)GetLastTime();
+                    Time.Current = (real32)CurrentTime;
+                    while(Accumulator >= SIMRATE)
                     {
-                        BytesToWrite  = (SoundOutput.BufferSize - BytesToLock); 
-                        BytesToWrite += TargetCursor;
+                        Game.FixedUpdate(&GameMemory, &RenderData, &State, &TransientState, Time);
+                        Accumulator -= Time.Delta;
+                        Time.CurrentTimeInSeconds = real32(GetCurrentTimeInSeconds());
                     }
-                    else
-                    {
-                        BytesToWrite = TargetCursor - BytesToLock; 
-                    }
-                    
-                    SoundIsValid = true; 
+                    Accumulator += Time.Delta;
                 }
                 
-                sound_buffer SoundBufferData      = {};
-                SoundBufferData.SamplesPerSecond  = 48000;
-                SoundBufferData.SampleOutputCount = BytesToWrite / SoundOutput.BytesPerSample; 
-                SoundBufferData.SampleBuffer      = SampleBufferStorage; 
-                
-                Game.GetSoundSamples(&GameMemory, &SoundBufferData, &State, &TransientState);
-                if(SoundIsValid)
+                // NOTE(Sleepster): UPDATE GAME 
                 {
-                    Win32FillSoundBuffer(&DSound, &SoundOutput, &SoundBufferData, BytesToLock, BytesToWrite);
+                    Game.UpdateAndDraw(&GameMemory, &RenderData, &State, &TransientState, Time, SizeData);
+                    // NOTE(Sleepster): UPDATE SOUND 
+                    {
+                        DWORD BytesToWrite = 0;
+                        DWORD BytesToLock = 0;
+                        DWORD TargetCursor;
+                        DWORD PlayCursorPosition;
+                        DWORD WriteCursorPosition;
+                        bool SoundIsValid = false;
+                        if(SUCCEEDED(DSound.SecondaryBuffer->GetCurrentPosition(&PlayCursorPosition, &WriteCursorPosition)))
+                        {
+                            BytesToWrite = 0;
+                            BytesToLock  = (SoundOutput.RunningSampleIndex * SoundOutput.BytesPerSample) % SoundOutput.BufferSize;
+                            TargetCursor = (PlayCursorPosition + (SoundOutput.LatencyCursor * SoundOutput.BytesPerSample)) % SoundOutput.BufferSize;
+                            
+                            if(BytesToLock > TargetCursor)
+                            {
+                                BytesToWrite  = (SoundOutput.BufferSize - BytesToLock); 
+                                BytesToWrite += TargetCursor;
+                            }
+                            else
+                            {
+                                BytesToWrite = TargetCursor - BytesToLock; 
+                            }
+                            
+                            SoundIsValid = true; 
+                        }
+                        
+                        sound_buffer SoundBufferData      = {};
+                        SoundBufferData.SamplesPerSecond  = 48000;
+                        SoundBufferData.SampleOutputCount = BytesToWrite / SoundOutput.BytesPerSample; 
+                        SoundBufferData.SampleBuffer      = SampleBufferStorage; 
+                        
+                        Game.GetSoundSamples(&GameMemory, &SoundBufferData, &State, &TransientState);
+                        if(SoundIsValid)
+                        {
+                            Win32FillSoundBuffer(&DSound, &SoundOutput, &SoundBufferData, BytesToLock, BytesToWrite);
+                        }
+                    }
+
+                    // NOTE(Sleepster): RENDERING 
+                    {
+                        RenderData.AspectRatio = (real32)SizeData.Width / (real32)SizeData.Height;
+                        glViewport(0, 0, SizeData.Width, SizeData.Height);
+                        glClearColor(RenderData.ClearColor.R, RenderData.ClearColor.G, RenderData.ClearColor.B, RenderData.ClearColor.A);
+                        glClearDepth(0.0f);
+                        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+
+                        // Start the Dear ImGui frame
+                        ImGui_ImplOpenGL3_NewFrame();
+                        ImGui_ImplWin32_NewFrame();
+                        ImGui::NewFrame();
+
+                        ImGui::Render();
+                        CloverRender(&RenderData);
+                        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+                        SwapBuffers(WindowDC);
+                    }
+                    ClearTransientState(&TransientState);
                 }
                 
-                ImGui::Render();
-                CloverRender(&RenderData);
-                ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-                SwapBuffers(WindowDC);
-                
-                ClearTransientState(&TransientState);
-                
-                // DELTA
                 LARGE_INTEGER EndCounter;
                 QueryPerformanceCounter(&EndCounter);
-                
+
                 DeltaCounter = real64(EndCounter.QuadPart - LastCounter.QuadPart);
                 LastCounter = EndCounter;
-                
                 FPSTimer += Time.Delta;
+
                 if(FPSTimer >= 1)
                 {
                     Time.FPSCounter = int32(PerfCountFrequency / DeltaCounter);

@@ -78,6 +78,13 @@ const uint16 ButtonLookup[]
     0x8000
 };
 
+struct win32_thread_context
+{
+    void *ThreadData;
+    HANDLE Handle;
+    DWORD  ID;
+};
+
 #define DIRECT_SOUND_CREATE(name) HRESULT WINAPI name(LPGUID lpGuid, LPDIRECTSOUND* ppDS, LPUNKNOWN pUnkOuter)
 typedef DIRECT_SOUND_CREATE(direct_sound_create);
 
