@@ -3,6 +3,16 @@ Clover Engine
 This is an entire game and GameEngine Written using minimal external libraries.   
 It operates **ONLY ON THE WIN32** as that is the only made platform layer at the moment.  
 
+Capabitilies (Brief)
+-------------------
+The Engine is currently capable of
+- Rendering Text using it's own font solution (Freetype)
+- Rendering Images and parsing them into their own subsprites
+- Performing batch rendering operation and deferred rendering using OpenGL
+- Multithreaded job handling
+
+Examples
+
 
 TODO
 ------
