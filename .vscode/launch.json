@@ -11,7 +11,7 @@
             "program" : "${workspaceFolder}/build/CloverGame",
             "args" : [],
             "cwd" : "${workspaceFolder}/build",
-            "console" : "integratedTerminal",
+            "console" : "internalConsole",
         }
     ]
 }

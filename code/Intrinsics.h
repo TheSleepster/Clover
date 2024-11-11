@@ -87,6 +87,14 @@ typedef double   real64;
 #define WriteBarrier     _WriteBarrier(); _mm_sfence()
 #define ReadBarrier      _ReadBarrier()
 #define ReadWriteBarrier _ReadWriteBarrier()
+
+#else
+#define alignas(x)       alignas()
+#define inline           inline
+
+#define WriteBarrier     __atomic_signal_fence(__ATOMIC_RELEASE); __atomic_thread_fence(__ATOMIC_RELEASE)
+#define ReadBarrier      __atomic_signal_fence(__ATOMIC_ACQUIRE); __atomic_thread_fence(__ATOMIC_ACQUIRE)
+#define ReadWriteBarrier __atomic_signal_fence(__ATOMIC_ACQ_REL); __atomic_thread_fence(__ATOMIC_ACQ_REL)
 #endif
 
 #endif // INTRINSICS_H
