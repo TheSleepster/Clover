@@ -46,7 +46,8 @@ LoadAsset(string Filepath, int32 TagType)
     game_asset Result = ;
     // stuff
     return(Result);
-}```
+}
+```
 
 Sound Mixer
 --------------
