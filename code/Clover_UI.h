@@ -21,6 +21,7 @@
 #include "Clover_Globals.h"
 #include "Clover_Renderer.h"
 #include "Clover_Input.h"
+#include "Clover_Asset.h"
 
 enum ui_layer
 {
@@ -116,7 +117,7 @@ struct clover_ui_context
     
     input     *GameInput;
     font_data *ActiveFont;
-    font_index ActiveFontIndex;
+    font_id    ActiveFontIndex;
     real32     LastActiveFontSize;
     
     real32 ButtonDelta;

@@ -504,7 +504,7 @@ Win32UnloadGameCode(game_functions *GameCode)
         GameCode->IsLoaded    = 0;
         GameCode->IsValid     = 0;
     }
-    
+
     GameCode->OnAwake         = GameOnAwakeStub;
     GameCode->FixedUpdate     = GameFixedUpdateStub;
     GameCode->UpdateAndDraw   = GameUpdateAndDrawStub;
@@ -646,7 +646,7 @@ Win32FillSoundBuffer(win32_sound_data *DSound, sound_output_data *SoundOutput, s
         {
             *DestSample++ = *SrcSample++;
             *DestSample++ = *SrcSample++;
-            
+
             SoundOutput->RunningSampleIndex++;
         }
         
@@ -658,7 +658,7 @@ Win32FillSoundBuffer(win32_sound_data *DSound, sound_output_data *SoundOutput, s
         {
             *DestSample++ = *SrcSample++;
             *DestSample++ = *SrcSample++;
-            
+
             SoundOutput->RunningSampleIndex++;
         }
     }
@@ -713,67 +713,116 @@ CollectGarbage(memory_arena *Trash)
     ClearArena(Trash);
 }
 
-struct job_queue
+struct work_queue_entry
+{
+    bool32 IsValid;
+    void  *UserData;
+};
+
+struct work_queue
 {
     uint32 volatile JobCount;
     uint32 volatile NextJob;
     uint32 volatile TotalJobsCompleted;
 
+    work_queue_entry Entries[256];
     HANDLE Semaphore;
-};
-
-struct job_queue_entry
-{
-    char *TextToPrint;
 };
 
 struct win32_thread_info
 {
-    int32 LogicalThreadIndex;
+    int32       LogicalThreadIndex;
+    work_queue *Queue;
 };
 
-global_variable job_queue JobQueue = {};
-job_queue_entry Entries[256] = {};
+struct master_queue_manager
+{
+    uint32 OpenThreadCount;
+    win32_thread_info *Threads;
+    
+    uint32 QueueCount;
+    work_queue *Queues;
+
+    HANDLE Semaphore;
+};
 
 internal void
-PushEntry(char *String)
-{ 
-    Assert(JobQueue.JobCount < ArrayCount(Entries));
-    job_queue_entry *Job = Entries + JobQueue.JobCount;
-    Job->TextToPrint = String;
+CompleteJob(work_queue_entry *JobEntry, int32 ThreadIndex)
+{
+    Assert(JobEntry->IsValid);
+    char Buffer[256];
 
-    WriteBarrier;
-    ++JobQueue.JobCount;
-    ReleaseSemaphore(JobQueue.Semaphore, 1, 0);
+    wsprintf(Buffer, "Thread %u: %s\n", ThreadIndex, (char *)JobEntry->UserData);
+    cl_Info(Buffer);
+}
+
+internal bool32
+IsQueueWorkCompleted(work_queue *Queue)
+{
+    return(Queue->JobCount != Queue->TotalJobsCompleted);
 }
 
 internal void
-CompleteJob(job_queue_entry *Entry)
+AddEntryToWorkQueue(work_queue *Queue, void *UserData)
 {
+    // TODO(Sleepster): Make this either growing or a circular buffer 
+    Assert(Queue->JobCount < ArrayCount(Queue->Entries));
+    Queue->Entries[Queue->JobCount].UserData = UserData;
+
+    WriteBarrier;
+    ++Queue->JobCount;
+    ReleaseSemaphore(Queue->Semaphore, 1, 0);
+}
+
+internal work_queue_entry
+GetNewJobFromQueue(work_queue *Queue, work_queue_entry *FinishedJob)
+{
+    work_queue_entry Result;
+    Result.IsValid = false;
+    if(FinishedJob->IsValid)
+    {
+        InterlockedIncrement(&Queue->TotalJobsCompleted);
+    }
+
+    uint32 UnincrementedJobIndex = Queue->NextJob;
+    if(UnincrementedJobIndex < Queue->JobCount)
+    {
+        uint32 JobIndex = InterlockedCompareExchange(&Queue->NextJob,
+                                                      UnincrementedJobIndex + 1,
+                                                      UnincrementedJobIndex);
+        if(JobIndex == UnincrementedJobIndex)
+        {
+            Result.UserData = Queue->Entries[JobIndex].UserData;
+            Result.IsValid = true;
+            ReadBarrier;
+        }
+    }
+    return(Result);
 }
 
 DWORD WINAPI
 ThreadProc(void *lpParam)
 {
-    win32_thread_info *ThreadInfo = (win32_thread_info *)lpParam;
+   win32_thread_info *ThreadInfo = (win32_thread_info *)lpParam;
+   work_queue_entry Entry = {};
     for(;;)
     {
-        if(JobQueue.NextJob < JobQueue.JobCount)
+        Entry = GetNewJobFromQueue(ThreadInfo->Queue, &Entry); 
+        if(Entry.IsValid)
         {
-            int EntryIndex         = InterlockedIncrement(&JobQueue.NextJob) - 1;
-            job_queue_entry *Entry = Entries + EntryIndex;
-
-            char Buffer[256];
-            wsprintf(Buffer, "Thread %u: %s\n", ThreadInfo->LogicalThreadIndex, Entry->TextToPrint);
-            cl_Info(Buffer);
-
-            InterlockedIncrement(&JobQueue.TotalJobsCompleted);
+            CompleteJob(&Entry, ThreadInfo->LogicalThreadIndex);
         }
         else
         {
-            WaitForSingleObjectEx(JobQueue.Semaphore, INFINITE, FALSE);
+            WaitForSingleObjectEx(ThreadInfo->Queue->Semaphore, INFINITE, FALSE);
         }
     }
+}
+
+internal void
+PushString(work_queue *Queue, char *String)
+{
+    AddEntryToWorkQueue(Queue, (void *)String);
 }
 
 int CALLBACK
@@ -784,63 +833,39 @@ WinMain(HINSTANCE hInstance,
 {
     // NOTE(Sleepster): THREADING 
     {
-        win32_thread_info TestThreads[11];
+        win32_thread_info TestThreads[5];
+        work_queue WorkQueue = {};
+        WorkQueue.Semaphore = CreateSemaphoreExA(0, 0, ArrayCount(TestThreads), 0, 0, SEMAPHORE_ALL_ACCESS);
 
-        JobQueue.Semaphore = CreateSemaphoreExA(0, 0, ArrayCount(TestThreads), 0, 0, SEMAPHORE_ALL_ACCESS);
         for(uint32 ThreadIndex = 0;
             ThreadIndex < ArrayCount(TestThreads);
             ++ThreadIndex)
         {
             win32_thread_info *TestThread = TestThreads + ThreadIndex;
             TestThread->LogicalThreadIndex = ThreadIndex;
+            TestThread->Queue = &WorkQueue;
 
             DWORD ThreadID;
             HANDLE ThreadHandle = CreateThread(0, 0, ThreadProc, (LPVOID *)TestThread, 0, &ThreadID); 
             CloseHandle(ThreadHandle);
         }
 
-        PushEntry("String A0");
-        PushEntry("String A1");
-        PushEntry("String A2");
-        PushEntry("String A3");
-        PushEntry("String A4");
-        PushEntry("String A5");
-        PushEntry("String A6");
-        PushEntry("String A7");
-        PushEntry("String A8");
-        PushEntry("String A9");
-        PushEntry("String A10");
-        PushEntry("String A11");
+        PushString(&WorkQueue, "String A0");
+        PushString(&WorkQueue, "String A1");
+        PushString(&WorkQueue, "String A2");
+        PushString(&WorkQueue, "String A3");
+        PushString(&WorkQueue, "String A4");
+        PushString(&WorkQueue, "String A5");
+        PushString(&WorkQueue, "String A6");
+        PushString(&WorkQueue, "String A7");
+        PushString(&WorkQueue, "String A8");
+        PushString(&WorkQueue, "String A9");
+        PushString(&WorkQueue, "String A10");
+        PushString(&WorkQueue, "String A11");
 
-        Sleep(2000);
-
-        PushEntry("String B0");
-        PushEntry("String B1");
-        PushEntry("String B2");
-        PushEntry("String B3");
-        PushEntry("String B4");
-        PushEntry("String B5");
-        PushEntry("String B6");
-        PushEntry("String B7");
-        PushEntry("String B8");
-        PushEntry("String B9");
-        PushEntry("String B10");
-        PushEntry("String B11");
-
-        Sleep(2000);
-
-        PushEntry("String C0");
-        PushEntry("String C1");
-        PushEntry("String C2");
-        PushEntry("String C3");
-        PushEntry("String C4");
-        PushEntry("String C5");
-        PushEntry("String C6");
-        PushEntry("String C7");
-        PushEntry("String C8");
-        PushEntry("String C9");
-        PushEntry("String C10");
-        PushEntry("String C11");
+        while(WorkQueue.JobCount != WorkQueue.TotalJobsCompleted)
+        {
+        }
     }
 
     WNDCLASS              Window         = {};
@@ -873,8 +898,9 @@ WinMain(HINSTANCE hInstance,
         AdjustWindowRectEx(&rect, WS_OVERLAPPEDWINDOW, FALSE, WS_EX_CLIENTEDGE);
         SizeData.Width  = rect.right  - rect.left;
         SizeData.Height = rect.bottom - rect.top;
-        
+
         Win32LoadWGLFunctions(Window, hInstance, &WGLFunctions);
+        
         
         HWND WindowHandle =
             CreateWindowEx(WS_EX_CLIENTEDGE,
@@ -889,16 +915,10 @@ WinMain(HINSTANCE hInstance,
                            0,
                            hInstance,
                            0);
+
         if(WindowHandle)
         {
             HDC WindowDC = GetDC(WindowHandle);
-#if 0
-            Memory.TransientStorage = ArenaCreate(Megabytes(512));
-            Memory.PermanentStorage = ArenaCreate(Megabytes(512));
-            
-            RenderData.DrawFrame.Vertices = (vertex *)ArenaAlloc(&Memory.PermanentStorage, sizeof(vertex) * TRUE_MAX_VERTICES);
-            RenderData.DrawFrame.UIVertices = (vertex *)ArenaAlloc(&Memory.PermanentStorage, sizeof(vertex) * TRUE_MAX_VERTICES);
-#endif
             // NOTE(Sleepster): ARENA INITIALZIATION 
             {
                 GameMemory.PermanentStorage.BlockSize    = Megabytes(512);
@@ -990,7 +1010,8 @@ WinMain(HINSTANCE hInstance,
                 WGLFunctions.wglSwapIntervalEXT(0);
                 // VSYNC
                 
-                CloverSetupRenderer(&TransientState.Garbage, &RenderData);
+                CloverSetupRenderer(&TransientState.Garbage, &RenderData, &TransientState);
+
                 RenderData.CloverRender = CloverRender;
             } 
 
@@ -1096,32 +1117,32 @@ WinMain(HINSTANCE hInstance,
                 }
                 
                 // NOTE(Sleepster: Shader Reloading  
-                filetime NewTextureWriteTime        = FileGetLastWriteTime(RenderData.GameAtlas.Filepath);    
-                filetime NewVertexShaderWriteTime   = FileGetLastWriteTime(RenderData.BasicShader.VertexShader.Filepath);
-                filetime NewFragmentShaderWriteTime = FileGetLastWriteTime(RenderData.BasicShader.FragmentShader.Filepath);
+                filetime NewTextureWriteTime        = FileGetLastWriteTime(TransientState.GameAssets.GameTextures[GT_GameAtlas].Filepath);    
+                filetime NewVertexShaderWriteTime   = FileGetLastWriteTime(TransientState.GameAssets.Shaders[GS_BasicShader].VertexShader.Filepath);
+                filetime NewFragmentShaderWriteTime = FileGetLastWriteTime(TransientState.GameAssets.Shaders[GS_BasicShader].FragmentShader.Filepath);
                 
-                if(!CloverCompareFiletime(NewTextureWriteTime, RenderData.GameAtlas.LastWriteTime))
+                if(!CloverCompareFiletime(NewTextureWriteTime, TransientState.GameAssets.GameTextures[GT_GameAtlas].LastWriteTime))
                 {
-                    CloverReloadTexture(&RenderData, &RenderData.GameAtlas, 0);
+                    CloverReloadTexture(&RenderData, &TransientState.GameAssets.GameTextures[GT_GameAtlas], 0);
                     Sleep(100);
                 }
                 
-                if(!CloverCompareFiletime(NewVertexShaderWriteTime,   RenderData.BasicShader.VertexShader.LastWriteTime) ||
-                   !CloverCompareFiletime(NewFragmentShaderWriteTime, RenderData.BasicShader.FragmentShader.LastWriteTime))
+                if(!CloverCompareFiletime(NewVertexShaderWriteTime,   TransientState.GameAssets.Shaders[GS_BasicShader].VertexShader.LastWriteTime) ||
+                   !CloverCompareFiletime(NewFragmentShaderWriteTime, TransientState.GameAssets.Shaders[GS_BasicShader].FragmentShader.LastWriteTime))
                 {
-                    RebuildShader(&TransientState.Garbage, &RenderData.BasicShader);
+                    RebuildShader(&TransientState.Garbage, &TransientState.GameAssets.Shaders[GS_BasicShader]);
                 }
                 
-                if(!CloverCompareFiletime(NewVertexShaderWriteTime,   RenderData.gBufferShader.VertexShader.LastWriteTime) ||
-                   !CloverCompareFiletime(NewFragmentShaderWriteTime, RenderData.gBufferShader.FragmentShader.LastWriteTime))
+                if(!CloverCompareFiletime(NewVertexShaderWriteTime,   TransientState.GameAssets.Shaders[GS_GBufferShader].VertexShader.LastWriteTime) ||
+                   !CloverCompareFiletime(NewFragmentShaderWriteTime, TransientState.GameAssets.Shaders[GS_GBufferShader].FragmentShader.LastWriteTime))
                 {
-                    RebuildShader(&TransientState.Garbage, &RenderData.gBufferShader); 
+                    RebuildShader(&TransientState.Garbage, &TransientState.GameAssets.Shaders[GS_GBufferShader]); 
                 }
                 
-                if(!CloverCompareFiletime(NewVertexShaderWriteTime,   RenderData.LightingShader.VertexShader.LastWriteTime) ||
-                   !CloverCompareFiletime(NewFragmentShaderWriteTime, RenderData.LightingShader.FragmentShader.LastWriteTime))
+                if(!CloverCompareFiletime(NewVertexShaderWriteTime,   TransientState.GameAssets.Shaders[GS_LightingShader].VertexShader.LastWriteTime) ||
+                   !CloverCompareFiletime(NewFragmentShaderWriteTime, TransientState.GameAssets.Shaders[GS_LightingShader].FragmentShader.LastWriteTime))
                 {
-                    RebuildShader(&TransientState.Garbage, &RenderData.LightingShader); 
+                    RebuildShader(&TransientState.Garbage, &TransientState.GameAssets.Shaders[GS_LightingShader]); 
                 }
 #endif
                 // NOTE(Sleepster): DELTA TIME 

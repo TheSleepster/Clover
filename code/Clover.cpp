@@ -39,6 +39,7 @@
 #include "Clover_Input.cpp"
 #include "Clover_Draw.cpp"
 #include "Clover_UI.cpp"
+#include "Clover_Asset.cpp"
 
 
 global_variable entity *Player = {};
@@ -1003,7 +1004,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
 {
     DrawImGui(State, RenderData, Time);
     
-    TransientState->GameFrameData.SelectedEntity = {};
+    TransientState->SelectedEntityThisFrame = {};
     // MATRICES
     {
         // NOTE(Sleepster): GAME 
@@ -1026,8 +1027,8 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
         State->UIContext.UICameraViewMatrix       = RenderData->GameUICamera.ViewMatrix;
         State->UIContext.UICameraProjectionMatrix = RenderData->GameUICamera.ProjectionMatrix;
         State->UIContext.GameInput                = &State->GameInput;
-        State->UIContext.ActiveFont               = &RenderData->LoadedFonts[UBUNTU_MONO];
-        State->UIContext.ActiveFontIndex          = UBUNTU_MONO;
+        State->UIContext.ActiveFont               = &TransientState->GameAssets.Fonts[GF_UbuntuMono];
+        State->UIContext.ActiveFontIndex          = GF_UbuntuMono;
     }
     
     vec2 MouseToWorld  = TransformMouseCoords(RenderData->GameCamera.ViewMatrix, 
@@ -1054,9 +1055,9 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             real32 PlayerToObjectDistance = fabsf(v2Distance(Temp->Position, Player->Position));
             if(Distance <= SelectionDistance && PlayerToObjectDistance <= MaxHitRange)
             {
-                if(!TransientState->GameFrameData.SelectedEntity || (Distance < MinimumDistance) || (Temp->EntityID != TransientState->GameFrameData.SelectedEntity->EntityID))
+                if(!TransientState->SelectedEntityThisFrame || (Distance < MinimumDistance) || (Temp->EntityID != TransientState->SelectedEntityThisFrame->EntityID))
                 {
-                    TransientState->GameFrameData.SelectedEntity = Temp;
+                    TransientState->SelectedEntityThisFrame = Temp;
                     MinimumDistance = Distance;
                 }
                 
@@ -1088,7 +1089,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                         }
                         
                         //PlaySound(&Memory->TemporaryStorage, State, STR("boop.wav"), 1);
-                        TransientState->GameFrameData.SelectedEntity = {};
+                        TransientState->SelectedEntityThisFrame = {};
                         DeleteEntity(Temp);
                     }
                 }
@@ -1641,7 +1642,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             XForm = mat4Multiply(XForm, mat4MakeScale(vec3{BoxWidth, BoxHeight, 1}));
             
             DrawUISpriteXForm(TransientState, XForm, GetSprite(State, SPRITE_Nil), 0, vec4{0.0, 0.0, 0.0, 0.8f});
-            DrawUIText(TransientState, RenderData, STR("Building..."), {-IconSize, 20}, 15, UBUNTU_MONO, WHITE);
+            DrawUIText(TransientState, RenderData, STR("Building..."), {-IconSize, 20}, 15, GF_UbuntuMono, WHITE);
         }
         
         // NOTE(Sleepster): Building From Inventory/Hotbar
@@ -1739,7 +1740,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     if(Temp->Flags & IS_PLACED)
                     {
                         real32 Distance = v2Distance(Player->Position, Temp->Position);
-                        if(Distance <= ItemPickupDist && TransientState->GameFrameData.SelectedEntity) 
+                        if(Distance <= ItemPickupDist && TransientState->SelectedEntityThisFrame) 
                         {
                             State->GameUIState = UI_State_Crafting;
                             State->ActiveCraftingStation = Temp;
@@ -1783,7 +1784,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             XForm = mat4Scale(XForm, vec3{BoxWidth, BoxHeight, 1});
             CloverUISpriteElement(&State->UIContext, {0, 0}, {0, 0}, XForm, GetSprite(State, SPRITE_Nil), BoxColor);
             
-            DrawUIText(TransientState, RenderData, STR("Crafting"), {-55, 40}, 15, UBUNTU_MONO, WHITE);
+            DrawUIText(TransientState, RenderData, STR("Crafting"), {-55, 40}, 15, GF_UbuntuMono, WHITE);
             for(uint32 Element = 0;
                 Element < ITEM_IDCount;
                 Element++)
@@ -1976,9 +1977,9 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             real32 PlayerToObjectDistance = fabsf(v2Distance(Temp->Position, Player->Position));
             if(Distance <= SelectionDistance && PlayerToObjectDistance <= MaxHitRange)
             {
-                if(!TransientState->GameFrameData.SelectedEntity || (Distance < MinimumDistance))
+                if(!TransientState->SelectedEntityThisFrame || (Distance < MinimumDistance))
                 {
-                    TransientState->GameFrameData.SelectedEntity = Temp;
+                    TransientState->SelectedEntityThisFrame = Temp;
                     MinimumDistance = Distance;
                 }
             }
@@ -2020,9 +2021,9 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                         }
                     }
                     
-                    if(TransientState->GameFrameData.SelectedEntity == Temp && !(Temp->Flags & IS_ITEM))
+                    if(TransientState->SelectedEntityThisFrame == Temp && !(Temp->Flags & IS_ITEM))
                     {
-                        TransientState->GameFrameData.SelectedEntity = Temp;
+                        TransientState->SelectedEntityThisFrame = Temp;
                         static_sprite_data SelectionBoxSprite = GetSprite(State, SPRITE_SelectionBox);
                         static_sprite_data EntitySprite = GetSprite(State, Temp->Sprite);
                         
@@ -2041,7 +2042,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
         }
     }
     
-    // NOTE(Sleepster): Draw the Tiles
+    // NOTE(Sleepster): DRAW FLOOR TILES
     ivec2  PlayerOffset = WorldToTilePos(Player->Position);
     ivec2  TileRadius   = {14, 16};
     

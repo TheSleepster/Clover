@@ -15,6 +15,7 @@
 #include "Clover_Renderer.h"
 #include "Clover_UI.h"
 #include "Clover_Audio.h"
+#include "Clover_Asset.h"
 
 #if 0
 struct game_memory
@@ -237,6 +238,9 @@ struct transient_state
     memory_arena TransientArena;
     memory_arena Garbage;
 
+    asset_manager GameAssets;
+
+    entity *SelectedEntityThisFrame;
     // RENDERER
     struct
     {
@@ -264,12 +268,6 @@ struct transient_state
         int32 PointLightCount;
         int32 SpotLightCount;
     }DrawFrameData;
-
-    // GAME
-    struct 
-    {
-        entity *SelectedEntity;
-    }GameFrameData;
 };
 
 struct game_state
@@ -295,7 +293,6 @@ struct game_state
     playing_sound     FirstPlayingSound;
     
     game_world_data World;
-    
     struct 
     { 
         static_sprite_data          Sprites[SPRITE_Count];

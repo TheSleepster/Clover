@@ -1,0 +1,44 @@
+Microsoft (R) C/C++ Optimizing Compiler Version 19.41.34120 for x64
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+Win32_Clover.cpp
+Microsoft (R) Incremental Linker Version 14.41.34120.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+/out:Win32_Clover.exe 
+/map:Win32_Clover.map 
+/debug 
+-ignore:4099 
+-incremental:no 
+shell32.lib 
+kernel32.lib 
+user32.lib 
+gdi32.lib 
+opengl32.lib 
+../data/deps/ImGUI/ImGuiDEBUG.lib 
+../data/deps/Freetype/freetype.lib 
+../data/deps/OpenGL/glad/src/Glad.lib 
+-OUT:CloverGame.exe 
+Win32_Clover.obj 
+Microsoft (R) C/C++ Optimizing Compiler Version 19.41.34120 for x64
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+Clover.cpp
+Microsoft (R) Incremental Linker Version 14.41.34120.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+/out:Clover.dll 
+/map:Clover.map 
+/debug 
+/dll 
+/implib:Clover.lib 
+-ignore:4099 
+../data/deps/ImGUI/ImGuiDEBUG.lib 
+-PDB:CloverGame_7971.pdb 
+-EXPORT:GameOnAwake 
+-EXPORT:GameUpdateAndDraw 
+-EXPORT:GameFixedUpdate 
+-EXPORT:GameGetSoundSamples 
+-OUT:CloverGame.dll 
+Clover.obj 
+   Creating library Clover.lib and object Clover.exp

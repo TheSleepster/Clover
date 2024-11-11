@@ -34,20 +34,6 @@
 
 struct transient_state;
 
-enum bound_texture_index
-{
-    TEXTURE_NIL,
-    GAME_ATLAS,
-    BoundTextureCount,
-};
-
-enum font_index
-{
-    UBUNTU_MONO,
-    LITERATION_MONO,
-    FONT_COUNT,
-};
-
 struct static_sprite_data
 {
     ivec2 AtlasOffset;
@@ -200,12 +186,6 @@ struct gl_render_data
     GLuint PointLightCountUID;
     GLuint SpotLightCountUID;
     
-    // SHADERS
-    shader BasicShader;
-    shader gBufferShader;
-    shader LightingShader;
-    shader CombinationShader;
-    
     // CAMERAS
     orthocamera2d GameCamera;
     orthocamera2d GameUICamera;
@@ -214,11 +194,7 @@ struct gl_render_data
     vec4          ClearColor;
     
     // GAME TEXTURES
-    texture2d     GameAtlas;
-    font_data     LoadedFonts[2];
-    uint32        TextureCount;
     real32        AspectRatio;
-
 
     // RENDERING TEXTURES
     GLuint gBuffer;
