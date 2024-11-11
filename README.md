@@ -1,6 +1,6 @@
 Clover Engine
 =============
-This is an entire game and GameEngine Written using minimal external libraries. It operates ONLY ON THE WIN32
+This is an entire game and GameEngine Written using minimal external libraries. It operates **ONLY ON THE WIN32**
 
 
 > [!NOTE]
