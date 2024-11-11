@@ -10,9 +10,84 @@ The Engine is currently capable of
 - Rendering Images and parsing them into their own subsprites
 - Performing batch rendering operation and deferred rendering using OpenGL
 - Multithreaded job handling
+- Conroller Support using XInput
 
 Examples
+-------
+### General & Transparency Testing:
+![Demo](https://github.com/user-attachments/assets/398e1c9b-a85f-461e-b0b7-f6d5187beea5)
 
+### Lighting:
+![example2](https://github.com/user-attachments/assets/6e365c61-f297-488a-8bc0-de5d62ae7e06)
+
+### Batch Rendering:
+![image](https://github.com/user-attachments/assets/7f5e6b08-291f-4a80-ae21-ed446a1b7a14)
+
+### Deferred Rendering:
+#### In the below image we render all of the quads onto a series of textures  
+- Albedo (color) Texture
+- Normal Texture (Vertex Normals)
+- World Position Texture
+- Depth Buffer
+
+![example3](https://github.com/user-attachments/assets/cce76cd1-c6cd-47c4-b082-3637a836b4d2)
+#### Then in this image we use the lighting shader to mix the two together:
+```GLSL
+#version 430 core
+#extension GL_ARB_shading_language_include : require
+
+#line 4
+#include "/../code/shader/CommonShader.glh"
+#line 6
+
+layout(std430, binding = 0) buffer gBufferPointLightSBO
+{
+    point_light PointLights[];    
+};
+
+uniform float uBrightnessFactor;
+uniform float uWorldBrightness;
+uniform int   uPointLightCount;
+
+layout(binding = 0) uniform sampler2D gBufferTexture;
+layout(binding = 1) uniform sampler2D gBufferNormals;
+layout(binding = 2) uniform sampler2D gBufferPosition;
+
+out vec4 FragColor;
+
+in vec2 vUV;
+
+void main()
+{
+    vec3 Normal      = texture(gBufferNormals,  vUV).rgb;
+    vec3 AlbedoColor = texture(gBufferTexture,  vUV).rgb;
+    vec3 FragPos     = texture(gBufferPosition, vUV).rgb;
+    
+    float AmbientStrength = (uWorldBrightness * uBrightnessFactor);
+    vec3  AmbientLighting = vec3(1.0) * AmbientStrength;
+
+    vec3 TotalLighting = vec3(0);
+    for(int LightIndex = 0; LightIndex < uPointLightCount; LightIndex++)
+    {
+        point_light PointLight = PointLights[LightIndex];
+        
+        vec3  LightDir  = normalize(PointLight.Position - FragPos);
+        float LightDist = length(PointLight.Position - FragPos); 
+        if(LightDist > PointLight.Radius) continue;
+
+        float Attenuation = 1.0 / (PointLight.Attenuation.Constant + PointLight.Attenuation.Linear * LightDist + PointLight.Attenuation.Quadratic * (LightDist * LightDist));
+        float DistanceFactor = smoothstep(PointLight.Radius * 0.5, PointLight.Radius, LightDist);
+
+        vec3  DiffuseLighting = AlbedoColor * PointLight.LightColor.rgb * Attenuation * PointLight.Strength * (1 - DistanceFactor);
+        TotalLighting        += DiffuseLighting;
+    }
+    
+    FragColor = vec4(AlbedoColor * AmbientLighting, 1.0) + vec4(TotalLighting, 1.0);
+}
+```
+#### Leading to This
+![example4](https://github.com/user-attachments/assets/85a15899-964c-47af-ba66-69000a1fa9e7)
+This allows us to manage complex lighting and GPU particles.
 
 TODO
 ------
