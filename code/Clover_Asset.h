@@ -14,16 +14,15 @@
 #include "Clover_Audio.h"
 #include "Clover_Asset.h"
 
-
 typedef uint64 asset_id;
 
 enum asset_type
 {
-    ASSET_GAME_ATLAS,
+    ASSET_GAME_TEXTURE,
     ASSET_FONT,
     ASSET_SOUND,
     ASSET_SHADER,
-    ASSET_COUNT,
+    ASSET_TYPE_COUNT,
 };
 
 enum shader_id
@@ -46,6 +45,13 @@ enum font_id
     GF_UbuntuMono,
     GF_LiterationMono,
     GF_FontIDCount,
+};
+
+enum soundfx_id
+{
+    GSFX_SunkenSeaTheme,
+    GSFX_RoarOfTheJungleDragon,
+    GSFX_IDCount,
 };
 
 struct asset

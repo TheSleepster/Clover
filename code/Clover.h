@@ -17,37 +17,9 @@
 #include "Clover_Audio.h"
 #include "Clover_Asset.h"
 
-#if 0
-struct game_memory
-{
-    memory_arena PermanentStorage;
-    memory_arena TemporaryStorage;
-};
-#endif
-
-struct game_memory
-{
-    bool  IsInitialized;
-
-    memory_block PermanentStorage;
-    memory_block TransientStorage;
-};
-
-struct time_data
-{
-    real32 Delta;
-    real32 Current;
-    real64 Alpha;
-    real64 Next;
-    
-    int32  FPSCounter;
-    real32 MSPerFrame;
-    real32 CurrentTimeInSeconds;
-};
-
 struct box2D : range_v2
 {
-    bool IsActive;
+    bool32 IsActive;
 };
 
 enum sprite_type
@@ -171,7 +143,7 @@ struct item
     int32 UniqueMaterialCount;
     int32 FormulaResultCount;
     
-    bool Craftable;
+    bool32 Craftable;
 };
 
 struct entity_item_inventory
@@ -272,18 +244,18 @@ struct transient_state
 
 struct game_state
 {
-    bool IsInitialized;
+    bool32 IsInitialized;
     
     input GameInput;
     
     clover_ui_context UIContext;
     game_ui_state     GameUIState;
     
-    bool DisplayPlayerHotbar;
-    bool DisplayPlayerInventory;
-    bool DisplayCraftingMenu;
-    bool DisplayBuildMenu;
-    bool DrawDebug;
+    bool32 DisplayPlayerHotbar;
+    bool32 DisplayPlayerInventory;
+    bool32 DisplayCraftingMenu;
+    bool32 DisplayBuildMenu;
+    bool32 DrawDebug;
     
     entity *ActiveCraftingStation;
     item   *ActiveRecipe;
@@ -372,7 +344,7 @@ RangeSize(range_v2 Range)
     return(Size);
 }
 
-internal inline bool
+internal inline bool32
 IsRangeWithinBounds(vec2 Test, range_v2 Bounds)
 {
     return (Test.X >= Bounds.Min.X && Test.X <= Bounds.Max.X && 
@@ -394,6 +366,7 @@ RangeFromQuad(quad *Quad)
 #define MULTIPLIER 6364136223846793005ull
 #define INCREMENT 1442695040888963407ull
 
+// TODO(Sleepster): This is windows????
 global_variable uint64 RDTSCRandomSeed = __rdtsc();
 
 internal inline uint64
@@ -442,37 +415,13 @@ SinBreathe(real32 Time, real32 Modifier)
     return(sinf(Time * Modifier));
 }
 
-bool
+bool32
 operator!=(static_sprite_data A, static_sprite_data B)
 {
-    bool Result = {};
+    bool32 Result = {};
     v2Cast(A.AtlasOffset) != v2Cast(B.AtlasOffset) ? Result = true : Result = false;
     
     return(Result);
-}
-
-#define GAME_ON_AWAKE(name) void name(game_memory *Memory, gl_render_data *RenderData, game_state *State, transient_state *TransientState)
-typedef GAME_ON_AWAKE(game_on_awake);
-GAME_ON_AWAKE(GameOnAwakeStub)
-{
-}
-
-#define GAME_FIXED_UPDATE(name) void name(game_memory *Memory, gl_render_data *RenderData, game_state *State, transient_state *TransientState, time_data Time)
-typedef GAME_FIXED_UPDATE(game_fixed_update);
-GAME_FIXED_UPDATE(GameFixedUpdateStub)
-{
-}
-
-#define GAME_UPDATE_AND_DRAW(name) void name(game_memory *Memory, gl_render_data *RenderData, game_state *State, transient_state *TransientState, time_data Time, ivec4 SizeDataIn)
-typedef GAME_UPDATE_AND_DRAW(game_update_and_draw);
-GAME_UPDATE_AND_DRAW(GameUpdateAndDrawStub)
-{
-}
-
-#define GAME_GET_SOUND_SAMPLES(name) void name(game_memory *Memory, sound_buffer *SoundBuffer, game_state *State, transient_state *TransientState)
-typedef GAME_GET_SOUND_SAMPLES(game_get_sound_samples);
-GAME_GET_SOUND_SAMPLES(GameGetSoundSamplesStub)
-{
 }
 
 #endif // _CLOVER_H

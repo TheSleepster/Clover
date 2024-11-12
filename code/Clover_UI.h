@@ -85,20 +85,20 @@ struct ui_element
     
     range_v2 OccupiedRange;
     
-    bool IsValid;
-    bool IsDisplayed;
-    bool IsHot;
-    bool IsActive;
-    bool HasText;
+    bool32 IsValid;
+    bool32 IsDisplayed;
+    bool32 IsHot;
+    bool32 IsActive;
+    bool32 HasText;
     
     mat4 XForm;
 };
 
 struct ui_element_state
 {
-    bool IsHot;
-    bool IsPressed;
-    bool IsReleased;
+    bool32 IsHot;
+    bool32 IsPressed;
+    bool32 IsReleased;
     ui_id UIID;
 };
 

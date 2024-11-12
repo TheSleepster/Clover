@@ -10,17 +10,6 @@
 #include "util/FileIO.h"
 #include "util/String.h"
 
-// GLAD
-#ifndef GLAD_OPENGL_IMPL
-#define GLAD_OPENGL_IMPL
-#include "../data/deps/OpenGL/glad/include/glad/glad.h"
-
-#define STB_IMAGE_IMPLEMENTATION
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "../data/deps/stb/stb_image.h"
-#include "../data/deps/stb/stb_image_write.h"
-#endif
-
 #include "shader/CommonShader.glh"
 #include "Clover_Globals.h"
 
@@ -122,7 +111,7 @@ CreateDrawRect(transient_state *TransientState, vec2 Size, real32 Rotation, vec4
 
 // TODO(Sleepster): Culling
 internal quad *
-DrawQuadXForm(transient_state *TransientState, quad *Quad, mat4 *Transform, bool IsFont)
+DrawQuadXForm(transient_state *TransientState, quad *Quad, mat4 *Transform, bool32 IsFont)
 {
     if(TransientState->DrawFrameData.TotalQuadCount >= MAX_QUADS)
     {
@@ -155,7 +144,7 @@ DrawQuadXForm(transient_state *TransientState, quad *Quad, mat4 *Transform, bool
     vertex **VertexBufferptr;
     uint32  *ElementCounter;
     
-    bool IsOpaque = (Quad->DrawColor.A == 1.0f && !IsFont);
+    bool32 IsOpaque = (Quad->DrawColor.A == 1.0f && !IsFont);
     if(IsOpaque)
     {
         VertexBufferptr = &TransientState->DrawFrameData.VertexBufferptr;
@@ -202,7 +191,7 @@ DrawQuadXForm(transient_state *TransientState, quad *Quad, mat4 *Transform, bool
 
 
 internal quad *
-DrawUIQuadXForm(transient_state *TransientState, quad *Quad, mat4 *Transform, bool IsFont)
+DrawUIQuadXForm(transient_state *TransientState, quad *Quad, mat4 *Transform, bool32 IsFont)
 {
     if(TransientState->DrawFrameData.TotalUIElementCount >= MAX_QUADS)
     {
@@ -230,7 +219,7 @@ DrawUIQuadXForm(transient_state *TransientState, quad *Quad, mat4 *Transform, bo
     vertex **UIVertexBufferptr;
     uint32  *ElementCounter;
     
-    bool IsOpaque = (Quad->DrawColor.A == 1.0f && !IsFont);
+    bool32 IsOpaque = (Quad->DrawColor.A == 1.0f && !IsFont);
     if(IsOpaque)
     {
         UIVertexBufferptr = &TransientState->DrawFrameData.UIVertexBufferptr;
@@ -276,7 +265,7 @@ DrawUIQuadXForm(transient_state *TransientState, quad *Quad, mat4 *Transform, bo
 }
 
 internal quad *
-DrawQuadProjected(transient_state *TransientState, quad *Quad, bool IsFont)
+DrawQuadProjected(transient_state *TransientState, quad *Quad, bool32 IsFont)
 {
     mat4 Translation = mat4Multiply(mat4Identity(1.0f), mat4Translate(v2Expand(vec2{Quad->Position.X, Quad->Position.Y + (Quad->Size.Y * 0.5f)}, 0.0f)));
     mat4 Rotation    = mat4Multiply(mat4Identity(1.0f), mat4RHRotate(AngleRad(Quad->Rotation), vec3{0.0f, 0.0f, 1.0f}));
@@ -288,7 +277,7 @@ DrawQuadProjected(transient_state *TransientState, quad *Quad, bool IsFont)
 }
 
 internal quad *
-DrawUIQuadProjected(transient_state *TransientState, quad *Quad, bool IsFont)
+DrawUIQuadProjected(transient_state *TransientState, quad *Quad, bool32 IsFont)
 {
     mat4 Translation = mat4Multiply(mat4Identity(1.0f), mat4Translate(v2Expand(vec2{Quad->Position.X - (Quad->Size.X * 0.5f), Quad->Position.Y + (Quad->Size.Y * 0.5f)}, 0.0f)));
     mat4 Rotation    = mat4Multiply(mat4Identity(1.0f), mat4RHRotate(AngleRad(Quad->Rotation), vec3{0.0f, 0.0f, 1.0f}));
@@ -308,7 +297,7 @@ DrawQuadTextured(transient_state*TransientState,
                  real32          Rotation,
                  vec4            Color, 
                  uint32          TextureIndex,
-                 bool            IsFont)
+                 bool32          IsFont)
 {
     quad Quad = CreateDrawQuad(TransientState, Position, Size, SpriteSize, AtlasOffset, Rotation, Color, (real32)TextureIndex);
     return(DrawQuadProjected(TransientState, &Quad, IsFont));
@@ -323,7 +312,7 @@ DrawUIQuadTextured(transient_state *TransientState,
                    real32           Rotation,
                    vec4             Color, 
                    uint32           TextureIndex,
-                   bool             IsFont)
+                   bool32           IsFont)
 {
     quad Quad = CreateDrawQuad(TransientState, Position, Size, SpriteSize, AtlasOffset, Rotation, Color, (real32)TextureIndex);
     return(DrawUIQuadProjected(TransientState, &Quad, IsFont));
@@ -332,14 +321,14 @@ DrawUIQuadTextured(transient_state *TransientState,
 // TODO(Sleepster): Perhaps make it where we have solids, and actors. Solids will be placed without matrix transforms.
 //                  STATIC SOLIDS if you would. Actors will be Dynamic and will require matrix calculations.
 internal quad*
-DrawQuad(transient_state *TransientState, vec2 Position, vec2 Size, real32 Rotation, vec4 Color, bool IsFont)
+DrawQuad(transient_state *TransientState, vec2 Position, vec2 Size, real32 Rotation, vec4 Color, bool32 IsFont)
 {
     quad Quad = CreateDrawQuad(TransientState, Position, Size, ivec2{16, 16}, ivec2{0, 0}, Rotation, Color, 0);
     return(DrawQuadProjected(TransientState, &Quad, IsFont));
 }
 
 internal quad*
-DrawUIQuad(transient_state *TransientState, vec2 Position, vec2 Size, real32 Rotation, vec4 Color, bool IsFont)
+DrawUIQuad(transient_state *TransientState, vec2 Position, vec2 Size, real32 Rotation, vec4 Color, bool32 IsFont)
 {
     quad Quad = CreateDrawQuad(TransientState, Position, Size, ivec2{16, 16}, ivec2{0, 0}, Rotation, Color, 0);
     return(DrawUIQuadProjected(TransientState, &Quad, IsFont));

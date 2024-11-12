@@ -55,7 +55,7 @@ struct array
         Count = 0;
     }
 
-    inline bool
+    inline bool32
     Full()
     {
         return(Count >= Capacity);

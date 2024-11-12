@@ -64,7 +64,7 @@ CloverUIWidgetMakeXForm(ui_element *Widget)
     Widget->XForm = Translation * Scale;
 } 
 
-internal bool 
+internal bool32
 CloverUIIsHot(clover_ui_context *Context, ui_element *Widget)
 {
     vec2 TransformedMousePos = TransformMouseCoords(Context->UICameraViewMatrix,
@@ -261,8 +261,8 @@ CloverUISortElementsByLayer(const void *A, const void *B)
     const ui_element *ElementA = (const ui_element*)A;
     const ui_element *ElementB = (const ui_element*)B;
     
-    bool IsOpaqueA = (ElementA->DrawColor.A == 1.0f);
-    bool IsOpaqueB = (ElementB->DrawColor.A == 1.0f);
+    bool32 IsOpaqueA = (ElementA->DrawColor.A == 1.0f);
+    bool32 IsOpaqueB = (ElementB->DrawColor.A == 1.0f);
     
     return((ElementA->UIID.LayerIdx > ElementB->UIID.LayerIdx) ?  1 :
            (ElementA->UIID.LayerIdx < ElementB->UIID.LayerIdx) ? -1 : 

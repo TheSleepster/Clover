@@ -22,12 +22,12 @@ struct pair
         : First(A), Second(B) {}
     
     
-    bool operator==(const pair &Comparitor)
+    bool32 operator==(const pair &Comparitor)
     {
         return(First == Comparitor.First && Second == Comparitor.Second);
     }
     
-    bool operator!=(const pair &Comparitor)
+    bool32 operator!=(const pair &Comparitor)
     {
         return(!(*this == Comparitor));
     }

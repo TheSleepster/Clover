@@ -15,3 +15,52 @@
 #include "util/Pairs.h"
 
 #include "Clover_Asset.h"
+
+internal inline texture2d*
+GetTextureFromID(asset_manager *AssetManager, texture_id ID)
+{
+    texture2d *Result = &AssetManager->GameTextures[ID];
+    if(Result->IsLoaded)
+    {
+        return(Result);
+    }
+    else
+    {
+        Result->IsLoaded = false;
+        Result->LoadRequested = true;
+    }
+    return(0);
+}
+
+internal inline shader*
+GetShaderFromID(asset_manager *AssetManager, shader_id ID)
+{
+    shader *Result = &AssetManager->Shaders[ID];
+    if(Result)
+    {
+        return(Result);
+    }
+    return(0);
+}
+
+internal inline font_data*
+GetFontFromID(asset_manager *AssetManager, font_id ID)
+{
+    font_data *Result = &AssetManager->Fonts[ID];
+    if(Result)
+    {
+        return(Result);
+    }
+    return(0);
+}
+
+internal inline loaded_sound*
+GetSoundFromId(asset_manager *AssetManager, soundfx_id ID)
+{
+    loaded_sound *Result = &AssetManager->Sounds[ID];
+    if(Result)
+    {
+        return(Result);
+    }
+    return(0);
+}

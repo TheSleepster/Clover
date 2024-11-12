@@ -32,10 +32,10 @@ NextChunk(riff_iterator Iter)
     return(Iter);
 }
 
-internal inline bool
+internal inline bool32
 IsChunkValid(riff_iterator Iter)
 {
-    bool Result = (Iter.At < Iter.End);
+    bool32 Result = (Iter.At < Iter.End);
     return(Result);
 }
 

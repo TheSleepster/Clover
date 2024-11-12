@@ -9,6 +9,12 @@
 #include "../data/deps/Freetype/include/ft2build.h"
 #include FT_FREETYPE_H
 
+// TODO(Sleepster): Maybe make it so that this doesn't have to be exposed to the game layer
+#ifndef STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_IMPLEMENTATION
+#include "../data/deps/stb/stb_image.h"
+#endif
+
 #if 0
 // NOTE(Sleepster: SDL Must come first as well 
 #include "../data/deps/SDL3/include/SDL3/SDL.h"
@@ -27,10 +33,13 @@
 
 // CLOVER HEADERS
 #include "Clover.h"
+#include "Clover_Platform.h"
 #include "Clover_Globals.h"
 #include "Clover_Input.h" 
 #include "Clover_Renderer.h"
 #include "Clover_Audio.h"
+#include "Clover_UI.h"
+#include "Clover_Asset.h"
 #include "shader/CommonShader.glh"
 
 // IMGUI IMPl
@@ -727,7 +736,7 @@ CompareEntityYAxis(const void *A, const void *B)
            (EntityA->Position.Y < EntityB->Position.Y) ? -1 : 0);
 }
 
-internal bool
+internal bool32
 SwapInventoryItems(entity_item_inventory *Inventory, item *ItemA, item *ItemB)
 {   
     item TempItem = *ItemA;
@@ -838,7 +847,7 @@ GetItemIDFromPair(game_state *State, sprite_type Sprite)
     return(ITEM_Nil);
 }
 
-internal bool
+internal bool32
 IsItemCraftable(int *ItemCounts, item *Craft)
 {
     if(Craft->CraftingFormula)
@@ -1687,7 +1696,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                 
                 if(IsGameKeyPressed(INTERACT, &State->GameInput))
                 {
-                    bool Overlap = {};
+                    bool32 Overlap = {};
                     for(uint32 EntityCounter = 0;
                         EntityCounter <= State->World.EntityCounter;
                         EntityCounter++)

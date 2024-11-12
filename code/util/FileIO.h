@@ -75,7 +75,7 @@ FileGetLastWriteTime(string Filepath)
     return(FileStats.st_mtime);
 }
 
-internal inline bool
+internal inline bool32
 CloverCompareFiletime(filetime A, filetime B)
 {
     return(A == B);

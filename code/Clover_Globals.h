@@ -11,8 +11,8 @@
 #include "util/String.h"
 
 // PLATFORM DATA
-global_variable ivec4 SizeData = {0, 0, 1920, 1080};
-global_variable bool  Running  = 0;
+global_variable ivec4  SizeData = {0, 0, 1920, 1080};
+global_variable bool32 Running  = 0;
 
 // TIMING DATA
 global_variable int64 PerfCountFrequency;

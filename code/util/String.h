@@ -39,7 +39,7 @@ GetStringLength(const char *String)
     return(Length);
 }
 
-internal inline bool
+internal inline bool32
 StringsMatch(string A, string B)
 {
     if(A.Length != B.Length) return(0);

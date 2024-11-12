@@ -15,6 +15,7 @@
 #include "util/String.h"
 
 #include "Clover_Renderer.h"
+#include "Clover_Platform.h"
 
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN
@@ -48,8 +49,8 @@ struct game_functions
     game_update_and_draw   *UpdateAndDraw;
     game_get_sound_samples *GetSoundSamples;
     
-    bool IsLoaded;
-    bool IsValid;
+    bool32 IsLoaded;
+    bool32 IsValid;
 };
 
 struct win32_sound_data

@@ -10,21 +10,21 @@
 #include "util/Arena.h"
 #include "util/String.h"
 
-internal inline bool
+internal inline bool32
 IsGamepadButtonPressed(controller_buttonID ButtonID, input *GameInput)
 {
     action_button PrimaryButton = GameInput->Controller.GamepadButtons[ButtonID];
     return(PrimaryButton.JustPressed && PrimaryButton.HalfTransitionCount >= 1);
 }
 
-internal inline bool
+internal inline bool32
 IsGamepadButtonJustReleased(controller_buttonID ButtonID, input *GameInput)
 {
     action_button PrimaryButton = GameInput->Controller.GamepadButtons[ButtonID];
     return(!PrimaryButton.IsDown && PrimaryButton.HalfTransitionCount >= 1);
 }
 
-internal inline bool
+internal inline bool32
 IsGamepadButtonDown(controller_buttonID ButtonID, input *GameInput)
 {
     action_button PrimaryButton = GameInput->Controller.GamepadButtons[ButtonID];
@@ -46,21 +46,21 @@ AddGameMapping(keycodeID MainKey, keycodeID AltKey,
     return(Result);
 }
 
-internal inline bool
+internal inline bool32
 IsKeyPressed(keycodeID Keycode, input *GameInput)
 {
     keyboard_key inputKey = GameInput->Keyboard.Keys[Keycode];
     return(inputKey.IsDown && inputKey.HalfTransitionCount >= 1);
 }
 
-internal inline bool
+internal inline bool32
 IsKeyReleased(keycodeID Keycode, input *GameInput)
 {
     keyboard_key inputKey = GameInput->Keyboard.Keys[Keycode];
     return(!inputKey.IsDown && inputKey.HalfTransitionCount >= 1);
 }
 
-internal inline bool 
+internal inline bool32 
 IsKeyDown(keycodeID Keycode, input *GameInput)
 {
     return(GameInput->Keyboard.Keys[Keycode].IsDown);
@@ -72,7 +72,7 @@ ConsumeKeyinput(keycodeID KeyCode, input *GameInput)
     GameInput->Keyboard.Keys[KeyCode].HalfTransitionCount = 0;
 }
 
-internal inline bool 
+internal inline bool32 
 IsGameKeyDown(KeyBindings InputType, input *GameInput)
 {
     keyboard_key InputKey     = GameInput->Keyboard.Keys[GameInput->Mappings[InputType].MainKey];
@@ -84,7 +84,7 @@ IsGameKeyDown(KeyBindings InputType, input *GameInput)
     return(InputKey.IsDown || AltInputKey.IsDown || InputButton.IsDown || AltButton.IsDown);
 }
 
-internal inline bool
+internal inline bool32
 IsGameKeyPressed(KeyBindings InputType, input *GameInput)
 {
     keyboard_key InputKey    = GameInput->Keyboard.Keys[GameInput->Mappings[InputType].MainKey];
@@ -100,7 +100,7 @@ IsGameKeyPressed(KeyBindings InputType, input *GameInput)
 }
 
 
-internal inline bool
+internal inline bool32
 IsGameKeyReleased(KeyBindings InputType, input *GameInput)
 {
     keyboard_key InputKey    = GameInput->Keyboard.Keys[GameInput->Mappings[InputType].MainKey];

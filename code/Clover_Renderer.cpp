@@ -1,6 +1,11 @@
 #include "../data/deps/Freetype/include/ft2build.h"
 #include FT_FREETYPE_H
 
+#ifndef STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_IMPLEMENTATION
+#include "../data/deps/stb/stb_image.h"
+#endif
+
 // INTRINSICS
 #include "Intrinsics.h"
 
@@ -157,9 +162,29 @@ CloverLoadFont(memory_arena *Memory, gl_render_data *RenderData, transient_state
     }
 }
 
+internal void
+CloverCreateSDFTexture(transient_state *TransientState, texture2d *TextureInfo, char *TextureData)
+{
+    glActiveTexture(GL_TEXTURE0 + TransientState->GameAssets.LoadedTextureCount);
+    glGenTextures(1, &TextureInfo->TextureID);
+    glBindTexture(GL_TEXTURE_2D, TextureInfo->TextureID);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, BITMAP_ATLAS_SIZE, BITMAP_ATLAS_SIZE, 0, GL_RED, GL_UNSIGNED_BYTE, TextureData);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 3);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
 // TODO(Sleepster): Revisit this to fix the alignment issues with letters like "p" "g" "l" "y" and such
 internal void
-CloverLoadSDFFont(memory_arena *Memory, gl_render_data *RenderData, transient_state *TransientState, string Filepath, uint32 FontSize, font_id FontName)
+CloverLoadSDFFont(memory_arena *Memory, transient_state *TransientState, string Filepath, uint32 FontSize, font_id FontName)
 {
     freetype_font_data Font = {};
     Font.FontSize = FontSize;
@@ -240,23 +265,7 @@ CloverLoadSDFFont(memory_arena *Memory, gl_render_data *RenderData, transient_st
     FT_Done_FreeType(Font.FontFile);
     
     // SDF TEXTURE DATA
-    {
-        glActiveTexture(GL_TEXTURE0 + TransientState->GameAssets.LoadedTextureCount);
-        glGenTextures(1, &TransientState->GameAssets.Fonts[0].FontAtlas.TextureID);
-        glBindTexture(GL_TEXTURE_2D, TransientState->GameAssets.Fonts[0].FontAtlas.TextureID);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, BITMAP_ATLAS_SIZE, BITMAP_ATLAS_SIZE, 0, GL_RED, GL_UNSIGNED_BYTE, TextureData);
-        
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        
-        glGenerateMipmap(GL_TEXTURE_2D);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 3);
-        
-        glBindTexture(GL_TEXTURE_2D, 0);
-    }
+    CloverCreateSDFTexture(TransientState, &TransientState->GameAssets.Fonts[FontName].FontAtlas, TextureData);
 }
 
 internal gl_shader_source
@@ -552,7 +561,7 @@ CloverSetupRenderer(memory_arena *Memory, gl_render_data *RenderData, transient_
     {
         // NOTE(Sleepster): The order is important, whatever you gen first will end up in the GL_TEXTUREX slot 
         CloverLoadTexture(RenderData, TransientState, &TransientState->GameAssets.GameTextures[GT_GameAtlas], STR("../data/res/textures/TextureAtlas.png"));
-        CloverLoadSDFFont(Memory, RenderData, TransientState, STR("../data/res/fonts/UbuntuMono-B.ttf"), 48, GF_UbuntuMono);
+        CloverLoadSDFFont(Memory, TransientState, STR("../data/res/fonts/UbuntuMono-B.ttf"), 48, GF_UbuntuMono);
     }
 
     // SHADER SETUP

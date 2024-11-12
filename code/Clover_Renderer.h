@@ -13,11 +13,6 @@
 #ifndef GLAD_OPENGL_IMPL
 #define GLAD_OPENGL_IMPL
 #include "../data/deps/OpenGL/glad/include/glad/glad.h"
-
-#define STB_IMAGE_IMPLEMENTATION
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "../data/deps/stb/stb_image.h"
-#include "../data/deps/stb/stb_image_write.h"
 #endif
 
 #include "util/Math.h"
@@ -43,13 +38,14 @@ struct static_sprite_data
 struct texture2d
 {
     time_t LastWriteTime;
+    string Filepath;
+    GLuint TextureID;
     
     ivec3  TextureData;
     char  *RawData;
-    string Filepath;
-    
-    GLuint TextureID;
-    GLenum ActiveTexture;
+
+    bool32 IsLoaded;
+    bool32 LoadRequested;
 };
 
 struct game_texture2d

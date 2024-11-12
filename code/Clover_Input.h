@@ -182,7 +182,7 @@ struct controller_input
 
 struct player_controller
 {
-    bool IsController;
+    bool32 IsController;
 
     controller_input Controller;
     keyboard_input   Keyboard;

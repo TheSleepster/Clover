@@ -36,7 +36,6 @@
 
 // STB IMAGE TEXTURE LOADING
 #define STB_IMAGE_IMPLEMENTATION
-#define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "../data/deps/stb/stb_image.h"
 
 // WINDOWS
@@ -61,17 +60,19 @@
 #include "../data/deps/OpenGL/glcorearb.h"
 
 // CLOVER HEADERS
-#include "Clover_Globals.h"
 #include "Clover.h"
+#include "Clover_Globals.h"
 #include "Clover_Renderer.h"
 #include "Clover_Input.h"
 #include "Win32_Clover.h"
 #include "Clover_Audio.h"
+#include "Clover_Platform.h"
 
 // FILES FOR UNITY BUILD
 #include "Clover_Renderer.cpp"
 #include "Clover_Input.cpp"
 #include "Clover_Audio.cpp"
+#include "Clover_Asset.cpp"
 
 
 // NOTE(Sleepster): ImGui WNDPROC. It uses this for input
@@ -707,122 +708,120 @@ Win32SetupXInput(game_state *State)
     }
 }
 
-internal void
+// NOTE(Sleepster): This doesn't need to be here, just a hoo haa funni
+internal inline void
 CollectGarbage(memory_arena *Trash)
 {
     ClearArena(Trash);
 }
 
-struct work_queue_entry
+
+
+struct platform_work_queue_entry
 {
-    bool32 IsValid;
-    void  *UserData;
+    bool32                       IsValid;
+    platform_job_entry_callback *Callback;
+    void                        *UserData;
 };
 
-struct work_queue
+struct platform_work_queue
 {
-    uint32 volatile JobCount;
-    uint32 volatile NextJob;
-    uint32 volatile TotalJobsCompleted;
+    uint32 volatile CompletionGoal;
+    uint32 volatile NextEntryToRead;
+    uint32 volatile NextEntryToWrite;
+    uint32 volatile JobsCompleted;
 
-    work_queue_entry Entries[256];
+    platform_work_queue_entry Entries[10];
     HANDLE Semaphore;
 };
 
 struct win32_thread_info
 {
-    int32       LogicalThreadIndex;
-    work_queue *Queue;
+    int32                LogicalThreadIndex;
+    platform_work_queue *Queue;
 };
 
-struct master_queue_manager
-{
-    uint32 OpenThreadCount;
-    win32_thread_info *Threads;
-    
-    uint32 QueueCount;
-    work_queue *Queues;
-
-    HANDLE Semaphore;
-};
-
+// TODO(Sleepster): Fix this so that we don't just bite the curb if a job takes to long to complete when we wrap around
 internal void
-CompleteJob(work_queue_entry *JobEntry, int32 ThreadIndex)
+Win32AddEntryToWorkQueue(platform_work_queue *Queue, platform_job_entry_callback *Callback, void *UserData)
 {
-    Assert(JobEntry->IsValid);
-    char Buffer[256];
+    uint32 NewEntryToWrite = (Queue->NextEntryToWrite + 1) % ArrayCount(Queue->Entries);
+    Assert(NewEntryToWrite !=  Queue->NextEntryToRead);
 
-    wsprintf(Buffer, "Thread %u: %s\n", ThreadIndex, (char *)JobEntry->UserData);
-    cl_Info(Buffer);
-}
-
-internal bool32
-IsQueueWorkCompleted(work_queue *Queue)
-{
-    return(Queue->JobCount != Queue->TotalJobsCompleted);
-}
-
-internal void
-AddEntryToWorkQueue(work_queue *Queue, void *UserData)
-{
-    // TODO(Sleepster): Make this either growing or a circular buffer 
-    Assert(Queue->JobCount < ArrayCount(Queue->Entries));
-    Queue->Entries[Queue->JobCount].UserData = UserData;
+    platform_work_queue_entry *Entry = Queue->Entries + Queue->NextEntryToWrite;
+    Entry->UserData = UserData;
+    Entry->Callback = Callback;
+    Entry->IsValid  = true;
+    ++Queue->CompletionGoal;
 
     WriteBarrier;
-    ++Queue->JobCount;
+    // TODO(Sleepster): InterlockedCompareExchange? 
+    Queue->NextEntryToWrite = NewEntryToWrite;
     ReleaseSemaphore(Queue->Semaphore, 1, 0);
 }
 
-internal work_queue_entry
-GetNewJobFromQueue(work_queue *Queue, work_queue_entry *FinishedJob)
+internal bool32 
+Win32DoNextJobEntry(platform_work_queue *Queue)
 {
-    work_queue_entry Result;
-    Result.IsValid = false;
-    if(FinishedJob->IsValid)
-    {
-        InterlockedIncrement(&Queue->TotalJobsCompleted);
-    }
+    bool32 ShouldSleep = false;
 
-    uint32 UnincrementedJobIndex = Queue->NextJob;
-    if(UnincrementedJobIndex < Queue->JobCount)
+    uint32 UnincrementedJobIndex = Queue->NextEntryToRead;
+    uint32 NextReadLocation = (UnincrementedJobIndex + 1) % ArrayCount(Queue->Entries);
+    if(UnincrementedJobIndex != Queue->NextEntryToWrite)
     {
-        uint32 JobIndex = InterlockedCompareExchange(&Queue->NextJob,
-                                                      UnincrementedJobIndex + 1,
+        uint32 JobIndex = InterlockedCompareExchange(&Queue->NextEntryToRead,
+                                                      NextReadLocation,
                                                       UnincrementedJobIndex);
         if(JobIndex == UnincrementedJobIndex)
         {
-            Result.UserData = Queue->Entries[JobIndex].UserData;
-            Result.IsValid = true;
-            ReadBarrier;
+            platform_work_queue_entry Entry = Queue->Entries[JobIndex];
+            Entry.Callback(Queue, Entry.UserData);
+            InterlockedIncrement(&Queue->JobsCompleted);
         }
     }
-    return(Result);
+    else
+    {
+        ShouldSleep = true;
+    }
+
+    return(ShouldSleep);
+}
+
+internal void
+Win32FlushAllWorkerEntries(platform_work_queue *Queue)
+{
+    while(Queue->CompletionGoal != Queue->JobsCompleted)
+    {
+        Win32DoNextJobEntry(Queue);
+    }
+    
+    Queue->CompletionGoal = 0;
+    Queue->JobsCompleted  = 0;
 }
 
 DWORD WINAPI
 ThreadProc(void *lpParam)
 {
    win32_thread_info *ThreadInfo = (win32_thread_info *)lpParam;
-   work_queue_entry Entry = {};
+   platform_work_queue_entry Entry = {};
     for(;;)
     {
-        Entry = GetNewJobFromQueue(ThreadInfo->Queue, &Entry); 
-        if(Entry.IsValid)
-        {
-            CompleteJob(&Entry, ThreadInfo->LogicalThreadIndex);
-        }
-        else
+        if(Win32DoNextJobEntry(ThreadInfo->Queue))
         {
             WaitForSingleObjectEx(ThreadInfo->Queue->Semaphore, INFINITE, FALSE);
         }
     }
 }
 
-internal void
-PushString(work_queue *Queue, char *String)
+
+
+
+internal
+PLATFORM_JOB_ENTRY_CALLBACK(DoWorkerWork)
 {
-    AddEntryToWorkQueue(Queue, (void *)String);
+    char Buffer[256];
+    wsprintf(Buffer, "Thread %u: %s\n", GetCurrentThreadId(), (char *)Data);
+    cl_Info(Buffer);
 }
 
 int CALLBACK
@@ -832,9 +831,9 @@ WinMain(HINSTANCE hInstance,
         int32 nShowCmd)
 {
     // NOTE(Sleepster): THREADING 
+    platform_work_queue WorkQueue = {};
     {
-        win32_thread_info TestThreads[5];
-        work_queue WorkQueue = {};
+        win32_thread_info TestThreads[10];
         WorkQueue.Semaphore = CreateSemaphoreExA(0, 0, ArrayCount(TestThreads), 0, 0, SEMAPHORE_ALL_ACCESS);
 
         for(uint32 ThreadIndex = 0;
@@ -850,22 +849,57 @@ WinMain(HINSTANCE hInstance,
             CloseHandle(ThreadHandle);
         }
 
-        PushString(&WorkQueue, "String A0");
-        PushString(&WorkQueue, "String A1");
-        PushString(&WorkQueue, "String A2");
-        PushString(&WorkQueue, "String A3");
-        PushString(&WorkQueue, "String A4");
-        PushString(&WorkQueue, "String A5");
-        PushString(&WorkQueue, "String A6");
-        PushString(&WorkQueue, "String A7");
-        PushString(&WorkQueue, "String A8");
-        PushString(&WorkQueue, "String A9");
-        PushString(&WorkQueue, "String A10");
-        PushString(&WorkQueue, "String A11");
+        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String A0");
+        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String A1");
+        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String A2");
+        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String A3");
+        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String A4");
+        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String A5");
+        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String A6");
+        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String A7");
+        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String A8");
+        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String A9");
 
-        while(WorkQueue.JobCount != WorkQueue.TotalJobsCompleted)
-        {
-        }
+        Sleep(100);
+
+        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String B0");
+        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String B1");
+        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String B2");
+        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String B3");
+        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String B4");
+        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String B5");
+        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String B6");
+        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String B7");
+        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String B8");
+        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String B9");
+
+        Sleep(100);
+
+        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String C0");
+        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String C1");
+        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String C2");
+        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String C3");
+        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String C4");
+        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String C5");
+        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String C6");
+        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String C7");
+        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String C8");
+        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String C9");
+
+        Sleep(100);
+
+        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String D0");
+        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String D1");
+        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String D2");
+        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String D3");
+        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String D4");
+        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String D5");
+        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String D6");
+        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String D7");
+        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String D8");
+        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String D9");
+
+        Win32FlushAllWorkerEntries(&WorkQueue);
     }
 
     WNDCLASS              Window         = {};
@@ -928,6 +962,10 @@ WinMain(HINSTANCE hInstance,
                 GameMemory.TransientStorage.BlockSize    = Megabytes(512);
                 GameMemory.TransientStorage.MemoryBlock  = VirtualAlloc(0, GameMemory.TransientStorage.BlockSize, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
                 GameMemory.TransientStorage.BlockOffset  = (uint8 *)GameMemory.TransientStorage.MemoryBlock;
+
+                GameMemory.HighPriorityQueue = &WorkQueue;
+                GameMemory.AddWorkQueueEntry = &Win32AddEntryToWorkQueue;
+                GameMemory.FlushAllWorkQueueEntries = &Win32FlushAllWorkerEntries;
                 
                 InitializeArena(&RenderData.VertexArena,        sizeof(vertex) * TRUE_MAX_VERTICES, &GameMemory.PermanentStorage);
                 InitializeArena(&RenderData.UIVertexArena,      sizeof(vertex) * TRUE_MAX_VERTICES, &GameMemory.PermanentStorage);
@@ -1111,6 +1149,10 @@ WinMain(HINSTANCE hInstance,
                 {
                     Win32UnloadGameCode(&Game);
                     Time.CurrentTimeInSeconds = 0.0f;
+
+                    GameMemory.HighPriorityQueue = &WorkQueue;
+                    GameMemory.AddWorkQueueEntry = &Win32AddEntryToWorkQueue;
+                    GameMemory.FlushAllWorkQueueEntries = &Win32FlushAllWorkerEntries;
 
                     Game = Win32LoadGameCode(STR("CloverGame.dll"));
                     Game.OnAwake(&GameMemory, &RenderData, &State, &TransientState);
