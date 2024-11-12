@@ -715,32 +715,6 @@ CollectGarbage(memory_arena *Trash)
     ClearArena(Trash);
 }
 
-
-
-struct platform_work_queue_entry
-{
-    bool32                       IsValid;
-    platform_job_entry_callback *Callback;
-    void                        *UserData;
-};
-
-struct platform_work_queue
-{
-    uint32 volatile CompletionGoal;
-    uint32 volatile NextEntryToRead;
-    uint32 volatile NextEntryToWrite;
-    uint32 volatile JobsCompleted;
-
-    platform_work_queue_entry Entries[10];
-    HANDLE Semaphore;
-};
-
-struct win32_thread_info
-{
-    int32                LogicalThreadIndex;
-    platform_work_queue *Queue;
-};
-
 // TODO(Sleepster): Fix this so that we don't just bite the curb if a job takes to long to complete when we wrap around
 internal void
 Win32AddEntryToWorkQueue(platform_work_queue *Queue, platform_job_entry_callback *Callback, void *UserData)
@@ -812,9 +786,6 @@ ThreadProc(void *lpParam)
         }
     }
 }
-
-
-
 
 internal
 PLATFORM_JOB_ENTRY_CALLBACK(DoWorkerWork)

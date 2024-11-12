@@ -61,6 +61,30 @@ struct win32_sound_data
     WAVEFORMATEX         DirectSoundBufferFormat;
 };
 
+struct platform_work_queue_entry
+{
+    bool32                       IsValid;
+    platform_job_entry_callback *Callback;
+    void                        *UserData;
+};
+
+struct platform_work_queue
+{
+    uint32 volatile CompletionGoal;
+    uint32 volatile NextEntryToRead;
+    uint32 volatile NextEntryToWrite;
+    uint32 volatile JobsCompleted;
+
+    platform_work_queue_entry Entries[10];
+    HANDLE Semaphore;
+};
+
+struct win32_thread_info
+{
+    int32                LogicalThreadIndex;
+    platform_work_queue *Queue;
+};
+
 const uint16 ButtonLookup[]
 {
     0x0001,
