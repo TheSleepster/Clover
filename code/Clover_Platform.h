@@ -35,8 +35,21 @@
 struct platform_work_queue;
 #define PLATFORM_JOB_ENTRY_CALLBACK(name) void name(platform_work_queue *Queue, void *Data)
 typedef PLATFORM_JOB_ENTRY_CALLBACK(platform_job_entry_callback);
+
 typedef void platform_add_entry(platform_work_queue *Queue, platform_job_entry_callback *Callback, void *Data);
 typedef void platform_flush_worker_entries(platform_work_queue *Queue);
+
+/*
+// NOTE(Sleepster): For each OS layer
+internal void* 
+PlatformReadEntrieFileMA(memory_arena *Arena, string Filepath)
+{
+    return(0);
+}
+
+// NOTE(Sleepster): For each rendering API 
+internal void CloverLoadTexture();
+*/
 
 struct game_memory
 {
@@ -64,26 +77,25 @@ struct time_data
     real32 CurrentTimeInSeconds;
 };
 
-
-#define GAME_ON_AWAKE(name) void name(game_memory *Memory, gl_render_data *RenderData, game_state *State, transient_state *TransientState)
+#define GAME_ON_AWAKE(name) void name(game_memory *GameMemory, gl_render_data *RenderData, game_state *GameState, transient_state *TransientState)
 typedef GAME_ON_AWAKE(game_on_awake);
 GAME_ON_AWAKE(GameOnAwakeStub)
 {
 }
 
-#define GAME_FIXED_UPDATE(name) void name(game_memory *Memory, gl_render_data *RenderData, game_state *State, transient_state *TransientState, time_data Time)
+#define GAME_FIXED_UPDATE(name) void name(game_memory *GameMemory, gl_render_data *RenderData, game_state *GameState, transient_state *TransientState, time_data Time)
 typedef GAME_FIXED_UPDATE(game_fixed_update);
 GAME_FIXED_UPDATE(GameFixedUpdateStub)
 {
 }
 
-#define GAME_UPDATE_AND_DRAW(name) void name(game_memory *Memory, gl_render_data *RenderData, game_state *State, transient_state *TransientState, time_data Time, ivec4 SizeDataIn)
+#define GAME_UPDATE_AND_DRAW(name) void name(game_memory *GameMemory, gl_render_data *RenderData, game_state *GameState, transient_state *TransientState, time_data Time, ivec4 SizeDataIn)
 typedef GAME_UPDATE_AND_DRAW(game_update_and_draw);
 GAME_UPDATE_AND_DRAW(GameUpdateAndDrawStub)
 {
 }
 
-#define GAME_GET_SOUND_SAMPLES(name) void name(game_memory *Memory, sound_buffer *SoundBuffer, game_state *State, transient_state *TransientState)
+#define GAME_GET_SOUND_SAMPLES(name) void name(game_memory *GameMemory, sound_buffer *SoundBuffer, game_state *GameState, transient_state *TransientState)
 typedef GAME_GET_SOUND_SAMPLES(game_get_sound_samples);
 GAME_GET_SOUND_SAMPLES(GameGetSoundSamplesStub)
 {

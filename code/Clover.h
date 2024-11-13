@@ -169,31 +169,31 @@ struct entity_item_drop
 
 struct entity
 {
-    int32 EntityID;
-    sprite_type Sprite;
+    int32                 EntityID;
+    sprite_type           Sprite;
     
-    uint32      Archetype;
-    uint32      Flags;
-    uint32      Health;
+    uint32                Archetype;
+    uint32                Flags;
+    uint32                Health;
     
-    vec2        Position;
-    vec2        Target;
-    vec2        Size;
+    vec2                  Position;
+    vec2                  Target;
+    vec2                  Size;
     
-    real32      Speed;
-    real32      Rotation;
+    real32                Speed;
+    real32                Rotation;
     
-    box2D       SelectionBox;
-    range_v2    BoxCollider;
+    box2D                 SelectionBox;
+    range_v2              BoxCollider;
     
     entity_item_inventory Inventory;
     
-    item_id     DroppedFromInventoryItemID;
-    int32       DroppedFromInventoryItemCount;
+    item_id               DroppedFromInventoryItemID;
+    int32                 DroppedFromInventoryItemCount;
 
     // DROPS ON DEATH
-    entity_item_drop EntityDrops[MAX_ENTITY_DROPS];
-    int32 UniqueDropCount;
+    entity_item_drop      EntityDrops[MAX_ENTITY_DROPS];
+    int32                 UniqueDropCount;
 };
 
 struct game_world_data
@@ -216,50 +216,51 @@ struct transient_state
     // RENDERER
     struct
     {
-        vertex *Vertices;
-        vertex *VertexBufferptr;
-        vertex *TransparentVertexBufferptr;
+        vertex     *Vertices;
+        vertex     *VertexBufferptr;
+        vertex     *TransparentVertexBufferptr;
 
-        uint32  OpaqueQuadCount;
-        uint32  TransparentQuadCount;
-        uint32  LastFrameQuadCount;
+        uint32      OpaqueQuadCount;
+        uint32      TransparentQuadCount;
+        uint32      LastFrameQuadCount;
 
-        vertex *UIVertices;
-        vertex *UIVertexBufferptr;
-        vertex *TransparentUIVertexBufferptr;
+        vertex     *UIVertices;
+        vertex     *UIVertexBufferptr;
+        vertex     *TransparentUIVertexBufferptr;
 
-        uint32  OpaqueUIElementCount;
-        uint32  TransparentUIElementCount;
+        uint32      OpaqueUIElementCount;
+        uint32      TransparentUIElementCount;
 
-        uint32  TotalQuadCount;
-        uint32  TotalUIElementCount;
+        uint32      TotalQuadCount;
+        uint32      TotalUIElementCount;
 
         point_light PointLights[MAX_POINT_LIGHTS];
         spot_light  SpotLights [MAX_SPOT_LIGHTS];
 
-        int32 PointLightCount;
-        int32 SpotLightCount;
+        int32       PointLightCount;
+        int32       SpotLightCount;
     }DrawFrameData;
 };
 
 struct game_state
 {
-    bool32 IsInitialized;
+    bool32            IsInitialized;
     
-    input GameInput;
+    input             GameInput;
     
     clover_ui_context UIContext;
     game_ui_state     GameUIState;
     
-    bool32 DisplayPlayerHotbar;
-    bool32 DisplayPlayerInventory;
-    bool32 DisplayCraftingMenu;
-    bool32 DisplayBuildMenu;
-    bool32 DrawDebug;
+    // TODO(Sleepster): Get Rid of these bool32s 
+    bool32            DisplayPlayerHotbar;
+    bool32            DisplayPlayerInventory;
+    bool32            DisplayCraftingMenu;
+    bool32            DisplayBuildMenu;
+    bool32            DrawDebug;
     
-    entity *ActiveCraftingStation;
-    item   *ActiveRecipe;
-    item   *ActiveBlueprint;
+    entity           *ActiveCraftingStation;
+    item             *ActiveRecipe;
+    item             *ActiveBlueprint;
 
     loaded_sound      TestSound;
     playing_sound     FirstPlayingSound;

@@ -15,52 +15,41 @@
 #include "util/Pairs.h"
 
 #include "Clover_Asset.h"
+#include "Clover_Platform.h"
+#include "Clover_Renderer.h"
+#include "Clover.h"
+
+struct load_texture_job
+{
+    transient_state *TransientState;
+    string Filepath;
+    texture2d *Texture;
+};
+
+internal
+PLATFORM_JOB_ENTRY_CALLBACK(LoadTextureCallback)
+{
+    load_texture_job *TextureData = (load_texture_job *)Data;
+    CloverLoadTexture(TextureData->TransientState, TextureData->Texture, TextureData->Filepath);
+}
 
 internal inline texture2d*
-GetTextureFromID(asset_manager *AssetManager, texture_id ID)
+GetTextureFromID(game_memory *GameMemory, texture_id ID)
 {
-    texture2d *Result = &AssetManager->GameTextures[ID];
-    if(Result->IsLoaded)
+    transient_state *TransientState = (transient_state *)GameMemory->TransientStorage.MemoryBlock;
+    texture2d *Texture = &TransientState->GameAssets.GameTextures[ID];
+    if(Texture->Filepath.Data != 0)
     {
-        return(Result);
+        return(Texture);
     }
     else
     {
-        Result->IsLoaded = false;
-        Result->LoadRequested = true;
-    }
-    return(0);
-}
+        load_texture_job TextureData = {};
+        TextureData.Filepath = STR("../data/res/textures/TextureAtlas.png");
+        TextureData.Texture = Texture;
+        TextureData.TransientState = TransientState;
 
-internal inline shader*
-GetShaderFromID(asset_manager *AssetManager, shader_id ID)
-{
-    shader *Result = &AssetManager->Shaders[ID];
-    if(Result)
-    {
-        return(Result);
+        GameMemory->AddWorkQueueEntry(GameMemory->HighPriorityQueue, LoadTextureCallback, (void *)&TextureData);
+        return(Texture);
     }
-    return(0);
-}
-
-internal inline font_data*
-GetFontFromID(asset_manager *AssetManager, font_id ID)
-{
-    font_data *Result = &AssetManager->Fonts[ID];
-    if(Result)
-    {
-        return(Result);
-    }
-    return(0);
-}
-
-internal inline loaded_sound*
-GetSoundFromId(asset_manager *AssetManager, soundfx_id ID)
-{
-    loaded_sound *Result = &AssetManager->Sounds[ID];
-    if(Result)
-    {
-        return(Result);
-    }
-    return(0);
 }

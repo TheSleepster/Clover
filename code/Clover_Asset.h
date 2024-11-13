@@ -12,7 +12,6 @@
 #include "Clover_Renderer.h"
 #include "Clover_UI.h"
 #include "Clover_Audio.h"
-#include "Clover_Asset.h"
 
 typedef uint64 asset_id;
 
@@ -54,10 +53,45 @@ enum soundfx_id
     GSFX_IDCount,
 };
 
+enum asset_state
+{
+    AssetState_Unloaded,
+    AssetState_Queued,
+    AssetState_Loaded,
+};
+
+struct asset_slot
+{
+    asset_state SlotState;
+    union
+    {
+        texture2d    *Texture;
+        loaded_sound *Sound;
+        font_data    *Font;
+        shader       *Shader;
+    };
+};
+
 struct asset
 {
     asset_id   ID;
-    asset_type Type;
+};
+
+struct game_assets
+{
+    uint32      TextureCount;
+    asset_slot *Textures;
+
+    uint32      SoundCount;
+    asset_slot *Sounds;
+
+    uint32      FontCount;
+    asset_slot *Fonts;
+
+    uint32      ShaderCount;
+    asset_slot *Shaders;
+
+    asset_type AssetTypes[ASSET_TYPE_COUNT];
 };
 
 struct asset_manager

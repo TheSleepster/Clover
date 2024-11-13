@@ -14,28 +14,7 @@
 #include "Clover_Globals.h"
 
 // RENDERING INTERFACE FUNCTIONS
-
-internal void
-DrawImGui(game_state *State, gl_render_data *RenderData, time_data Time)
-{
-    if(State->DrawDebug)
-    {
-        ImGui::SetCurrentContext(RenderData->CurrentImGuiContext);
-        ImGui::Begin("Render Quad Color Picker");
-
-        ImGui::SeparatorText("ENGINE DEBUG INFO");
-        ImGui::Text("Famerate: %i", Time.FPSCounter);
-        ImGui::Text("FrameTime: %.02f", Time.MSPerFrame);
-
-        ImGui::SeparatorText("GAME DEBUG INFO");
-        ImGui::Text("Entity Count: %i", State->World.EntityCounter);
-        ImGui::Text("Quad Count: %i", RenderData->LastFrameQuadCount);
-        ImGui::Text("Vertex Count: %i", RenderData->LastFrameQuadCount * 4);
-
-        ImGui::End();
-    }
-}
-
+//
 // TODO(Sleepster): Perhaps add TextureIndex into the static_sprite_data Struct?
 internal quad
 CreateDrawQuad(transient_state *TransientState, 

@@ -69,11 +69,10 @@
 #include "Clover_Platform.h"
 
 // FILES FOR UNITY BUILD
+#include "Clover_Asset.cpp"
 #include "Clover_Renderer.cpp"
 #include "Clover_Input.cpp"
 #include "Clover_Audio.cpp"
-#include "Clover_Asset.cpp"
-
 
 // NOTE(Sleepster): ImGui WNDPROC. It uses this for input
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -777,7 +776,8 @@ DWORD WINAPI
 ThreadProc(void *lpParam)
 {
    win32_thread_info *ThreadInfo = (win32_thread_info *)lpParam;
-   platform_work_queue_entry Entry = {};
+
+    platform_work_queue_entry Entry = {};
     for(;;)
     {
         if(Win32DoNextJobEntry(ThreadInfo->Queue))
@@ -816,7 +816,7 @@ WinMain(HINSTANCE hInstance,
             TestThread->Queue = &WorkQueue;
 
             DWORD ThreadID;
-            HANDLE ThreadHandle = CreateThread(0, 0, ThreadProc, (LPVOID *)TestThread, 0, &ThreadID); 
+            HANDLE ThreadHandle = CreateThread(0, 0, ThreadProc, (LPVOID *)TestThread, 0, &ThreadID);
             CloseHandle(ThreadHandle);
         }
 
@@ -831,52 +831,13 @@ WinMain(HINSTANCE hInstance,
         Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String A8");
         Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String A9");
 
-        Sleep(100);
-
-        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String B0");
-        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String B1");
-        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String B2");
-        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String B3");
-        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String B4");
-        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String B5");
-        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String B6");
-        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String B7");
-        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String B8");
-        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String B9");
-
-        Sleep(100);
-
-        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String C0");
-        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String C1");
-        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String C2");
-        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String C3");
-        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String C4");
-        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String C5");
-        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String C6");
-        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String C7");
-        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String C8");
-        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String C9");
-
-        Sleep(100);
-
-        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String D0");
-        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String D1");
-        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String D2");
-        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String D3");
-        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String D4");
-        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String D5");
-        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String D6");
-        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String D7");
-        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String D8");
-        Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String D9");
-
         Win32FlushAllWorkerEntries(&WorkQueue);
     }
 
     WNDCLASS              Window         = {};
     time_data             Time           = {};
-    game_state            State          = {};
-    transient_state       TransientState = {};
+    game_state           *GameState      = {};
+    transient_state      *TransientState = {};
     game_memory           GameMemory     = {};
     game_functions        Game           = {};
     wgl_function_pointers WGLFunctions   = {};
@@ -934,24 +895,32 @@ WinMain(HINSTANCE hInstance,
                 GameMemory.TransientStorage.MemoryBlock  = VirtualAlloc(0, GameMemory.TransientStorage.BlockSize, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
                 GameMemory.TransientStorage.BlockOffset  = (uint8 *)GameMemory.TransientStorage.MemoryBlock;
 
+                GameState = (game_state *)GameMemory.PermanentStorage.MemoryBlock;
+                GameMemory.PermanentStorage.BlockOffset += sizeof(game_state);
+                TransientState = (transient_state *)GameMemory.TransientStorage.MemoryBlock;                
+                GameMemory.TransientStorage.BlockOffset += sizeof(transient_state);
+                
+                // NOTE(Sleepster): ARENA INIT 
+                InitializeArena(&RenderData.VertexArena,         sizeof(vertex) * TRUE_MAX_VERTICES, &GameMemory.PermanentStorage);
+                InitializeArena(&RenderData.UIVertexArena,       sizeof(vertex) * TRUE_MAX_VERTICES, &GameMemory.PermanentStorage);
+                InitializeArena(&TransientState->TransientArena, Megabytes(300),                     &GameMemory.TransientStorage);
+                InitializeArena(&GameState->World.WorldArena,    (sizeof(struct entity) * MAX_ENTITIES) + sizeof(struct item) * MAX_ITEMS, &GameMemory.PermanentStorage);
+
+                TransientState->Garbage = InitSubArena(&TransientState->TransientArena, Megabytes(100));
+
+                GameState->World.Entities = PushArray(&GameState->World.WorldArena, entity, MAX_ENTITIES);
+                GameState->World.Items    = PushArray(&GameState->World.WorldArena, item,   MAX_ITEMS);
+                
+                // NOTE(Sleepster): RENDERER POINTERS 
+                TransientState->DrawFrameData.Vertices                     = (vertex *)RenderData.VertexArena.Base;
+                TransientState->DrawFrameData.UIVertices                   = (vertex *)RenderData.UIVertexArena.Base;
+                TransientState->DrawFrameData.TransparentVertexBufferptr   = (vertex *)(RenderData.VertexArena.Base   + (RenderData.VertexArena.Capacity / 2));
+                TransientState->DrawFrameData.TransparentUIVertexBufferptr = (vertex *)(RenderData.UIVertexArena.Base + (RenderData.UIVertexArena.Capacity / 2));
+
+                // NOTE(Sleepster): MULTITHREADING 
                 GameMemory.HighPriorityQueue = &WorkQueue;
                 GameMemory.AddWorkQueueEntry = &Win32AddEntryToWorkQueue;
                 GameMemory.FlushAllWorkQueueEntries = &Win32FlushAllWorkerEntries;
-                
-                InitializeArena(&RenderData.VertexArena,        sizeof(vertex) * TRUE_MAX_VERTICES, &GameMemory.PermanentStorage);
-                InitializeArena(&RenderData.UIVertexArena,      sizeof(vertex) * TRUE_MAX_VERTICES, &GameMemory.PermanentStorage);
-                InitializeArena(&TransientState.TransientArena, Megabytes(100),                     &GameMemory.TransientStorage);
-                InitializeArena(&TransientState.Garbage,        Megabytes(100),                     &GameMemory.TransientStorage);
-
-                // TODO(Sleepster): Think about reworking TransientStorage;  
-                InitializeArena(&State.World.WorldArena,       (sizeof(struct entity) * MAX_ENTITIES) + sizeof(struct item) * MAX_ITEMS, &GameMemory.PermanentStorage);
-                State.World.Entities = PushArray(&State.World.WorldArena, entity, MAX_ENTITIES);
-                State.World.Items    = PushArray(&State.World.WorldArena, item,   MAX_ITEMS);
-                
-                TransientState.DrawFrameData.Vertices                     = (vertex *)RenderData.VertexArena.Base;
-                TransientState.DrawFrameData.UIVertices                   = (vertex *)RenderData.UIVertexArena.Base;
-                TransientState.DrawFrameData.TransparentVertexBufferptr   = (vertex *)(RenderData.VertexArena.Base   + (RenderData.VertexArena.Capacity / 2));
-                TransientState.DrawFrameData.TransparentUIVertexBufferptr = (vertex *)(RenderData.UIVertexArena.Base + (RenderData.UIVertexArena.Capacity / 2));
             }
 
             // NOTE(Sleepster): DSOUND INIT 
@@ -977,7 +946,7 @@ WinMain(HINSTANCE hInstance,
 
             // NOTE(Sleepster): INIT OPENGL 
             {
-                CloverResetRendererState(&RenderData, &TransientState);
+                CloverResetRendererState(&RenderData, TransientState);
                 const int32 PixelAttributes[] =
                 {
                     WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
@@ -1019,7 +988,7 @@ WinMain(HINSTANCE hInstance,
                 WGLFunctions.wglSwapIntervalEXT(0);
                 // VSYNC
                 
-                CloverSetupRenderer(&TransientState.Garbage, &RenderData, &TransientState);
+                CloverSetupRenderer(&TransientState->Garbage, &RenderData, TransientState);
 
                 RenderData.CloverRender = CloverRender;
             } 
@@ -1045,16 +1014,16 @@ WinMain(HINSTANCE hInstance,
 
             // NOTE(Sleepster): INPUT INIT 
             {
-                Win32LoadKeyData(&State);
-                Win32LoadDefaultBindings(&State.GameInput);
-                Win32SetupXInput(&State);
+                Win32LoadKeyData(GameState);
+                Win32LoadDefaultBindings(&GameState->GameInput);
+                Win32SetupXInput(GameState);
             }
             
             // NOTE(Sleepster): GAME INIT 
             {
                 Game = Win32LoadGameCode(STR("CloverGame.dll"));
-                Game.OnAwake(&GameMemory, &RenderData, &State, &TransientState);
-                State.TestSound = CloverLoadWAVFile(&TransientState.Garbage, STR("../data/res/sounds/Test.wav")); 
+                Game.OnAwake(&GameMemory, &RenderData, GameState, TransientState);
+                GameState->TestSound = CloverLoadWAVFile(&TransientState->Garbage, STR("../data/res/sounds/Test.wav")); 
             }
 
             // NOTE(Sleepster): CLOCK 
@@ -1066,8 +1035,8 @@ WinMain(HINSTANCE hInstance,
                 MSG Message = {};
 
                 // NOTE(Sleepster): INPUT UPDATING 
-                Win32ProcessInputMessages(Message, WindowHandle, &State);
-                State.GameInput.ButtonLookup[LEFT_THUMBSTICK_DOWN]  = XINPUT_GAMEPAD_LEFT_THUMB;
+                Win32ProcessInputMessages(Message, WindowHandle, GameState);
+                GameState->GameInput.ButtonLookup[LEFT_THUMBSTICK_DOWN]  = XINPUT_GAMEPAD_LEFT_THUMB;
 
                 for(uint32 ControllerIndex = 0;
                     ControllerIndex < 1;
@@ -1081,7 +1050,7 @@ WinMain(HINSTANCE hInstance,
                             ButtonIndex < GAMEPAD_BUTTON_COUNT;
                             ++ButtonIndex)
                         {
-                            action_button *Button = &State.GameInput.Controller.GamepadButtons[ButtonIndex];
+                            action_button *Button = &GameState->GameInput.Controller.GamepadButtons[ButtonIndex];
                             bool32 IsDown = (Gamepad->wButtons & ButtonLookup[ButtonIndex]);
 
                             Button->JustPressed  = !Button->JustPressed && !Button->IsDown &&  IsDown;
@@ -1095,21 +1064,21 @@ WinMain(HINSTANCE hInstance,
                             }
                         }
 
-                        State.GameInput.Controller.LeftStick  = {Gamepad->sThumbLX, Gamepad->sThumbLY};
-                        State.GameInput.Controller.RightStick = {Gamepad->sThumbRX, Gamepad->sThumbRY};
+                        GameState->GameInput.Controller.LeftStick  = {Gamepad->sThumbLX, Gamepad->sThumbLY};
+                        GameState->GameInput.Controller.RightStick = {Gamepad->sThumbRX, Gamepad->sThumbRY};
 
-                        State.GameInput.Controller.LeftTriggerValue = Gamepad->bLeftTrigger;
-                        State.GameInput.Controller.RightTriggerValue = Gamepad->bRightTrigger;
+                        GameState->GameInput.Controller.LeftTriggerValue = Gamepad->bLeftTrigger;
+                        GameState->GameInput.Controller.RightTriggerValue = Gamepad->bRightTrigger;
 
                         XINPUT_VIBRATION Rumble = 
                         {
-                            .wLeftMotorSpeed = State.GameInput.Controller.LeftRumble, 
-                            .wRightMotorSpeed = State.GameInput.Controller.RightRumble
+                            .wLeftMotorSpeed  = GameState->GameInput.Controller.LeftRumble, 
+                            .wRightMotorSpeed = GameState->GameInput.Controller.RightRumble
                         };
                         XInputSetState(ControllerIndex, &Rumble);
 
-                        State.GameInput.Controller.LeftRumble = 0;
-                        State.GameInput.Controller.RightRumble = 0;
+                        GameState->GameInput.Controller.LeftRumble = 0;
+                        GameState->GameInput.Controller.RightRumble = 0;
                     }
                 }
 
@@ -1126,36 +1095,36 @@ WinMain(HINSTANCE hInstance,
                     GameMemory.FlushAllWorkQueueEntries = &Win32FlushAllWorkerEntries;
 
                     Game = Win32LoadGameCode(STR("CloverGame.dll"));
-                    Game.OnAwake(&GameMemory, &RenderData, &State, &TransientState);
+                    Game.OnAwake(&GameMemory, &RenderData, GameState, TransientState);
                 }
                 
                 // NOTE(Sleepster: Shader Reloading  
-                filetime NewTextureWriteTime        = FileGetLastWriteTime(TransientState.GameAssets.GameTextures[GT_GameAtlas].Filepath);    
-                filetime NewVertexShaderWriteTime   = FileGetLastWriteTime(TransientState.GameAssets.Shaders[GS_BasicShader].VertexShader.Filepath);
-                filetime NewFragmentShaderWriteTime = FileGetLastWriteTime(TransientState.GameAssets.Shaders[GS_BasicShader].FragmentShader.Filepath);
+                //filetime NewTextureWriteTime        = FileGetLastWriteTime(TransientState->GameAssets.GameTextures[GT_GameAtlas].Filepath);    
+                filetime NewVertexShaderWriteTime   = FileGetLastWriteTime(TransientState->GameAssets.Shaders[GS_BasicShader].VertexShader.Filepath);
+                filetime NewFragmentShaderWriteTime = FileGetLastWriteTime(TransientState->GameAssets.Shaders[GS_BasicShader].FragmentShader.Filepath);
                 
-                if(!CloverCompareFiletime(NewTextureWriteTime, TransientState.GameAssets.GameTextures[GT_GameAtlas].LastWriteTime))
+                /* if(!CloverCompareFiletime(NewTextureWriteTime, TransientState->GameAssets.GameTextures[GT_GameAtlas].LastWriteTime)) */
+                /* { */
+                /*     CloverReloadTexture(&TransientState->GameAssets.GameTextures[GT_GameAtlas], 0); */
+                /*     Sleep(100); */
+                /* } */
+                
+                if(!CloverCompareFiletime(NewVertexShaderWriteTime,   TransientState->GameAssets.Shaders[GS_BasicShader].VertexShader.LastWriteTime) ||
+                   !CloverCompareFiletime(NewFragmentShaderWriteTime, TransientState->GameAssets.Shaders[GS_BasicShader].FragmentShader.LastWriteTime))
                 {
-                    CloverReloadTexture(&RenderData, &TransientState.GameAssets.GameTextures[GT_GameAtlas], 0);
-                    Sleep(100);
+                    RebuildShader(&TransientState->Garbage, &TransientState->GameAssets.Shaders[GS_BasicShader]);
                 }
                 
-                if(!CloverCompareFiletime(NewVertexShaderWriteTime,   TransientState.GameAssets.Shaders[GS_BasicShader].VertexShader.LastWriteTime) ||
-                   !CloverCompareFiletime(NewFragmentShaderWriteTime, TransientState.GameAssets.Shaders[GS_BasicShader].FragmentShader.LastWriteTime))
+                if(!CloverCompareFiletime(NewVertexShaderWriteTime,   TransientState->GameAssets.Shaders[GS_GBufferShader].VertexShader.LastWriteTime) ||
+                   !CloverCompareFiletime(NewFragmentShaderWriteTime, TransientState->GameAssets.Shaders[GS_GBufferShader].FragmentShader.LastWriteTime))
                 {
-                    RebuildShader(&TransientState.Garbage, &TransientState.GameAssets.Shaders[GS_BasicShader]);
+                    RebuildShader(&TransientState->Garbage, &TransientState->GameAssets.Shaders[GS_GBufferShader]); 
                 }
                 
-                if(!CloverCompareFiletime(NewVertexShaderWriteTime,   TransientState.GameAssets.Shaders[GS_GBufferShader].VertexShader.LastWriteTime) ||
-                   !CloverCompareFiletime(NewFragmentShaderWriteTime, TransientState.GameAssets.Shaders[GS_GBufferShader].FragmentShader.LastWriteTime))
+                if(!CloverCompareFiletime(NewVertexShaderWriteTime,   TransientState->GameAssets.Shaders[GS_LightingShader].VertexShader.LastWriteTime) ||
+                   !CloverCompareFiletime(NewFragmentShaderWriteTime, TransientState->GameAssets.Shaders[GS_LightingShader].FragmentShader.LastWriteTime))
                 {
-                    RebuildShader(&TransientState.Garbage, &TransientState.GameAssets.Shaders[GS_GBufferShader]); 
-                }
-                
-                if(!CloverCompareFiletime(NewVertexShaderWriteTime,   TransientState.GameAssets.Shaders[GS_LightingShader].VertexShader.LastWriteTime) ||
-                   !CloverCompareFiletime(NewFragmentShaderWriteTime, TransientState.GameAssets.Shaders[GS_LightingShader].FragmentShader.LastWriteTime))
-                {
-                    RebuildShader(&TransientState.Garbage, &TransientState.GameAssets.Shaders[GS_LightingShader]); 
+                    RebuildShader(&TransientState->Garbage, &TransientState->GameAssets.Shaders[GS_LightingShader]); 
                 }
 #endif
                 // NOTE(Sleepster): DELTA TIME 
@@ -1167,7 +1136,7 @@ WinMain(HINSTANCE hInstance,
                     Time.Current = (real32)CurrentTime;
                     while(Accumulator >= SIMRATE)
                     {
-                        Game.FixedUpdate(&GameMemory, &RenderData, &State, &TransientState, Time);
+                        Game.FixedUpdate(&GameMemory, &RenderData, GameState, TransientState, Time);
                         Accumulator -= Time.Delta;
                         Time.CurrentTimeInSeconds = real32(GetCurrentTimeInSeconds());
                     }
@@ -1176,7 +1145,7 @@ WinMain(HINSTANCE hInstance,
                 
                 // NOTE(Sleepster): UPDATE GAME 
                 {
-                    Game.UpdateAndDraw(&GameMemory, &RenderData, &State, &TransientState, Time, SizeData);
+                    Game.UpdateAndDraw(&GameMemory, &RenderData, GameState, TransientState, Time, SizeData);
                     // NOTE(Sleepster): UPDATE SOUND 
                     {
                         DWORD BytesToWrite = 0;
@@ -1208,7 +1177,7 @@ WinMain(HINSTANCE hInstance,
                         SoundBufferData.SampleOutputCount = BytesToWrite / SoundOutput.BytesPerSample; 
                         SoundBufferData.SampleBuffer      = SampleBufferStorage; 
 
-                        Game.GetSoundSamples(&GameMemory, &SoundBufferData, &State, &TransientState);
+                        Game.GetSoundSamples(&GameMemory, &SoundBufferData, GameState, TransientState);
                         if(SoundIsValid)
                         {
                             Win32FillSoundBuffer(&DSound, &SoundOutput, &SoundBufferData, BytesToLock, BytesToWrite);
@@ -1217,24 +1186,26 @@ WinMain(HINSTANCE hInstance,
 
                     // NOTE(Sleepster): RENDERING 
                     {
+                        // Start the Dear ImGui frame
+                        ImGui_ImplOpenGL3_NewFrame();
+                        ImGui_ImplWin32_NewFrame();
+                        ImGui::NewFrame();
+
                         RenderData.AspectRatio = (real32)SizeData.Width / (real32)SizeData.Height;
                         glViewport(0, 0, SizeData.Width, SizeData.Height);
                         glClearColor(RenderData.ClearColor.R, RenderData.ClearColor.G, RenderData.ClearColor.B, RenderData.ClearColor.A);
                         glClearDepth(0.0f);
                         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
-                        // Start the Dear ImGui frame
-                        ImGui_ImplOpenGL3_NewFrame();
-                        ImGui_ImplWin32_NewFrame();
-                        ImGui::NewFrame();
+                        DrawImGui(GameState, &RenderData, Time);
+                        CloverRender(&GameMemory, &RenderData, TransientState);
 
                         ImGui::Render();
-                        CloverRender(&RenderData, &TransientState);
                         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
                         SwapBuffers(WindowDC);
                     }
-                    CloverResetRendererState(&RenderData, &TransientState);
-                    CollectGarbage(&TransientState.Garbage);
+                    CloverResetRendererState(&RenderData, TransientState);
+                    CollectGarbage(&TransientState->Garbage);
                 }
                 
                 LARGE_INTEGER EndCounter;

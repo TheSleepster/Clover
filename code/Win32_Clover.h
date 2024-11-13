@@ -75,7 +75,7 @@ struct platform_work_queue
     uint32 volatile NextEntryToWrite;
     uint32 volatile JobsCompleted;
 
-    platform_work_queue_entry Entries[10];
+    platform_work_queue_entry Entries[256];
     HANDLE Semaphore;
 };
 

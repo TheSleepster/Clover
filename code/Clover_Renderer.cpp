@@ -36,8 +36,8 @@ OpenGLDebugMessageCallback(GLenum Source, GLenum Type, GLuint ID, GLenum Severit
     }
 }
 
-internal void
-glVerifyIVStatus(GLuint TestID, GLuint Type)
+void
+CloverTestShader(GLuint TestID, GLuint Type)
 {
     bool32 Success = {};
     char ShaderLog[2048] = {};
@@ -63,8 +63,206 @@ glVerifyIVStatus(GLuint TestID, GLuint Type)
     }
 }
 
+// TODO(Sleepster): Revisit this to fix the alignment issues with letters like "p" "g" "l" "y" and such
+void
+CloverLoadSDFFont(memory_arena *Memory, transient_state *TransientState, string Filepath, uint32 FontSize, font_id FontName)
+{
+    freetype_font_data Font = {};
+    Font.FontSize = FontSize;
+    FT_Error Error;
+    
+    Error = FT_Init_FreeType(&Font.FontFile);
+    Check(Error == 0, "Failed to initialize Freetype\n");
+    
+    Error = FT_New_Face(Font.FontFile, (const char *)Filepath.Data, 0, &Font.FontFace);
+    Check(Error == 0, "Failed to initialize the Font Face\n");
+    Check(Error != FT_Err_Unknown_File_Format, "Failed to load the font file, it is found but not supported\n");
+    
+    // NOTE(Sleepster): Test, we would normally use FT_Set_Pixel_Sizes(); 
+    Error = FT_Set_Pixel_Sizes(Font.FontFace, 0, Font.FontSize);
+    Check(Error == 0, "Issue setting the pixel size of the font\n");
+    
+    Font.AtlasPadding = 8;
+    int32 Row = {};
+    int32 Column = Font.AtlasPadding;
+    
+    FT_GlyphSlot CurrentSlot = Font.FontFace->glyph;
+    
+    char *TextureData = (char *)PushSize(Memory, (uint64)(sizeof(char) * (BITMAP_ATLAS_SIZE * BITMAP_ATLAS_SIZE)));
+    if(TextureData)
+    {
+        for(uint32 GlyphIndex = 32;
+            GlyphIndex < 127;
+            ++GlyphIndex)
+        {
+            FT_Load_Char(Font.FontFace, GlyphIndex, FT_LOAD_DEFAULT);
+            if(Column + Font.FontFace->glyph->bitmap.width + Font.AtlasPadding >= BITMAP_ATLAS_SIZE)
+            {
+                Column = Font.AtlasPadding;
+                Row += int32(Font.FontSize * 1.20);
+            }
+            
+            Error = FT_Render_Glyph(CurrentSlot, FT_RENDER_MODE_SDF);
+            Check(Error == 0, "Issues here\n");
+            
+            TransientState->GameAssets.Fonts[FontName].FontHeight = MAX((Font.FontFace->size->metrics.ascender - Font.FontFace->size->metrics.descender) >> 6, 
+                                                                         TransientState->GameAssets.Fonts[FontName].Glyphs[GlyphIndex].GlyphSize.Y);
+            for(uint32 YIndex = 0;
+                YIndex < Font.FontFace->glyph->bitmap.rows;
+                ++YIndex)
+            {
+                for(uint32 XIndex = 0;
+                    XIndex < Font.FontFace->glyph->bitmap.width;
+                    ++XIndex)
+                {
+                    TextureData[(Row + YIndex) * BITMAP_ATLAS_SIZE + (Column + XIndex)] = 
+                        Font.FontFace->glyph->bitmap.buffer[YIndex * Font.FontFace->glyph->bitmap.width + XIndex];
+                }
+            }
+            
+            font_glyph *CurrentGlyph = &TransientState->GameAssets.Fonts[0].Glyphs[GlyphIndex];
+            CurrentGlyph->GlyphUVs  = {Column, Row};
+            CurrentGlyph->GlyphSize = 
+            {
+                (int32)Font.FontFace->glyph->bitmap.width, 
+                (int32)Font.FontFace->glyph->bitmap.rows
+            };
+            CurrentGlyph->GlyphAdvance = 
+            {
+                real32(Font.FontFace->glyph->advance.x >> 6), 
+                real32(Font.FontFace->glyph->advance.y >> 6)
+            };
+            CurrentGlyph->GlyphOffset = 
+            {
+                real32(Font.FontFace->glyph->bitmap_left),
+                real32(Font.FontFace->glyph->bitmap_top)
+            };
+            
+            Column += Font.FontFace->glyph->bitmap.width + Font.AtlasPadding;
+        }
+    }
+    
+    FT_Done_Face(Font.FontFace);
+    FT_Done_FreeType(Font.FontFile);
+    
+    // SDF TEXTURE DATA
+    CloverCreateSDFTexture(TransientState, &TransientState->GameAssets.Fonts[FontName].FontAtlas, TextureData);
+}
+
+gl_shader_source
+CloverLoadShaderSource(memory_arena *Scratch, uint32 ShaderType, string Filepath)
+{
+    uint32 FileSize = 0;
+    gl_shader_source ReturnShader = {};
+    
+    string ShaderSource = ReadEntireFileMA(Scratch, Filepath, &FileSize);
+    ReturnShader.Filepath = Filepath;
+    
+    if(ShaderSource.Data)
+    {
+        const char *ShaderSourceChar = (const char *)ShaderSource.Data;
+
+        ReturnShader.SourceID = glCreateShader(ShaderType);
+        glShaderSource(ReturnShader.SourceID, 1, &ShaderSourceChar, 0);
+        glCompileShader(ReturnShader.SourceID);
+        CloverTestShader(ReturnShader.SourceID, GL_VERTEX_SHADER);
+    }
+    else
+    {
+        Trace("File is either not found or does not contain strings!\n");
+        Assert(false);
+    }
+    return(ReturnShader);
+}
+
+shader
+CloverCreateShader(memory_arena *Memory, string VertexShader, string FragmentShader)
+{
+    glUseProgram(0);
+    shader ReturnShader = {};
+    
+    ReturnShader.VertexShader   = CloverLoadShaderSource(Memory, GL_VERTEX_SHADER, VertexShader);
+    ReturnShader.FragmentShader = CloverLoadShaderSource(Memory, GL_FRAGMENT_SHADER, FragmentShader);
+    
+    ReturnShader.VertexShader.LastWriteTime   = FileGetLastWriteTime(VertexShader);
+    ReturnShader.FragmentShader.LastWriteTime = FileGetLastWriteTime(FragmentShader);
+    
+    ReturnShader.ShaderID = glCreateProgram();
+    glAttachShader(ReturnShader.ShaderID, ReturnShader.VertexShader.SourceID);
+    glAttachShader(ReturnShader.ShaderID, ReturnShader.FragmentShader.SourceID);
+    glLinkProgram(ReturnShader.ShaderID);
+    
+    CloverTestShader(ReturnShader.ShaderID, GL_PROGRAM);
+    
+    glDetachShader(ReturnShader.ShaderID, ReturnShader.VertexShader.SourceID);
+    glDetachShader(ReturnShader.ShaderID, ReturnShader.FragmentShader.SourceID);
+    glDeleteShader(ReturnShader.VertexShader.SourceID);
+    glDeleteShader(ReturnShader.FragmentShader.SourceID);
+    
+    return(ReturnShader);
+}
+
+void
+CloverLoadTexture(transient_state *TransientState, texture2d *TextureInfo, string Filepath)
+{
+    uint32 TextureCount = TransientState->GameAssets.LoadedTextureCount;
+    glActiveTexture(GL_TEXTURE0 + TextureCount);
+    InterlockedIncrement(&TransientState->GameAssets.LoadedTextureCount);
+    
+    glGenTextures(1, &TextureInfo->TextureID);
+    glBindTexture(GL_TEXTURE_2D, TextureInfo->TextureID);
+    
+    TextureInfo->Filepath = Filepath;
+    TextureInfo->LastWriteTime = FileGetLastWriteTime(Filepath);
+    TextureInfo->RawData = (char *)stbi_load((const char *)Filepath.Data, 
+                                             &TextureInfo->TextureData.Width, 
+                                             &TextureInfo->TextureData.Height, 
+                                             &TextureInfo->TextureData.Channels, 
+                                             4);
+    if(TextureInfo->RawData)
+    {
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB_ALPHA, 
+                     TextureInfo->TextureData.Width, TextureInfo->TextureData.Height, 0, 
+                     GL_RGBA, GL_UNSIGNED_BYTE, TextureInfo->RawData);
+    }
+    stbi_image_free(TextureInfo->RawData);
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void
+CloverReloadTexture(texture2d *TextureInfo, uint32 TextureIndex)
+{
+    glBindTexture(GL_TEXTURE_2D, TextureInfo->TextureID);
+    
+    TextureInfo->LastWriteTime = FileGetLastWriteTime(TextureInfo->Filepath);
+    TextureInfo->RawData = (char *)stbi_load((const char *)TextureInfo->Filepath.Data, 
+                                             &TextureInfo->TextureData.Width, 
+                                             &TextureInfo->TextureData.Height, 
+                                             &TextureInfo->TextureData.Channels, 
+                                             4);
+    if(TextureInfo->RawData)
+    {
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 
+                     TextureInfo->TextureData.Width, TextureInfo->TextureData.Height, 0, 
+                     GL_RGBA, GL_UNSIGNED_BYTE, TextureInfo->RawData);
+    }
+    stbi_image_free(TextureInfo->RawData);
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+
 internal void
-CloverLoadFont(memory_arena *Memory, gl_render_data *RenderData, transient_state *TransientState, string Filepath, uint32 FontSize, font_id FontID)
+CloverLoadFont(memory_arena *Memory, gl_render_data *RenderData, transient_state *TransientState, string Filepath, uint32 FontSize, uint32 FontID)
 {
 
     freetype_font_data Font = {};
@@ -162,7 +360,7 @@ CloverLoadFont(memory_arena *Memory, gl_render_data *RenderData, transient_state
     }
 }
 
-internal void
+void
 CloverCreateSDFTexture(transient_state *TransientState, texture2d *TextureInfo, char *TextureData)
 {
     glActiveTexture(GL_TEXTURE0 + TransientState->GameAssets.LoadedTextureCount);
@@ -182,203 +380,7 @@ CloverCreateSDFTexture(transient_state *TransientState, texture2d *TextureInfo, 
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-// TODO(Sleepster): Revisit this to fix the alignment issues with letters like "p" "g" "l" "y" and such
-internal void
-CloverLoadSDFFont(memory_arena *Memory, transient_state *TransientState, string Filepath, uint32 FontSize, font_id FontName)
-{
-    freetype_font_data Font = {};
-    Font.FontSize = FontSize;
-    FT_Error Error;
-    
-    Error = FT_Init_FreeType(&Font.FontFile);
-    Check(Error == 0, "Failed to initialize Freetype\n");
-    
-    Error = FT_New_Face(Font.FontFile, (const char *)Filepath.Data, 0, &Font.FontFace);
-    Check(Error == 0, "Failed to initialize the Font Face\n");
-    Check(Error != FT_Err_Unknown_File_Format, "Failed to load the font file, it is found but not supported\n");
-    
-    // NOTE(Sleepster): Test, we would normally use FT_Set_Pixel_Sizes(); 
-    Error = FT_Set_Pixel_Sizes(Font.FontFace, 0, Font.FontSize);
-    Check(Error == 0, "Issue setting the pixel size of the font\n");
-    
-    Font.AtlasPadding = 8;
-    int32 Row = {};
-    int32 Column = Font.AtlasPadding;
-    
-    FT_GlyphSlot CurrentSlot = Font.FontFace->glyph;
-    
-    char *TextureData = (char *)PushSize(Memory, (uint64)(sizeof(char) * (BITMAP_ATLAS_SIZE * BITMAP_ATLAS_SIZE)));
-    if(TextureData)
-    {
-        for(uint32 GlyphIndex = 32;
-            GlyphIndex < 127;
-            ++GlyphIndex)
-        {
-            FT_Load_Char(Font.FontFace, GlyphIndex, FT_LOAD_DEFAULT);
-            if(Column + Font.FontFace->glyph->bitmap.width + Font.AtlasPadding >= BITMAP_ATLAS_SIZE)
-            {
-                Column = Font.AtlasPadding;
-                Row += int32(Font.FontSize * 1.20);
-            }
-            
-            Error = FT_Render_Glyph(CurrentSlot, FT_RENDER_MODE_SDF);
-            Check(Error == 0, "Issues here\n");
-            
-            TransientState->GameAssets.Fonts[FontName].FontHeight = MAX((Font.FontFace->size->metrics.ascender - Font.FontFace->size->metrics.descender) >> 6, 
-                                                                         TransientState->GameAssets.Fonts[FontName].Glyphs[GlyphIndex].GlyphSize.Y);
-            for(uint32 YIndex = 0;
-                YIndex < Font.FontFace->glyph->bitmap.rows;
-                ++YIndex)
-            {
-                for(uint32 XIndex = 0;
-                    XIndex < Font.FontFace->glyph->bitmap.width;
-                    ++XIndex)
-                {
-                    TextureData[(Row + YIndex) * BITMAP_ATLAS_SIZE + (Column + XIndex)] = 
-                        Font.FontFace->glyph->bitmap.buffer[YIndex * Font.FontFace->glyph->bitmap.width + XIndex];
-                }
-            }
-            
-            font_glyph *CurrentGlyph = &TransientState->GameAssets.Fonts[0].Glyphs[GlyphIndex];
-            CurrentGlyph->GlyphUVs  = {Column, Row};
-            CurrentGlyph->GlyphSize = 
-            {
-                (int32)Font.FontFace->glyph->bitmap.width, 
-                (int32)Font.FontFace->glyph->bitmap.rows
-            };
-            CurrentGlyph->GlyphAdvance = 
-            {
-                real32(Font.FontFace->glyph->advance.x >> 6), 
-                real32(Font.FontFace->glyph->advance.y >> 6)
-            };
-            CurrentGlyph->GlyphOffset = 
-            {
-                real32(Font.FontFace->glyph->bitmap_left),
-                real32(Font.FontFace->glyph->bitmap_top)
-            };
-            
-            Column += Font.FontFace->glyph->bitmap.width + Font.AtlasPadding;
-        }
-    }
-    
-    FT_Done_Face(Font.FontFace);
-    FT_Done_FreeType(Font.FontFile);
-    
-    // SDF TEXTURE DATA
-    CloverCreateSDFTexture(TransientState, &TransientState->GameAssets.Fonts[FontName].FontAtlas, TextureData);
-}
-
-internal gl_shader_source
-CloverLoadShaderSource(memory_arena *Scratch, uint32 ShaderType, string Filepath)
-{
-    uint32 FileSize = 0;
-    gl_shader_source ReturnShader = {};
-    
-    string ShaderSource = ReadEntireFileMA(Scratch, Filepath, &FileSize);
-    ReturnShader.Filepath = Filepath;
-    
-    if(ShaderSource.Data)
-    {
-        const char *ShaderSourceChar = (const char *)ShaderSource.Data;
-
-        ReturnShader.SourceID = glCreateShader(ShaderType);
-        glShaderSource(ReturnShader.SourceID, 1, &ShaderSourceChar, 0);
-        glCompileShader(ReturnShader.SourceID);
-        glVerifyIVStatus(ReturnShader.SourceID, GL_VERTEX_SHADER);
-    }
-    else
-    {
-        Trace("File is either not found or does not contain strings!\n");
-        Assert(false);
-    }
-    return(ReturnShader);
-}
-
-internal shader
-CloverCreateShader(memory_arena *Memory, string VertexShader, string FragmentShader)
-{
-    glUseProgram(0);
-    shader ReturnShader = {};
-    
-    ReturnShader.VertexShader   = CloverLoadShaderSource(Memory, GL_VERTEX_SHADER, VertexShader);
-    ReturnShader.FragmentShader = CloverLoadShaderSource(Memory, GL_FRAGMENT_SHADER, FragmentShader);
-    
-    ReturnShader.VertexShader.LastWriteTime   = FileGetLastWriteTime(VertexShader);
-    ReturnShader.FragmentShader.LastWriteTime = FileGetLastWriteTime(FragmentShader);
-    
-    ReturnShader.ShaderID = glCreateProgram();
-    glAttachShader(ReturnShader.ShaderID, ReturnShader.VertexShader.SourceID);
-    glAttachShader(ReturnShader.ShaderID, ReturnShader.FragmentShader.SourceID);
-    glLinkProgram(ReturnShader.ShaderID);
-    
-    glVerifyIVStatus(ReturnShader.ShaderID, GL_PROGRAM);
-    
-    glDetachShader(ReturnShader.ShaderID, ReturnShader.VertexShader.SourceID);
-    glDetachShader(ReturnShader.ShaderID, ReturnShader.FragmentShader.SourceID);
-    glDeleteShader(ReturnShader.VertexShader.SourceID);
-    glDeleteShader(ReturnShader.FragmentShader.SourceID);
-    
-    return(ReturnShader);
-}
-
-internal void
-CloverLoadTexture(gl_render_data *RenderData, transient_state *TransientState, texture2d *TextureInfo, string Filepath)
-{
-    glActiveTexture(GL_TEXTURE0 + TransientState->GameAssets.LoadedTextureCount);
-    TransientState->GameAssets.LoadedTextureCount++;
-    
-    glGenTextures(1, &TextureInfo->TextureID);
-    glBindTexture(GL_TEXTURE_2D, TextureInfo->TextureID);
-    
-    TextureInfo->Filepath = Filepath;
-    TextureInfo->LastWriteTime = FileGetLastWriteTime(Filepath);
-    TextureInfo->RawData = (char *)stbi_load((const char *)Filepath.Data, 
-                                             &TextureInfo->TextureData.Width, 
-                                             &TextureInfo->TextureData.Height, 
-                                             &TextureInfo->TextureData.Channels, 
-                                             4);
-    if(TextureInfo->RawData)
-    {
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB_ALPHA, 
-                     TextureInfo->TextureData.Width, TextureInfo->TextureData.Height, 0, 
-                     GL_RGBA, GL_UNSIGNED_BYTE, TextureInfo->RawData);
-    }
-    stbi_image_free(TextureInfo->RawData);
-    glBindTexture(GL_TEXTURE_2D, 0);
-}
-
-internal void
-CloverReloadTexture(gl_render_data *RenderData, texture2d *TextureInfo, uint32 TextureIndex)
-{
-    glBindTexture(GL_TEXTURE_2D, TextureInfo->TextureID);
-    
-    TextureInfo->LastWriteTime = FileGetLastWriteTime(TextureInfo->Filepath);
-    TextureInfo->RawData = (char *)stbi_load((const char *)TextureInfo->Filepath.Data, 
-                                             &TextureInfo->TextureData.Width, 
-                                             &TextureInfo->TextureData.Height, 
-                                             &TextureInfo->TextureData.Channels, 
-                                             4);
-    if(TextureInfo->RawData)
-    {
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 
-                     TextureInfo->TextureData.Width, TextureInfo->TextureData.Height, 0, 
-                     GL_RGBA, GL_UNSIGNED_BYTE, TextureInfo->RawData);
-    }
-    stbi_image_free(TextureInfo->RawData);
-    glBindTexture(GL_TEXTURE_2D, 0);
-}
-
-internal void
+void
 CloverResetRendererState(gl_render_data *RenderData, transient_state *TransientState)
 {
     TransientState->DrawFrameData.LastFrameQuadCount = TransientState->DrawFrameData.TotalQuadCount;
@@ -560,7 +562,6 @@ CloverSetupRenderer(memory_arena *Memory, gl_render_data *RenderData, transient_
     // TEXTURE/FONT LOADING
     {
         // NOTE(Sleepster): The order is important, whatever you gen first will end up in the GL_TEXTUREX slot 
-        CloverLoadTexture(RenderData, TransientState, &TransientState->GameAssets.GameTextures[GT_GameAtlas], STR("../data/res/textures/TextureAtlas.png"));
         CloverLoadSDFFont(Memory, TransientState, STR("../data/res/fonts/UbuntuMono-B.ttf"), 48, GF_UbuntuMono);
     }
 
@@ -616,10 +617,30 @@ CloverSetupRenderer(memory_arena *Memory, gl_render_data *RenderData, transient_
     }
 }
 
+internal void
+DrawImGui(game_state *State, gl_render_data *RenderData, time_data Time)
+{
+    if(State->DrawDebug)
+    {
+        ImGui::SetCurrentContext(RenderData->CurrentImGuiContext);
+
+        ImGui::Begin("Render Quad Color Picker");
+        ImGui::SeparatorText("ENGINE DEBUG INFO");
+        ImGui::Text("Famerate: %i", Time.FPSCounter);
+        ImGui::Text("FrameTime: %.02f", Time.MSPerFrame);
+
+        ImGui::SeparatorText("GAME DEBUG INFO");
+        ImGui::Text("Entity Count: %i", State->World.EntityCounter);
+        ImGui::Text("Quad Count: %i", RenderData->LastFrameQuadCount);
+        ImGui::Text("Vertex Count: %i", RenderData->LastFrameQuadCount * 4);
+        ImGui::End();
+    }
+}
+
 internal
 CLOVER_OGL_RENDER(CloverRender)
 {
-    // NOTE(Sleepster): Figure out this offset  
+    texture2d *CurrentGameAtlasTexture = GetTextureFromID(GameMemory, GT_GameAtlas);
     // OPAQUE GAME OBJECT RENDERING PASS
     glUseProgram(TransientState->GameAssets.Shaders[GS_GBufferShader].ShaderID);
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
@@ -646,7 +667,7 @@ CLOVER_OGL_RENDER(CloverRender)
             glUniform1f(RenderData->gBufferBrightnessUID, RenderBrightness);
 
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, TransientState->GameAssets.GameTextures[GT_GameAtlas].TextureID);
+            glBindTexture(GL_TEXTURE_2D, CurrentGameAtlasTexture->TextureID);
 
             glActiveTexture(GL_TEXTURE1);
             glBindTexture(GL_TEXTURE_2D, TransientState->GameAssets.Fonts[GF_UbuntuMono].FontAtlas.TextureID);
@@ -720,7 +741,7 @@ CLOVER_OGL_RENDER(CloverRender)
             glUniform1f(RenderData->BasicShaderBrightnessUID, RenderBrightness);
 
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, TransientState->GameAssets.GameTextures[GT_GameAtlas].TextureID);
+            glBindTexture(GL_TEXTURE_2D, CurrentGameAtlasTexture->TextureID);
 
             glActiveTexture(GL_TEXTURE1);
             glBindTexture(GL_TEXTURE_2D, TransientState->GameAssets.Fonts[GF_UbuntuMono].FontAtlas.TextureID);
@@ -756,7 +777,7 @@ CLOVER_OGL_RENDER(CloverRender)
             glUniform1f(RenderData->BasicShaderBrightnessUID, RenderBrightness);
 
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, TransientState->GameAssets.GameTextures[GT_GameAtlas].TextureID);
+            glBindTexture(GL_TEXTURE_2D, CurrentGameAtlasTexture->TextureID);
 
             glActiveTexture(GL_TEXTURE1);
             glBindTexture(GL_TEXTURE_2D, TransientState->GameAssets.Fonts[GF_UbuntuMono].FontAtlas.TextureID);
@@ -786,7 +807,7 @@ CLOVER_OGL_RENDER(CloverRender)
             glUniform1f(RenderData->BasicShaderBrightnessUID, RenderBrightness);
 
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, TransientState->GameAssets.GameTextures[GT_GameAtlas].TextureID);
+            glBindTexture(GL_TEXTURE_2D, CurrentGameAtlasTexture->TextureID);
 
             glActiveTexture(GL_TEXTURE1);
             glBindTexture(GL_TEXTURE_2D, TransientState->GameAssets.Fonts[GF_UbuntuMono].FontAtlas.TextureID);

@@ -27,6 +27,7 @@
 #include "Clover_Globals.h"
 #include "Clover.h"
 
+struct game_memory;
 struct transient_state;
 
 struct static_sprite_data
@@ -43,9 +44,6 @@ struct texture2d
     
     ivec3  TextureData;
     char  *RawData;
-
-    bool32 IsLoaded;
-    bool32 LoadRequested;
 };
 
 struct game_texture2d
@@ -206,7 +204,7 @@ struct gl_render_data
     GLuint  LightingShaderUserBrightnessUID;
     GLuint  LightingShaderWorldBrightnessUID;
 
-    void(*CloverRender)(gl_render_data *RenderData, transient_state *TransientState);
+    void(*CloverRender)(game_memory *GameMemory, gl_render_data *RenderData, transient_state *TransientState);
 
     // IMGUI STUFF
     ImGuiContext *CurrentImGuiContext;
@@ -216,8 +214,9 @@ struct gl_render_data
     memory_arena UIVertexArena;
 };
 
-#define CLOVER_OGL_RENDER(name) void name(gl_render_data *RenderData, transient_state *TransientState)
+#define CLOVER_OGL_RENDER(name) void name(game_memory *GameMemory, gl_render_data *RenderData, transient_state *TransientState)
 typedef CLOVER_OGL_RENDER(clover_ogl_render);
+
 
 internal vec4 
 HexToRGBA(int64 hex) 
@@ -239,5 +238,13 @@ HexToRGBA(int64 hex)
     
     return(Result);
 }
+
+void             CloverCreateSDFTexture(transient_state *TransientState, texture2d *TextureInfo, char *TextureData); 
+void             CloverTestShader(GLuint TestID, GLuint Type); 
+void             CloverLoadSDFFont(memory_arena *Memory, transient_state *TransientState, string Filepath, uint32 FontSize, uint32 FontName);
+gl_shader_source CloverLoadShaderSource(memory_arena *Scratch, uint32 ShaderType, string Filepath);
+shader           CloverCreateShader(memory_arena *Memory, string VertexShader, string FragmentShader);
+void             CloverLoadTexture(transient_state *TransientState, texture2d *TextureInfo, string Filepath);
+void             CloverReloadTexture(texture2d *TextureInfo, uint32 TextureIndex);
 
 #endif // _CLOVER_RENDERER_H

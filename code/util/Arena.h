@@ -11,68 +11,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if 0
-
-struct game_memory
-{
-    memory_arena PermanentStorage;
-    memory_arena TransientStorage;
-};
-
-// OLD API
-struct memory_arena
-{
-    uint64 Capacity;
-    uint64 Used;
-    uint8 *Memory;
-};
-
-internal memory_arena
-ArenaCreate(uint64 Size)
-{
-    memory_arena Arena = {};
-    Arena.Memory = (uint8 *)malloc(Size);
-    if(Arena.Memory)
-    {
-        Arena.Capacity = Size;
-        memset(Arena.Memory, 0, Size);
-    }
-    return(Arena);    
-}
-
-internal uint8*
-ArenaAlloc(memory_arena *Memory, uint64 Size)
-{   
-    uint8 *Result = {};
-    uint64 AlignedSize = (Size + 7) & ~ 7;
-    if(Memory->Used + AlignedSize <= Memory->Capacity)
-    {
-        Result = Memory->Memory + Memory->Used;
-        Memory->Used += AlignedSize;
-    }
-    else
-    {
-        Check(0, "Allocation is too large!\n");
-    }
-    return(Result);
-}
-
-internal inline void
-ArenaReset(memory_arena *Memory)
-{
-    memset(Memory->Memory, 0, sizeof(Memory->Capacity));
-    Memory->Used = 0;
-}
-
-internal inline void
-ArenaDestroy(memory_arena *Memory)
-{
-    free(Memory->Memory);
-    Memory = {};
-}
-// OLD API
-#endif
-
 typedef size_t memory_index;
 
 struct memory_block
@@ -103,6 +41,42 @@ struct scratch_memory
 #define PushStruct(Arena, type, ...)       (type *)PushSize_(Arena, sizeof(type), ##__VA_ARGS__)
 #define PushArray(Arena, type, Count, ...) (type *)PushSize_(Arena, sizeof(type) * (Count), ##__VA_ARGS__)
 
+internal inline memory_index
+GetAlignmentOffset(memory_arena *Arena, memory_index Alignment = 4)
+{
+    memory_index Offset = (memory_index)Arena->Base + Arena->Used;
+    memory_index AlignmentMask = Alignment - 1;
+
+    memory_index AlignmentOffset = 0;
+    if(Offset & AlignmentMask) // If the memory is misaligned
+    {
+        AlignmentOffset = Alignment - (Offset & AlignmentMask); // align it 
+    }
+
+    return(AlignmentOffset);
+}
+
+internal inline memory_index
+ArenaGetRemainingSize(memory_arena *Arena, memory_index Alignment)
+{
+    memory_index Result = Arena->Capacity - (Arena->Used + GetAlignmentOffset(Arena, Alignment));
+    return(Result);
+}
+
+internal void*
+PushSize_(memory_arena *Arena, memory_index Size, memory_index Alignment = 4)
+{
+    memory_index AlignmentOffset = GetAlignmentOffset(Arena, Alignment);
+    Size += AlignmentOffset;
+
+    Assert((Arena->Used + Size) <= Arena->Capacity);
+
+    void *Result = (void *)(Arena->Base + Arena->Used + AlignmentOffset);
+    Arena->Used += Size;
+
+    return(Result);
+}
+
 internal inline void 
 InitializeArena(memory_arena *Arena, memory_index Capacity, memory_block *BlockBuffer)
 {
@@ -114,23 +88,13 @@ InitializeArena(memory_arena *Arena, memory_index Capacity, memory_block *BlockB
     BlockBuffer->BlockOffset += Arena->Capacity;
 }
 
-internal void*
-PushSize_(memory_arena *Arena, memory_index Size, memory_index Alignment = 4)
+internal inline memory_arena
+InitSubArena(memory_arena *Arena, memory_index Capacity, memory_index Alignment = 4)
 {
-    memory_index ResultOffset    = (memory_index)Arena->Base + Arena->Used;
-    memory_index AlignmentOffset = 0;
+    memory_arena Result = {};
+    Result.Capacity = Capacity;
+    Result.Base = (uint8 *)PushSize_(Arena, Capacity, Alignment);
 
-    memory_index AlignmentMask = Alignment - 1;
-    if(ResultOffset & AlignmentMask) // If the memory is misaligned
-    {
-        AlignmentOffset = Alignment - (ResultOffset & AlignmentMask); // align it 
-    }
-    Size += AlignmentOffset;
-
-    Assert((Arena->Used + Size) <= Arena->Capacity);
-    Arena->Used += Size;
-
-    void *Result = (void *)(ResultOffset + AlignmentOffset);
     return(Result);
 }
 
