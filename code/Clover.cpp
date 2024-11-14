@@ -48,8 +48,8 @@
 #include "Clover_Input.cpp"
 #include "Clover_Draw.cpp"
 #include "Clover_UI.cpp"
+#include "Clover_Audio.cpp"
 #include "Clover_Asset.cpp"
-
 
 global_variable entity *Player = {};
 
@@ -1034,7 +1034,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
         GameState->UIContext.UICameraViewMatrix       = RenderData->GameUICamera.ViewMatrix;
         GameState->UIContext.UICameraProjectionMatrix = RenderData->GameUICamera.ProjectionMatrix;
         GameState->UIContext.GameInput                = &GameState->GameInput;
-        GameState->UIContext.ActiveFont               = &TransientState->GameAssets.Fonts[GF_UbuntuMono];
+        GameState->UIContext.ActiveFont               = TransientState->GameAssets->Fonts[GF_UbuntuMono].Font;
         GameState->UIContext.ActiveFontIndex          = GF_UbuntuMono;
     }
     
@@ -2091,19 +2091,22 @@ extern
 GAME_GET_SOUND_SAMPLES(GameGetSoundSamples)
 {
     int16 *SampleOut = SoundBuffer->SampleBuffer;
-    for(int32 SampleIndex = 0;
-        SampleIndex < SoundBuffer->SampleOutputCount;
-        ++SampleIndex)
+    if(GameState->TestSound.ChannelCount != 0)
     {
-        int16 Volume = 1;
+        for(int32 SampleIndex = 0;
+                SampleIndex < SoundBuffer->SampleOutputCount;
+                ++SampleIndex)
+        {
+            int16 Volume = 1;
 
-        int32 SampleOffset     = (GameState->TestSound.SamplesConsumed + SampleIndex) % GameState->TestSound.SampleCount;
-        int16 LeftSampleValue  = GameState->TestSound.Samples[SampleOffset * 2];
-        int16 RightSampleValue  = GameState->TestSound.Samples[(SampleOffset * 2) + 1];
-        
-        *SampleOut++ = LeftSampleValue * Volume;
-        *SampleOut++ = RightSampleValue * Volume;
+            int32 SampleOffset     = (GameState->TestSound.SamplesConsumed + SampleIndex) % GameState->TestSound.SampleCount;
+            int16 LeftSampleValue  = GameState->TestSound.Samples[SampleOffset * 2];
+            int16 RightSampleValue  = GameState->TestSound.Samples[(SampleOffset * 2) + 1];
+
+            *SampleOut++ = LeftSampleValue * Volume;
+            *SampleOut++ = RightSampleValue * Volume;
+        }
+
+        GameState->TestSound.SamplesConsumed += SoundBuffer->SampleOutputCount;
     }
-    
-    GameState->TestSound.SamplesConsumed += SoundBuffer->SampleOutputCount;
 }

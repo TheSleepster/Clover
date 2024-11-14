@@ -26,6 +26,7 @@ enum asset_type
 
 enum shader_id
 {
+    GS_NullShader,
     GS_BasicShader,
     GS_GBufferShader,
     GS_LightingShader,
@@ -41,13 +42,15 @@ enum texture_id
 
 enum font_id
 {
+    GF_NullFont,
     GF_UbuntuMono,
-    GF_LiterationMono,
+    GF_LiberationMono,
     GF_FontIDCount,
 };
 
 enum soundfx_id
 {
+    GSFX_NullSound,
     GSFX_SunkenSeaTheme,
     GSFX_RoarOfTheJungleDragon,
     GSFX_IDCount,
@@ -66,8 +69,8 @@ struct asset_slot
     union
     {
         texture2d    *Texture;
-        loaded_sound *Sound;
         font_data    *Font;
+        loaded_sound *Sound;
         shader       *Shader;
     };
 };
@@ -77,31 +80,45 @@ struct asset
     asset_id   ID;
 };
 
+
+// NOTE(Sleepster): There's only 2 ways to do our asset streaming, either set it like so, a stack array.
+//                  Or to make it so that "TextureCount" is the amount that we need for a given scene, then dynamically allocate.
 struct game_assets
 {
-    uint32      TextureCount;
-    asset_slot *Textures;
+    struct transient_state *TransientState;
+    memory_arena            AssetArena;
 
-    uint32      SoundCount;
-    asset_slot *Sounds;
+    uint32                  TextureCount;
+    asset_slot              Textures[GT_TextureIDCount];
 
-    uint32      FontCount;
-    asset_slot *Fonts;
+    uint32                  FontCount;
+    asset_slot              Fonts[GF_FontIDCount];
 
-    uint32      ShaderCount;
-    asset_slot *Shaders;
+    uint32                  ShaderCount;
+    shader                  Shaders[GS_ShaderIDCount];
 
-    asset_type AssetTypes[ASSET_TYPE_COUNT];
+    uint32                  SoundCount;
+    asset_slot              Sounds[GSFX_IDCount];
 };
 
-struct asset_manager
+const pair<uint32, string> TextureFilepaths[] = 
 {
-    texture2d    GameTextures[GT_TextureIDCount];
-    font_data    Fonts[GF_FontIDCount];
-    loaded_sound Sounds[MAX_SOUNDS];
-    shader       Shaders[GS_ShaderIDCount];
+    pair<uint32, string>(GT_NullAtlas,               STR("")),
+    pair<uint32, string>(GT_GameAtlas,               STR("../data/res/textures/TextureAtlas.png")),
+};
 
-    uint32 LoadedTextureCount;
+const pair<uint32, string> FontFilepaths[] =
+{
+    pair<uint32, string>(GF_NullFont,                STR("")),
+    pair<uint32, string>(GF_UbuntuMono,              STR("../data/res/fonts/UbuntuMono-B.ttf")),
+    pair<uint32, string>(GF_LiberationMono,          STR("../data/res/fonts/LiberationMono-Regular.ttf")),
+};
+
+const pair<uint32, string>SoundFilepaths[] = 
+{
+    pair<uint32, string>(GSFX_NullSound,             STR("")),
+    pair<uint32, string>(GSFX_SunkenSeaTheme,        STR("../data/res/sounds/Test.wav")),
+    pair<uint32, string>(GSFX_RoarOfTheJungleDragon, STR("../data/res/sounds/Test2.wav")),
 };
 
 #endif // CLOVER_ASSET_H

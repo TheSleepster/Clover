@@ -446,13 +446,13 @@ DrawGameText(transient_state *TransientState,
     {
         if(Text.Data[StringIndex] == '\n')    
         {
-            Position.Y += TransientState->GameAssets.Fonts[Font].FontHeight * TrueScale;
+            Position.Y += TransientState->GameAssets->Fonts[Font].Font->FontHeight * TrueScale;
             Position.X = TextOrigin.X;
             continue;
         }
         
         char C = (Text.Data[StringIndex]);
-        font_glyph Glyph = TransientState->GameAssets.Fonts[Font].Glyphs[C];
+        font_glyph Glyph = TransientState->GameAssets->Fonts[Font].Font->Glyphs[C];
         
         vec2  RenderScale   = {Glyph.GlyphSize.X * TrueScale, (real32)Glyph.GlyphSize.Y * (TrueScale * 2)};
         ivec2 AtlasOffset   = Glyph.GlyphUVs;
@@ -481,13 +481,13 @@ DrawUIText(transient_state *TransientState,
     {
         if(Text.Data[StringIndex] == '\n')    
         {
-            Position.Y += TransientState->GameAssets.Fonts[Font].FontHeight * TrueScale;
+            Position.Y += TransientState->GameAssets->Fonts[Font].Font->FontHeight * TrueScale;
             Position.X = TextOrigin.X;
             continue;
         }
         
         char C = (Text.Data[StringIndex]);
-        font_glyph Glyph = TransientState->GameAssets.Fonts[Font].Glyphs[C];
+        font_glyph Glyph = TransientState->GameAssets->Fonts[Font].Font->Glyphs[C];
         
         vec2 RenderScale    = {Glyph.GlyphSize.X * TrueScale, (real32)Glyph.GlyphSize.Y * (TrueScale * 2)};
         ivec2 AtlasOffset   = Glyph.GlyphUVs;

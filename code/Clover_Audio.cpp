@@ -61,11 +61,10 @@ GetType(riff_iterator Iter)
     return(Result);
 }
 
-internal loaded_sound
-CloverLoadWAVFile(memory_arena *Memory, string Filepath)
-{
-    loaded_sound Result = {};
 
+internal void 
+CloverLoadWAVFile(memory_arena *Memory, loaded_sound *Sound, string Filepath)
+{
     uint32 FileSize = {};
     string FileContents = ReadEntireFileMA(Memory, Filepath, &FileSize);
 
@@ -102,13 +101,13 @@ CloverLoadWAVFile(memory_arena *Memory, string Filepath)
             }
         }
         Assert(ChannelCount && SampleData);
-        Result.ChannelCount = ChannelCount;
-        Result.SampleCount  = (SampleDataSize / (sizeof(uint8)));
-        Result.SampleCount  = (Result.SampleCount + 1) & ~1;
+        Sound->ChannelCount = ChannelCount;
+        Sound->SampleCount  = (SampleDataSize / (sizeof(uint8)));
+        Sound->SampleCount  = (Sound->SampleCount + 1) & ~1;
         // NOTE(Sleepster): Mono/Stereo 
         if(ChannelCount == 1||ChannelCount == 2)
         {
-            Result.Samples = SampleData;
+            Sound->Samples = SampleData;
         }
         // NOTE(Sleepster): IDK like 5.1 or something  
         else
@@ -116,6 +115,4 @@ CloverLoadWAVFile(memory_arena *Memory, string Filepath)
             Check(0, "Unsupported Channel Count!\n");
         }
     }
-
-    return(Result);
 }

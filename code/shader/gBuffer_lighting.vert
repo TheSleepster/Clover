@@ -1,9 +1,10 @@
-#version 430 core
+#version 460 core
 #extension GL_ARB_shading_language_include : require
+#extension GL_ARB_bindless_texture : require
 
-#line 4
+#line 5
 #include "/../code/shader/CommonShader.glh"
-#line 6
+#line 7
 
 out vec2 vUV;
 

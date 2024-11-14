@@ -77,6 +77,7 @@ PushSize_(memory_arena *Arena, memory_index Size, memory_index Alignment = 4)
     return(Result);
 }
 
+// TODO(Sleepster): Make this simply take a memory offset rather than a memory block
 internal inline void 
 InitializeArena(memory_arena *Arena, memory_index Capacity, memory_block *BlockBuffer)
 {

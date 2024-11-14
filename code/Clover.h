@@ -210,7 +210,7 @@ struct transient_state
     memory_arena TransientArena;
     memory_arena Garbage;
 
-    asset_manager GameAssets;
+    game_assets *GameAssets;
 
     entity *SelectedEntityThisFrame;
     // RENDERER
@@ -263,6 +263,7 @@ struct game_state
     item             *ActiveBlueprint;
 
     loaded_sound      TestSound;
+    bool32            SoundIsLoaded;
     playing_sound     FirstPlayingSound;
     
     game_world_data World;

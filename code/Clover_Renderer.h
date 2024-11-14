@@ -30,6 +30,8 @@
 struct game_memory;
 struct transient_state;
 
+enum   asset_state;
+
 struct static_sprite_data
 {
     ivec2 AtlasOffset;
@@ -94,6 +96,7 @@ struct shader
     gl_shader_source VertexShader;
     gl_shader_source FragmentShader;
     GLuint           ShaderID;
+    asset_state      ShaderState;    
 };
 
 struct orthocamera2d
@@ -139,8 +142,8 @@ struct quad
     material_data Material;
     vec4          DrawColor;
     
-    vec2 Position;
-    vec2 Size;
+    vec2   Position;
+    vec2   Size;
     real32 TextureIndex;
     
     real32 Rotation;
@@ -241,7 +244,7 @@ HexToRGBA(int64 hex)
 
 void             CloverCreateSDFTexture(transient_state *TransientState, texture2d *TextureInfo, char *TextureData); 
 void             CloverTestShader(GLuint TestID, GLuint Type); 
-void             CloverLoadSDFFont(memory_arena *Memory, transient_state *TransientState, string Filepath, uint32 FontSize, uint32 FontName);
+void             CloverLoadSDFFont(transient_state *TransientState, font_data *NewFont, string Filepath, uint32 FontSize);
 gl_shader_source CloverLoadShaderSource(memory_arena *Scratch, uint32 ShaderType, string Filepath);
 shader           CloverCreateShader(memory_arena *Memory, string VertexShader, string FragmentShader);
 void             CloverLoadTexture(transient_state *TransientState, texture2d *TextureInfo, string Filepath);

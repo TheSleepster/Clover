@@ -65,7 +65,7 @@ CloverTestShader(GLuint TestID, GLuint Type)
 
 // TODO(Sleepster): Revisit this to fix the alignment issues with letters like "p" "g" "l" "y" and such
 void
-CloverLoadSDFFont(memory_arena *Memory, transient_state *TransientState, string Filepath, uint32 FontSize, font_id FontName)
+CloverLoadSDFFont(transient_state *TransientState, font_data *NewFont, string Filepath, uint32 FontSize)
 {
     freetype_font_data Font = {};
     Font.FontSize = FontSize;
@@ -88,7 +88,7 @@ CloverLoadSDFFont(memory_arena *Memory, transient_state *TransientState, string 
     
     FT_GlyphSlot CurrentSlot = Font.FontFace->glyph;
     
-    char *TextureData = (char *)PushSize(Memory, (uint64)(sizeof(char) * (BITMAP_ATLAS_SIZE * BITMAP_ATLAS_SIZE)));
+    char *TextureData = (char *)PushSize(&TransientState->Garbage, (uint64)(sizeof(char) * (BITMAP_ATLAS_SIZE * BITMAP_ATLAS_SIZE)));
     if(TextureData)
     {
         for(uint32 GlyphIndex = 32;
@@ -105,8 +105,8 @@ CloverLoadSDFFont(memory_arena *Memory, transient_state *TransientState, string 
             Error = FT_Render_Glyph(CurrentSlot, FT_RENDER_MODE_SDF);
             Check(Error == 0, "Issues here\n");
             
-            TransientState->GameAssets.Fonts[FontName].FontHeight = MAX((Font.FontFace->size->metrics.ascender - Font.FontFace->size->metrics.descender) >> 6, 
-                                                                         TransientState->GameAssets.Fonts[FontName].Glyphs[GlyphIndex].GlyphSize.Y);
+            NewFont->FontHeight = MAX((Font.FontFace->size->metrics.ascender - Font.FontFace->size->metrics.descender) >> 6, 
+                                       NewFont->Glyphs[GlyphIndex].GlyphSize.Y);
             for(uint32 YIndex = 0;
                 YIndex < Font.FontFace->glyph->bitmap.rows;
                 ++YIndex)
@@ -120,7 +120,7 @@ CloverLoadSDFFont(memory_arena *Memory, transient_state *TransientState, string 
                 }
             }
             
-            font_glyph *CurrentGlyph = &TransientState->GameAssets.Fonts[0].Glyphs[GlyphIndex];
+            font_glyph *CurrentGlyph = &NewFont->Glyphs[GlyphIndex];
             CurrentGlyph->GlyphUVs  = {Column, Row};
             CurrentGlyph->GlyphSize = 
             {
@@ -146,7 +146,7 @@ CloverLoadSDFFont(memory_arena *Memory, transient_state *TransientState, string 
     FT_Done_FreeType(Font.FontFile);
     
     // SDF TEXTURE DATA
-    CloverCreateSDFTexture(TransientState, &TransientState->GameAssets.Fonts[FontName].FontAtlas, TextureData);
+    CloverCreateSDFTexture(TransientState, &NewFont->FontAtlas, TextureData);
 }
 
 gl_shader_source
@@ -205,9 +205,10 @@ CloverCreateShader(memory_arena *Memory, string VertexShader, string FragmentSha
 void
 CloverLoadTexture(transient_state *TransientState, texture2d *TextureInfo, string Filepath)
 {
-    uint32 TextureCount = TransientState->GameAssets.LoadedTextureCount;
+    uint32 TextureCount = TransientState->GameAssets->TextureCount;
+    TransientState->GameAssets->TextureCount++;
     glActiveTexture(GL_TEXTURE0 + TextureCount);
-    InterlockedIncrement(&TransientState->GameAssets.LoadedTextureCount);
+    InterlockedIncrement(&TransientState->GameAssets->TextureCount);
     
     glGenTextures(1, &TextureInfo->TextureID);
     glBindTexture(GL_TEXTURE_2D, TextureInfo->TextureID);
@@ -260,110 +261,11 @@ CloverReloadTexture(texture2d *TextureInfo, uint32 TextureIndex)
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-
-internal void
-CloverLoadFont(memory_arena *Memory, gl_render_data *RenderData, transient_state *TransientState, string Filepath, uint32 FontSize, uint32 FontID)
-{
-
-    freetype_font_data Font = {};
-    Font.FontSize = FontSize;
-    FT_Error Error;
-
-    Error = FT_Init_FreeType(&Font.FontFile);
-    Check(Error == 0, "Failed to initialize Freetype\n");
-    
-    Error = FT_New_Face(Font.FontFile, (const char *)Filepath.Data, 0, &Font.FontFace);
-    Check(Error == 0, "Failed to initialize the Font Face\n");
-    Check(Error != FT_Err_Unknown_File_Format, "Failed to load the font file, it is found but not supported\n");
-    
-    // NOTE(Sleepster): Test, we would normally use FT_Set_Pixel_Sizes(); 
-    Error = FT_Set_Pixel_Sizes(Font.FontFace, 0, Font.FontSize);
-    Check(Error == 0, "Issue setting the pixel size of the font\n");
-    
-    Font.AtlasPadding = 4;
-    int32 Row = {};
-    int32 Column = Font.AtlasPadding;
-    
-    char *TextureData = (char *)PushSize(Memory, (uint64)(sizeof(char) * (BITMAP_ATLAS_SIZE * BITMAP_ATLAS_SIZE)));
-    if(TextureData)
-    {
-        for(uint32 GlyphIndex = 32;
-            GlyphIndex < 127;
-            ++GlyphIndex)
-        {
-            if(Column + Font.FontFace->glyph->bitmap.width + Font.AtlasPadding >= BITMAP_ATLAS_SIZE)
-            {
-                Column = Font.AtlasPadding;
-                // NOTE(Sleepster): This is a product of our "test". Freetype uses >> 6 on sizes, so we divide by 3 to offset it 
-                //                  ONLY WHEN USING FT_Set_Char_Size
-                Row += Font.FontSize;
-            }
-            // NOTE(Sleepster): Leaving this here would make it only work for one font, perhaps make it so we pass in a font index into an array of 
-            //                  fonts? Simply have a cap for the amount of fonts that can be loaded at any one point.
-            TransientState->GameAssets.Fonts[FontID].FontHeight = MAX((Font.FontFace->size->metrics.ascender - Font.FontFace->size->metrics.descender) >> 6,
-                            (int32)TransientState->GameAssets.Fonts[FontID].FontHeight);
-            for(uint32 YIndex = 0;
-                YIndex < Font.FontFace->glyph->bitmap.rows;
-                ++YIndex)
-            {
-                for(uint32 XIndex = 0;
-                    XIndex < Font.FontFace->glyph->bitmap.width;
-                    ++XIndex)
-                {
-                    TextureData[(Row + YIndex) * BITMAP_ATLAS_SIZE + (Column + XIndex)] = 
-                        Font.FontFace->glyph->bitmap.buffer[YIndex * Font.FontFace->glyph->bitmap.width + XIndex];
-                }
-            }
-            font_glyph *CurrentGlyph = &TransientState->GameAssets.Fonts[FontID].Glyphs[GlyphIndex];
-            CurrentGlyph->GlyphUVs  = {Column, Row};
-            CurrentGlyph->GlyphSize = 
-            {
-                (int32)Font.FontFace->glyph->bitmap.width, 
-                (int32)Font.FontFace->glyph->bitmap.rows
-            };
-            CurrentGlyph->GlyphAdvance = 
-            {
-                real32(Font.FontFace->glyph->advance.x >> 6), 
-                real32(Font.FontFace->glyph->advance.y >> 6)
-            };
-            CurrentGlyph->GlyphOffset = 
-            {
-                real32(Font.FontFace->glyph->bitmap_left),
-                real32(Font.FontFace->glyph->bitmap_top)
-            };
-            
-            Column += Font.FontFace->glyph->bitmap.width + Font.AtlasPadding;
-        }
-        
-        FT_Done_Face(Font.FontFace);
-        FT_Done_FreeType(Font.FontFile);
-        
-        // OPENGL TEXTURE
-        {
-            glActiveTexture(GL_TEXTURE0 + TransientState->GameAssets.LoadedTextureCount);
-            ++TransientState->GameAssets.LoadedTextureCount;
-            
-            glGenTextures(1, &TransientState->GameAssets.Fonts[FontID].FontAtlas.TextureID);
-            glBindTexture(GL_TEXTURE_2D, TransientState->GameAssets.Fonts[FontID].FontAtlas.TextureID);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, BITMAP_ATLAS_SIZE, BITMAP_ATLAS_SIZE, 0, GL_RED, GL_UNSIGNED_BYTE, TextureData);
-            
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            glBindTexture(GL_TEXTURE_2D, 0);
-        }
-    }
-    else
-    {
-        Check(0, "Failed to Allocate Storage\n");
-    }
-}
-
 void
 CloverCreateSDFTexture(transient_state *TransientState, texture2d *TextureInfo, char *TextureData)
 {
-    glActiveTexture(GL_TEXTURE0 + TransientState->GameAssets.LoadedTextureCount);
+    TransientState->GameAssets->TextureCount++;
+    glActiveTexture(GL_TEXTURE0 + TransientState->GameAssets->TextureCount);
     glGenTextures(1, &TextureInfo->TextureID);
     glBindTexture(GL_TEXTURE_2D, TextureInfo->TextureID);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, BITMAP_ATLAS_SIZE, BITMAP_ATLAS_SIZE, 0, GL_RED, GL_UNSIGNED_BYTE, TextureData);
@@ -428,7 +330,12 @@ RebuildShader(memory_arena *Memory, shader *ReloadingShader)
 }
 
 internal void
-CloverSetupRenderer(memory_arena *Memory, gl_render_data *RenderData, transient_state *TransientState)
+LoadQueuedTexture()
+{
+}
+
+internal void
+CloverSetupRenderer(game_memory *GameMemory, gl_render_data *RenderData, transient_state *TransientState)
 {
     // STATE INITIALIZATION
     {
@@ -447,7 +354,7 @@ CloverSetupRenderer(memory_arena *Memory, gl_render_data *RenderData, transient_
         glDisable(0x809D); // Disabling multisampling
         
         RenderData->ClearColor = DARK_GRAY;
-        TransientState->GameAssets.LoadedTextureCount = 1;
+        TransientState->GameAssets->TextureCount = 0;
     }
     
     
@@ -558,28 +465,24 @@ CloverSetupRenderer(memory_arena *Memory, gl_render_data *RenderData, transient_
         }
     }
 
-    // TODO(Sleepster): Is this okay?
-    // TEXTURE/FONT LOADING
-    {
-        // NOTE(Sleepster): The order is important, whatever you gen first will end up in the GL_TEXTUREX slot 
-        CloverLoadSDFFont(Memory, TransientState, STR("../data/res/fonts/UbuntuMono-B.ttf"), 48, GF_UbuntuMono);
-    }
-
     // SHADER SETUP
     {
         // NOTE(Sleepster): This is for the common shader includes 
         uint32 Size = {};
-        string CommonGLHeader = ReadEntireFileMA(Memory, STR("../code/shader/CommonShader.glh"), &Size);
+        string CommonGLHeader = ReadEntireFileMA(&TransientState->Garbage, STR("../code/shader/CommonShader.glh"), &Size);
         glNamedStringARB(GL_SHADER_INCLUDE_ARB, -1, "/../code/shader/CommonShader.glh", int32(CommonGLHeader.Length), CSTR(CommonGLHeader));
 
-        TransientState->GameAssets.Shaders[0] = 
-            CloverCreateShader(Memory, STR("../code/shader/Basic.vert"), STR("../code/shader/Basic.frag"));
+        TransientState->GameAssets->Shaders[GS_BasicShader] = 
+            CloverCreateShader(&TransientState->Garbage, STR("../code/shader/Basic.vert"), STR("../code/shader/Basic.frag"));
+        TransientState->GameAssets->Shaders[GS_BasicShader].ShaderState = AssetState_Loaded;
 
-        TransientState->GameAssets.Shaders[1] = 
-            CloverCreateShader(Memory, STR("../code/shader/gBuffer_Geo.vert"), STR("../code/shader/gBuffer_Geo.frag"));
+        TransientState->GameAssets->Shaders[GS_GBufferShader] = 
+            CloverCreateShader(&TransientState->Garbage, STR("../code/shader/gBuffer_Geo.vert"), STR("../code/shader/gBuffer_Geo.frag"));
+        TransientState->GameAssets->Shaders[GS_GBufferShader].ShaderState = AssetState_Loaded; 
 
-        TransientState->GameAssets.Shaders[2] = 
-            CloverCreateShader(Memory, STR("../code/shader/gBuffer_lighting.vert"), STR("../code/shader/gBuffer_lighting.frag"));
+        TransientState->GameAssets->Shaders[GS_LightingShader] = 
+            CloverCreateShader(&TransientState->Garbage, STR("../code/shader/gBuffer_lighting.vert"), STR("../code/shader/gBuffer_lighting.frag"));
+        TransientState->GameAssets->Shaders[GS_LightingShader].ShaderState = AssetState_Loaded;
     }
 
     // SHADER UNIFORM / STORAGE BUFFER SETUP
@@ -587,18 +490,18 @@ CloverSetupRenderer(memory_arena *Memory, gl_render_data *RenderData, transient_
         RenderData->GameCamera.ViewMatrix            = mat4Identity(1.0f);
         RenderData->GameUICamera.ViewMatrix          = mat4Identity(1.0f);
 
-        RenderData->ProjectionMatrixUID              = glGetUniformLocation(TransientState->GameAssets.Shaders[0].ShaderID,    "ProjectionMatrix");
-        RenderData->ViewMatrixUID                    = glGetUniformLocation(TransientState->GameAssets.Shaders[0].ShaderID,    "ViewMatrix");
-        RenderData->BasicShaderBrightnessUID         = glGetUniformLocation(TransientState->GameAssets.Shaders[0].ShaderID,    "uBrightness");
+        RenderData->ProjectionMatrixUID              = glGetUniformLocation(TransientState->GameAssets->Shaders[GS_BasicShader].ShaderID,    "ProjectionMatrix");
+        RenderData->ViewMatrixUID                    = glGetUniformLocation(TransientState->GameAssets->Shaders[GS_BasicShader].ShaderID,    "ViewMatrix");
+        RenderData->BasicShaderBrightnessUID         = glGetUniformLocation(TransientState->GameAssets->Shaders[GS_BasicShader].ShaderID,    "uBrightness");
 
-        RenderData->gBufferProjectionMatrixUID       = glGetUniformLocation(TransientState->GameAssets.Shaders[1].ShaderID,  "ProjectionMatrix");
-        RenderData->gBufferViewMatrixUID             = glGetUniformLocation(TransientState->GameAssets.Shaders[1].ShaderID,  "ViewMatrix");
-        RenderData->gBufferBrightnessUID             = glGetUniformLocation(TransientState->GameAssets.Shaders[1].ShaderID,  "uBrightness");
+        RenderData->gBufferProjectionMatrixUID       = glGetUniformLocation(TransientState->GameAssets->Shaders[GS_GBufferShader].ShaderID,  "ProjectionMatrix");
+        RenderData->gBufferViewMatrixUID             = glGetUniformLocation(TransientState->GameAssets->Shaders[GS_GBufferShader].ShaderID,  "ViewMatrix");
+        RenderData->gBufferBrightnessUID             = glGetUniformLocation(TransientState->GameAssets->Shaders[GS_GBufferShader].ShaderID,  "uBrightness");
  
-        RenderData->PointLightSBOID                  = glGetUniformLocation(TransientState->GameAssets.Shaders[2].ShaderID, "gBufferPointLightSBO");
-        RenderData->PointLightCountUID               = glGetUniformLocation(TransientState->GameAssets.Shaders[2].ShaderID, "uPointLightCount");
-        RenderData->LightingShaderUserBrightnessUID  = glGetUniformLocation(TransientState->GameAssets.Shaders[2].ShaderID, "uBrightnessFactor");
-        RenderData->LightingShaderWorldBrightnessUID = glGetUniformLocation(TransientState->GameAssets.Shaders[2].ShaderID, "uWorldBrightness");
+        RenderData->PointLightSBOID                  = glGetUniformLocation(TransientState->GameAssets->Shaders[GS_LightingShader].ShaderID, "gBufferPointLightSBO");
+        RenderData->PointLightCountUID               = glGetUniformLocation(TransientState->GameAssets->Shaders[GS_LightingShader].ShaderID, "uPointLightCount");
+        RenderData->LightingShaderUserBrightnessUID  = glGetUniformLocation(TransientState->GameAssets->Shaders[GS_LightingShader].ShaderID, "uBrightnessFactor");
+        RenderData->LightingShaderWorldBrightnessUID = glGetUniformLocation(TransientState->GameAssets->Shaders[GS_LightingShader].ShaderID, "uWorldBrightness");
 
         // NOTE(Sleepster): Point Light Shader Buffer
         uint64 MaxBufferSize = sizeof(struct point_light) * MAX_POINT_LIGHTS;
@@ -640,9 +543,14 @@ DrawImGui(game_state *State, gl_render_data *RenderData, time_data Time)
 internal
 CLOVER_OGL_RENDER(CloverRender)
 {
-    texture2d *CurrentGameAtlasTexture = GetTextureFromID(GameMemory, GT_GameAtlas);
+    texture2d *CurrentGameAtlasTexture = GetTextureFromID(TransientState->GameAssets, GT_GameAtlas);
+    shader    *BasicShader             = GetShaderFromID(TransientState->GameAssets, GS_BasicShader);
+    shader    *GBufferShader           = GetShaderFromID(TransientState->GameAssets, GS_GBufferShader);
+    shader    *LightingShader          = GetShaderFromID(TransientState->GameAssets, GS_LightingShader);
+    font_data *CurrentBoundFont        = GetFontFromID(TransientState->GameAssets, 48, GF_UbuntuMono);
+
     // OPAQUE GAME OBJECT RENDERING PASS
-    glUseProgram(TransientState->GameAssets.Shaders[GS_GBufferShader].ShaderID);
+    glUseProgram(GBufferShader->ShaderID);
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
     if(TransientState->DrawFrameData.OpaqueQuadCount > 0)
     {
@@ -670,7 +578,7 @@ CLOVER_OGL_RENDER(CloverRender)
             glBindTexture(GL_TEXTURE_2D, CurrentGameAtlasTexture->TextureID);
 
             glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, TransientState->GameAssets.Fonts[GF_UbuntuMono].FontAtlas.TextureID);
+            glBindTexture(GL_TEXTURE_2D, CurrentBoundFont->FontAtlas.TextureID);
 
             glBindVertexArray(RenderData->GameVAOID);
             glDrawElements(GL_TRIANGLES, 
@@ -691,7 +599,7 @@ CLOVER_OGL_RENDER(CloverRender)
             glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
             glDisable(0x809D); // Disabling multisampling
-            glUseProgram(TransientState->GameAssets.Shaders[GS_LightingShader].ShaderID);
+            glUseProgram(LightingShader->ShaderID);
 
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, RenderData->gBufferTextures[0]);
@@ -718,7 +626,7 @@ CLOVER_OGL_RENDER(CloverRender)
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
-    glUseProgram(TransientState->GameAssets.Shaders[GS_BasicShader].ShaderID);
+    glUseProgram(BasicShader->ShaderID);
     if(TransientState->DrawFrameData.TransparentQuadCount > 0)
     {
         GLintptr BufferOffset   =  (TransientState->DrawFrameData.OpaqueQuadCount * 4) * sizeof(vertex);
@@ -744,7 +652,7 @@ CLOVER_OGL_RENDER(CloverRender)
             glBindTexture(GL_TEXTURE_2D, CurrentGameAtlasTexture->TextureID);
 
             glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, TransientState->GameAssets.Fonts[GF_UbuntuMono].FontAtlas.TextureID);
+            glBindTexture(GL_TEXTURE_2D, CurrentBoundFont->FontAtlas.TextureID);
 
             glBindVertexArray(RenderData->GameVAOID);
             glDrawElements(GL_TRIANGLES, 
@@ -780,7 +688,7 @@ CLOVER_OGL_RENDER(CloverRender)
             glBindTexture(GL_TEXTURE_2D, CurrentGameAtlasTexture->TextureID);
 
             glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, TransientState->GameAssets.Fonts[GF_UbuntuMono].FontAtlas.TextureID);
+            glBindTexture(GL_TEXTURE_2D, CurrentBoundFont->FontAtlas.TextureID);
 
             glBindVertexArray(RenderData->GameUIVAOID);
             glDrawElements(GL_TRIANGLES, 
@@ -810,7 +718,7 @@ CLOVER_OGL_RENDER(CloverRender)
             glBindTexture(GL_TEXTURE_2D, CurrentGameAtlasTexture->TextureID);
 
             glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, TransientState->GameAssets.Fonts[GF_UbuntuMono].FontAtlas.TextureID);
+            glBindTexture(GL_TEXTURE_2D, CurrentBoundFont->FontAtlas.TextureID);
 
             glBindVertexArray(RenderData->GameUIVAOID);
             glDrawElements(GL_TRIANGLES, 

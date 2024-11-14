@@ -80,6 +80,8 @@ struct playing_sound
     uint32 SamplesConsumed;
     real32 Volume[2];
 
+    string Filepath;
+
     playing_sound *Next;
 };
 
