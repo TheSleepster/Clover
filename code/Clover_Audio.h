@@ -64,9 +64,6 @@ struct riff_iterator
 
 struct loaded_sound
 {
-    uint32 SoundID;
-    uint32 NextID;
-    
     uint16 ChannelCount;
     uint32 SampleCount;
     uint32 SamplesConsumed;
@@ -76,11 +73,9 @@ struct loaded_sound
 
 struct playing_sound
 {
-    uint32 SoundID;
+    uint32 IDToPlay;
     uint32 SamplesConsumed;
-    real32 Volume[2];
-
-    string Filepath;
+    vec2   Volume = {1.0f, 1.0f};
 
     playing_sound *Next;
 };

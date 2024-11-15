@@ -3,6 +3,9 @@
 > There's still more
 
 
+- So funny little HOO HA. In the game, when an entity is picked up, and then dropped again,
+  It increments the entity counter TWICE
+
 
 - WASAPI??? XAudio2???
 - # Sound Mixer
@@ -27,8 +30,8 @@
 ---
 - ## Asset System
     - [ ] Create a system for tagging assets. 
-    - [ ] Make Tags will include things like what KIND of asset it is 
-    - [ ] Create a struct to control what assets get streamed in and out the game
+    - [x] Make Tags will include things like what KIND of asset it is 
+    - [x] Create a struct to control what assets get streamed in and out the game
     - [ ] Asset file format that will store things like what assets are needed on a per area basis for asset streaming
 
     > [!NOTE]
@@ -67,7 +70,7 @@
         ```
 ---
 - # Sound API
-    - [ ] Provide a way for the engine to play a sound, probably by creating a pair between a string and a SoundID that's loaded
+    - [x] Provide a way for the engine to play a sound, probably by creating a pair between a string and a SoundID that's loaded
     - [ ] With the Asset System, handle the sounds
 
 ---
@@ -78,8 +81,8 @@
 
 ---
 - #### Multithreading (if needed)
-    - [ ] Job system
-    - [ ] Multithreaded asset loading
+    - [x] Job system
+    - [x] Multithreaded asset loading
     - [ ] Multithreaded rendering
     - [ ] Multithreaded game code execution
 

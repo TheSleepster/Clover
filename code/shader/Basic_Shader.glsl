@@ -1,4 +1,4 @@
-#VERTEX
+#shader VERTEX
 
 #version 460 core
 #extension GL_ARB_shading_language_include : require
@@ -33,7 +33,7 @@ void main()
     gl_Position = ProjectionMatrix * ViewMatrix * vec4(VertexPos, 1.0f); 
 }
 
-#FRAGMENT
+#shader FRAGMENT
 
 #version 460 core
 #extension GL_ARB_shading_language_include : require

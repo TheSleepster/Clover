@@ -217,6 +217,11 @@ struct gl_render_data
 
     memory_arena   VertexArena;
     memory_arena UIVertexArena;
+
+    // DEBUG TIMERS
+    GLuint StartTimer;
+    GLuint EndTimer;
+    real64 GPUTimeInMS;
 };
 
 #define CLOVER_OGL_RENDER(name) void name(game_memory *GameMemory, gl_render_data *RenderData, transient_state *TransientState)

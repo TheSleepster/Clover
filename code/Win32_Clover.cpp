@@ -865,11 +865,11 @@ WinMain(HINSTANCE hInstance,
             HDC WindowDC = GetDC(WindowHandle);
             // NOTE(Sleepster): ARENA INITIALZIATION 
             {
-                GameMemory.PermanentStorage.BlockSize    = Megabytes(512);
+                GameMemory.PermanentStorage.BlockSize    = Megabytes(1024);
                 GameMemory.PermanentStorage.MemoryBlock  = VirtualAlloc(0, GameMemory.PermanentStorage.BlockSize, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
                 GameMemory.PermanentStorage.BlockOffset  = (uint8 *)GameMemory.PermanentStorage.MemoryBlock;
                 
-                GameMemory.TransientStorage.BlockSize    = Megabytes(512);
+                GameMemory.TransientStorage.BlockSize    = Megabytes(1024);
                 GameMemory.TransientStorage.MemoryBlock  = VirtualAlloc(0, GameMemory.TransientStorage.BlockSize, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
                 GameMemory.TransientStorage.BlockOffset  = (uint8 *)GameMemory.TransientStorage.MemoryBlock;
 
@@ -881,7 +881,8 @@ WinMain(HINSTANCE hInstance,
                 // NOTE(Sleepster): ARENA INIT 
                 InitializeArena(&RenderData.VertexArena,         sizeof(vertex) * TRUE_MAX_VERTICES, &GameMemory.PermanentStorage);
                 InitializeArena(&RenderData.UIVertexArena,       sizeof(vertex) * TRUE_MAX_VERTICES, &GameMemory.PermanentStorage);
-                InitializeArena(&TransientState->TransientArena, Megabytes(500),                     &GameMemory.TransientStorage);
+                InitializeArena(&GameState->SoundArena,          Megabytes(400),                     &GameMemory.PermanentStorage);
+                InitializeArena(&TransientState->TransientArena, Megabytes(1024),                    &GameMemory.TransientStorage);
                 InitializeArena(&GameState->World.WorldArena,    (sizeof(struct entity) * MAX_ENTITIES) + sizeof(struct item) * MAX_ITEMS, &GameMemory.PermanentStorage);
 
                 GameState->World.Entities = PushArray(&GameState->World.WorldArena, entity, MAX_ENTITIES);
@@ -896,7 +897,7 @@ WinMain(HINSTANCE hInstance,
                 TransientState->GameAssets = PushStruct(&TransientState->TransientArena, game_assets);
                 TransientState->GameAssets->TransientState = TransientState;
                 TransientState->GameAssets->AssetArena     = InitSubArena(&TransientState->TransientArena, Megabytes(200));
-                TransientState->Garbage                    = InitSubArena(&TransientState->TransientArena, Megabytes(100));
+                TransientState->Garbage                    = InitSubArena(&TransientState->TransientArena, Megabytes(300));
             }
 
             // NOTE(Sleepster): THREADING 

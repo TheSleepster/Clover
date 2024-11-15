@@ -412,7 +412,7 @@ CloverSetupRenderer(game_memory *GameMemory, gl_render_data *RenderData, transie
         glEnable(GL_BLEND);        
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glBlendEquation(GL_FUNC_ADD);
-        
+
         glEnable(GL_FRAMEBUFFER_SRGB);
         glDisable(0x809D); // Disabling multisampling
         
@@ -581,6 +581,9 @@ CloverSetupRenderer(game_memory *GameMemory, gl_render_data *RenderData, transie
         glBindTexture(GL_TEXTURE_2D, 0);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     }
+
+    glGenQueries(1, &RenderData->StartTimer);
+    glGenQueries(1, &RenderData->EndTimer);
 }
 
 internal void
@@ -599,6 +602,7 @@ DrawImGui(game_state *State, gl_render_data *RenderData, time_data Time)
         ImGui::Text("Entity Count: %i", State->World.EntityCounter);
         ImGui::Text("Quad Count: %i", RenderData->LastFrameQuadCount);
         ImGui::Text("Vertex Count: %i", RenderData->LastFrameQuadCount * 4);
+        ImGui::Text("GPU Time: %f", RenderData->GPUTimeInMS);
         ImGui::End();
     }
 }
@@ -606,11 +610,13 @@ DrawImGui(game_state *State, gl_render_data *RenderData, time_data Time)
 internal
 CLOVER_OGL_RENDER(CloverRender)
 {
+    glQueryCounter(RenderData->StartTimer, GL_TIMESTAMP);
     texture2d *CurrentGameAtlasTexture = GetTextureFromID(GameMemory, GT_GameAtlas);
     shader    *BasicShader             = GetShaderFromID(GameMemory, GS_BasicShader);
     shader    *GBufferShader           = GetShaderFromID(GameMemory, GS_GBufferShader);
     shader    *LightingShader          = GetShaderFromID(GameMemory, GS_LightingShader);
     font_data *CurrentBoundFont        = GetFontFromID(GameMemory, 48, GF_UbuntuMono);
+
 
     // OPAQUE GAME OBJECT RENDERING PASS
     glUseProgram(GBufferShader->ShaderID);
@@ -790,4 +796,7 @@ CLOVER_OGL_RENDER(CloverRender)
                         0); 
         }
     }
+
+    glQueryCounter(RenderData->EndTimer, GL_TIMESTAMP);
+    RenderData->GPUTimeInMS = (RenderData->EndTimer - RenderData->StartTimer);
 }

@@ -26,13 +26,6 @@ struct load_texture_job
     texture2d *Texture;
 };
 
-struct load_sound_job
-{
-    transient_state *TransientState;
-    loaded_sound *Sound;
-    string Filepath;
-};
-
 struct load_font_job
 {
     game_assets *Assets;
@@ -40,6 +33,13 @@ struct load_font_job
 
     uint32       FontSize;
     string       Filepath;
+};
+
+struct load_sound_job
+{
+    transient_state *TransientState;
+    asset_slot       *SoundSlot;
+    string           Filepath;
 };
 
 internal
@@ -57,11 +57,12 @@ PLATFORM_JOB_ENTRY_CALLBACK(LoadTextureCallback)
 }
 
 internal
-PLATFORM_JOB_ENTRY_CALLBACK(LoadSoundCallback)
+PLATFORM_JOB_ENTRY_CALLBACK(LoadSoundDataCallback)
 {
     load_sound_job *SoundJob = (load_sound_job *)Data;
     WriteBarrier;
-    CloverLoadWAVFile(&SoundJob->TransientState->Garbage, SoundJob->Sound, SoundJob->Filepath);
+    CloverLoadWAVFile(&SoundJob->TransientState->Garbage, SoundJob->SoundSlot->Sound, SoundJob->Filepath);
+    SoundJob->SoundSlot->SlotState = AssetState_Loaded;
 }
 
 internal
@@ -89,30 +90,28 @@ GetShaderFromID(game_memory *GameMemory, shader_id ID)
     }
 }
 
-internal inline void
-CloverLoadAssetTexture(game_memory *GameMemory, asset_slot *TextureSlot, texture_id ID)
-{
-    transient_state *TransientState = (transient_state *)GameMemory->TransientStorage.MemoryBlock;
-
-    TextureSlot->Texture = PushStruct(&TransientState->GameAssets->AssetArena, texture2d);
-
-    load_texture_job *TextureLoadJob = PushStruct(&TransientState->Garbage, load_texture_job);
-    TextureLoadJob->Texture = TextureSlot->Texture;
-    TextureLoadJob->Filepath = TextureFilepaths[ID].Second;
-    TextureLoadJob->TransientState = TransientState;
-
-    GameMemory->AddWorkQueueEntry(GameMemory->HighPriorityQueue, LoadTextureCallback, (void *)TextureLoadJob);
-}
-
 internal inline texture2d*
-PushTextureForRendering(game_memory *GameMemory, texture_id ID)
+PushTextureForRendering(game_memory *GameMemory, asset_slot *TextureSlot, texture_id ID)
 {
-    transient_state *TransientState = (transient_state *)GameMemory->TransientStorage.MemoryBlock;
-    asset_slot *TextureSlot = &TransientState->GameAssets->Textures[ID];
+    if(TextureSlot->SlotState == AssetState_Unloaded)
+    {
+        transient_state *TransientState = (transient_state *)GameMemory->TransientStorage.MemoryBlock;
+        TextureSlot->Texture = PushStruct(&TransientState->GameAssets->AssetArena, texture2d);
 
-    CloverLoadAssetTexture(GameMemory, TextureSlot, ID);
-    TextureSlot->SlotState = AssetState_Queued;
-    return(TextureSlot->Texture);
+        load_texture_job *TextureLoadJob = PushStruct(&TransientState->Garbage, load_texture_job);
+        TextureLoadJob->Texture = TextureSlot->Texture;
+        TextureLoadJob->Filepath = TextureFilepaths[ID].Second;
+        TextureLoadJob->TransientState = TransientState;
+
+        GameMemory->AddWorkQueueEntry(GameMemory->HighPriorityQueue, LoadTextureCallback, (void *)TextureLoadJob);
+
+        TextureSlot->SlotState = AssetState_Queued;
+        return(TextureSlot->Texture);
+    }
+    else
+    {
+        return(TextureSlot->Texture);
+    }
 }
 
 internal inline texture2d*
@@ -124,42 +123,35 @@ GetTextureFromID(game_memory *GameMemory, texture_id ID)
     {
         return(TextureSlot->Texture);
     }
-    else
+    else if(ID != GT_NullAtlas)
     {
-        TextureSlot->Texture = PushTextureForRendering(GameMemory, ID);
+        TextureSlot->Texture = PushTextureForRendering(GameMemory, TextureSlot, ID);
         return(TextureSlot->Texture);
     }
-}
-
-    
-internal void
-CloverLoadAssetFont(game_memory *GameMemory, asset_slot *FontSlot, uint32 Size, font_id ID)
-{
-    transient_state *TransientState = (transient_state *)GameMemory->TransientStorage.MemoryBlock;
-    FontSlot->Font = PushStruct(&TransientState->GameAssets->AssetArena, font_data);
-
-    load_font_job *FontJob = PushStruct(&TransientState->Garbage, load_font_job);
-    FontJob->Assets = TransientState->GameAssets;
-    FontJob->Font = FontSlot->Font;
-    FontJob->Filepath = FontFilepaths[ID].Second;
-    FontJob->FontSize = Size;
-
-    GameMemory->AddWorkQueueEntry(GameMemory->HighPriorityQueue, LoadFontDataCallback, (void *)FontJob);
+    return(0);
 }
 
 internal inline font_data*
-PushFontForUse(game_memory *GameMemory, uint32 Size, font_id ID)
+CloverLoadFontForUse(game_memory *GameMemory, asset_slot *FontSlot, uint32 Size, font_id ID)
 {
-    transient_state *TransientState = (transient_state *)GameMemory->TransientStorage.MemoryBlock;
-    asset_slot *FontSlot = &TransientState->GameAssets->Fonts[ID];
-    if(FontSlot->Font && FontSlot->SlotState == AssetState_Loaded)
+    if(FontSlot->SlotState == AssetState_Unloaded)
     {
+        transient_state *TransientState = (transient_state *)GameMemory->TransientStorage.MemoryBlock;
+        FontSlot->Font = PushStruct(&TransientState->GameAssets->AssetArena, font_data);
+
+        load_font_job *FontJob = PushStruct(&TransientState->Garbage, load_font_job);
+        FontJob->Assets = TransientState->GameAssets;
+        FontJob->Font = FontSlot->Font;
+        FontJob->Filepath = FontFilepaths[ID].Second;
+        FontJob->FontSize = Size;
+
+        GameMemory->AddWorkQueueEntry(GameMemory->HighPriorityQueue, LoadFontDataCallback, (void *)FontJob);
+        FontSlot->SlotState = AssetState_Queued;
+
         return(FontSlot->Font);
     }
     else
     {
-        CloverLoadAssetFont(GameMemory, FontSlot, Size, ID);
-        FontSlot->SlotState = AssetState_Queued;
         return(FontSlot->Font);
     }
 }
@@ -169,23 +161,55 @@ GetFontFromID(game_memory *GameMemory, int32 Size, font_id ID)
 {
     transient_state *TransientState = (transient_state *)GameMemory->TransientStorage.MemoryBlock;
     asset_slot *FontSlot = &TransientState->GameAssets->Fonts[ID];
-	if(FontSlot->Font)
+    if(FontSlot->Font)
     {
         return(FontSlot->Font);
+    }
+    else if(ID != GF_NullFont)
+    {
+        FontSlot->Font = CloverLoadFontForUse(GameMemory, FontSlot, Size, ID);
+        return(FontSlot->Font);
+    }
+    return(0);
+}
+
+internal loaded_sound*
+LoadSoundFromID(game_memory *GameMemory, asset_slot *SoundSlot, soundfx_id ID)
+{
+    if(SoundSlot->SlotState == AssetState_Unloaded)
+    {
+        transient_state *TransientState = (transient_state *)GameMemory->TransientStorage.MemoryBlock;
+        SoundSlot->Sound = PushStruct(&TransientState->GameAssets->AssetArena, loaded_sound);
+
+        load_sound_job *LoadSoundJob = PushStruct(&TransientState->Garbage, load_sound_job);
+        LoadSoundJob->TransientState = TransientState;
+        LoadSoundJob->SoundSlot      = SoundSlot;
+        LoadSoundJob->Filepath       = SoundFilepaths[ID].Second;
+
+        GameMemory->AddWorkQueueEntry(GameMemory->HighPriorityQueue, LoadSoundDataCallback, (void *)LoadSoundJob);
+        SoundSlot->SlotState = AssetState_Queued;
+
+        return(SoundSlot->Sound);
     }
     else
     {
-        FontSlot->Font = PushFontForUse(GameMemory, Size, ID);
-        return(FontSlot->Font);
+        return(SoundSlot->Sound);
     }
 }
 
-internal inline void
-PushSound(game_assets *Assets, soundfx_id ID)
+internal loaded_sound*
+GetSoundFromID(game_memory *GameMemory, soundfx_id ID)
 {
-}
-
-internal inline shader *
-PushShader(game_assets *Assets, shader_id ID)
-{
+    transient_state *TransientState = (transient_state *)GameMemory->TransientStorage.MemoryBlock;
+    asset_slot *SoundSlot = &TransientState->GameAssets->Sounds[ID];
+    if(SoundSlot->Sound && SoundSlot->SlotState == AssetState_Loaded)
+    {
+        return(SoundSlot->Sound);
+    }
+    else if(ID != GSFX_NullSound)
+    {
+        SoundSlot->Sound = LoadSoundFromID(GameMemory, SoundSlot, ID);
+        return(SoundSlot->Sound);
+    }
+    return(0);
 }

@@ -262,9 +262,9 @@ struct game_state
     item             *ActiveRecipe;
     item             *ActiveBlueprint;
 
-    loaded_sound      TestSound;
-    bool32            SoundIsLoaded;
-    playing_sound     FirstPlayingSound;
+    memory_arena       SoundArena;
+    playing_sound     *FirstPlayingSound;
+    playing_sound     *FirstFreePlayingSound;
     
     game_world_data World;
     struct 

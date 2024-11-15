@@ -278,7 +278,7 @@ CreateEntity(game_state *GameState)
 }
 
 internal inline void
-DeleteEntity(entity *Entity)
+DeleteEntity(entity *Entity, game_state *GameState)
 {
     memset(Entity, 0, sizeof(struct entity));
 }
@@ -669,7 +669,7 @@ ResetGame(gl_render_data *RenderData, game_state *GameState, game_memory *GameMe
     for(uint32 i = 0; i < MAX_ENTITIES; i++)
     {
         entity *Temp = &GameState->World.Entities[i];
-        DeleteEntity(Temp);
+        DeleteEntity(Temp, GameState);
     }
     GameState->World.EntityCounter = 0;
     
@@ -890,7 +890,7 @@ AddItemToPlayerInventory(game_state *GameState, entity *PlayerEntity, entity *Te
                 {
                     PlayerEntity->Inventory.Items[InventoryIndex].CurrentStack++;
                     // NOTE(Sleepster): If two matching IDs are found, skip to the deletion 
-                    DeleteEntity(Temp);
+                    DeleteEntity(Temp, GameState);
                     return;
                 }
             }
@@ -909,7 +909,7 @@ AddItemToPlayerInventory(game_state *GameState, entity *PlayerEntity, entity *Te
                     }
                     PlayerEntity->Inventory.Items[InventoryIndex] = NewItem;
                     PlayerEntity->Inventory.Items[InventoryIndex].OccupiedInventorySlot = InventoryIndex;
-                    DeleteEntity(Temp);
+                    DeleteEntity(Temp, GameState);
                     break;
                 }
             }
@@ -998,7 +998,6 @@ GAME_ON_AWAKE(GameOnAwake)
     
     Player = CreateEntity(GameState);
     SetupPlayer(GameState, Player);
-    
     
     GameState->DisplayPlayerHotbar = true;
 }
@@ -1095,9 +1094,8 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                             }
                         }
                         
-                        //PlaySound(&Memory->TemporaryStorage, State, STR("boop.wav"), 1);
                         TransientState->SelectedEntityThisFrame = {};
-                        DeleteEntity(Temp);
+                        DeleteEntity(Temp, GameState);
                     }
                 }
             }
@@ -2085,28 +2083,84 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
         GameState->GameInput.Controller.LeftRumble = 1000;
         GameState->GameInput.Controller.RightRumble = 1000;
     }
+
+    if(IsGameKeyPressed(ATTACK, &GameState->GameInput))
+    {
+        PlaySound(GameState, GSFX_SunkenSeaTheme);
+    }
 }
 
 extern
 GAME_GET_SOUND_SAMPLES(GameGetSoundSamples)
 {
-    int16 *SampleOut = SoundBuffer->SampleBuffer;
-    if(GameState->TestSound.ChannelCount != 0)
+    real32 *MixerBuffer00 = PushArray(&TransientState->TransientArena, real32, SoundBuffer->SampleOutputCount);
+    real32 *MixerBuffer01 = PushArray(&TransientState->TransientArena, real32, SoundBuffer->SampleOutputCount);
+
+    real32 *Dest00 = MixerBuffer00;
+    real32 *Dest01 = MixerBuffer01;
+    for(int32 SampleIndex = 0;
+            SampleIndex < SoundBuffer->SampleOutputCount;
+            ++SampleIndex)
     {
-        for(int32 SampleIndex = 0;
-                SampleIndex < SoundBuffer->SampleOutputCount;
-                ++SampleIndex)
+        *Dest00++ = 0;
+        *Dest01++ = 0;
+    }
+
+    real32 MasterVolume  = 1.0f;
+    for(playing_sound **PlayingSoundptr = &GameState->FirstPlayingSound;
+        *PlayingSoundptr;
+        )
+    {
+        bool IsFinished = false;
+        playing_sound *PlayingSound = *PlayingSoundptr;
+        loaded_sound *CurrentSound = GetSoundFromID(GameMemory, (soundfx_id)PlayingSound->IDToPlay);
+        if(CurrentSound)
         {
-            int16 Volume = 1;
+            Dest00 = MixerBuffer00;
+            Dest01 = MixerBuffer01;
 
-            int32 SampleOffset     = (GameState->TestSound.SamplesConsumed + SampleIndex) % GameState->TestSound.SampleCount;
-            int16 LeftSampleValue  = GameState->TestSound.Samples[SampleOffset * 2];
-            int16 RightSampleValue  = GameState->TestSound.Samples[(SampleOffset * 2) + 1];
+            uint32 SamplesToMix = SoundBuffer->SampleOutputCount;
+            uint32 SamplesRemaining = (CurrentSound->SampleCount - CurrentSound->SamplesConsumed);
+            if(SamplesToMix > SamplesRemaining)
+            {
+                SamplesToMix = SamplesRemaining;
+            }
 
-            *SampleOut++ = LeftSampleValue * Volume;
-            *SampleOut++ = RightSampleValue * Volume;
+            for(uint32 SampleIndex = 0;
+                SampleIndex < SamplesToMix;
+                ++SampleIndex)
+            {
+                int32  SampleOffset           = (PlayingSound->SamplesConsumed + SampleIndex) % CurrentSound->SampleCount;
+                real32 LeftSampleValue        = CurrentSound->Samples[SampleOffset * 2];
+                real32 RightSampleValue       = CurrentSound->Samples[(SampleOffset * 2) + 1];
+
+                *Dest00++ += LeftSampleValue  * PlayingSound->Volume[0];
+                *Dest01++ += RightSampleValue * PlayingSound->Volume[1];
+            }
+
+            IsFinished = (PlayingSound->SamplesConsumed == CurrentSound->SampleCount);
+            PlayingSound->SamplesConsumed += SamplesToMix;
         }
+        if(IsFinished)
+        {
+            *PlayingSoundptr = PlayingSound->Next;
+            PlayingSound->Next = GameState->FirstFreePlayingSound;
+            GameState->FirstFreePlayingSound = PlayingSound;
+        }
+        else
+        {
+            PlayingSoundptr = &PlayingSound->Next;
+        }
+    }
 
-        GameState->TestSound.SamplesConsumed += SoundBuffer->SampleOutputCount;
+    Dest00 = MixerBuffer00;
+    Dest01 = MixerBuffer01;
+    int16 *SampleOut = SoundBuffer->SampleBuffer;
+    for(int32 SampleIndex = 0;
+        SampleIndex < SoundBuffer->SampleOutputCount;
+        ++SampleIndex)
+    {
+        *SampleOut++ = int16((*Dest00++ * MasterVolume) + 0.5f);
+        *SampleOut++ = int16((*Dest01++ * MasterVolume) + 0.5f);
     }
 }

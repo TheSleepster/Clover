@@ -116,3 +116,24 @@ CloverLoadWAVFile(memory_arena *Memory, loaded_sound *Sound, string Filepath)
         }
     }
 }
+
+internal playing_sound *
+PlaySound(game_state *GameState, soundfx_id SoundID)
+{
+    if(!GameState->FirstFreePlayingSound)
+    {
+        GameState->FirstFreePlayingSound = PushStruct(&GameState->SoundArena, playing_sound);
+        GameState->FirstFreePlayingSound->Next = 0;
+    }
+
+    playing_sound *PlayingSound = GameState->FirstFreePlayingSound;
+    GameState->FirstFreePlayingSound = PlayingSound->Next;
+
+    PlayingSound->IDToPlay = SoundID;
+    PlayingSound->Volume   = vec2{1.0f, 1.0f};
+
+    PlayingSound->Next = GameState->FirstPlayingSound;
+    GameState->FirstPlayingSound = PlayingSound;
+    
+    return(PlayingSound);
+}
