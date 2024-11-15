@@ -63,9 +63,8 @@ CloverTestShader(GLuint TestID, GLuint Type)
     }
 }
 
-// TODO(Sleepster): Revisit this to fix the alignment issues with letters like "p" "g" "l" "y" and such
-void
-CloverLoadSDFFont(transient_state *TransientState, font_data *NewFont, string Filepath, uint32 FontSize)
+char *
+CloverLoadSDFFontData(transient_state *TransientState, font_data *NewFont, string Filepath, uint32 FontSize)
 {
     freetype_font_data Font = {};
     Font.FontSize = FontSize;
@@ -88,6 +87,7 @@ CloverLoadSDFFont(transient_state *TransientState, font_data *NewFont, string Fi
     
     FT_GlyphSlot CurrentSlot = Font.FontFace->glyph;
     
+    // TODO(Sleepster): See if pushing onto garbage is a bad idea 
     char *TextureData = (char *)PushSize(&TransientState->Garbage, (uint64)(sizeof(char) * (BITMAP_ATLAS_SIZE * BITMAP_ATLAS_SIZE)));
     if(TextureData)
     {
@@ -144,8 +144,15 @@ CloverLoadSDFFont(transient_state *TransientState, font_data *NewFont, string Fi
     
     FT_Done_Face(Font.FontFace);
     FT_Done_FreeType(Font.FontFile);
-    
-    // SDF TEXTURE DATA
+
+    return(TextureData);
+}
+
+// TODO(Sleepster): Revisit this to fix the alignment issues with letters like "p" "g" "l" "y" and such
+void
+CloverLoadSDFFont(transient_state *TransientState, font_data *NewFont, string Filepath, uint32 FontSize)
+{
+    char *TextureData = CloverLoadSDFFontData(TransientState, NewFont, Filepath, FontSize);
     CloverCreateSDFTexture(TransientState, &NewFont->FontAtlas, TextureData);
 }
 
@@ -206,7 +213,6 @@ void
 CloverLoadTexture(transient_state *TransientState, texture2d *TextureInfo, string Filepath)
 {
     uint32 TextureCount = TransientState->GameAssets->TextureCount;
-    TransientState->GameAssets->TextureCount++;
     glActiveTexture(GL_TEXTURE0 + TextureCount);
     InterlockedIncrement(&TransientState->GameAssets->TextureCount);
     
@@ -329,9 +335,66 @@ RebuildShader(memory_arena *Memory, shader *ReloadingShader)
     }
 }
 
+// Poll for textures to upload to opengl
 internal void
-LoadQueuedTexture()
-{
+LoadQueuedOpenGLTextures(game_assets *Assets)
+{   
+    for(uint32 Index = 0;
+        Index < GT_TextureIDCount;
+        ++Index)
+    {
+        asset_slot *TextureInfo = &Assets->Textures[Index];
+        if(TextureInfo->Texture && TextureInfo->SlotState == AssetState_Queued)
+        {
+            if(TextureInfo->Texture->RawData)
+            {
+                int32 TextureCount = Assets->TextureCount;
+                glActiveTexture(GL_TEXTURE0 + TextureCount);
+                InterlockedIncrement(&Assets->TextureCount);
+
+                glGenTextures(1, &TextureInfo->Texture->TextureID);
+                glBindTexture(GL_TEXTURE_2D, TextureInfo->Texture->TextureID);
+
+                TextureInfo->Texture->LastWriteTime = FileGetLastWriteTime(TextureInfo->Texture->Filepath);
+                TextureInfo->Texture->RawData = (char *)stbi_load((const char *)TextureInfo->Texture->Filepath.Data, 
+                        &TextureInfo->Texture->TextureData.Width, 
+                        &TextureInfo->Texture->TextureData.Height, 
+                        &TextureInfo->Texture->TextureData.Channels, 
+                        4);
+                if(TextureInfo->Texture->RawData)
+                {
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+                    glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB_ALPHA, 
+                            TextureInfo->Texture->TextureData.Width, TextureInfo->Texture->TextureData.Height, 0, 
+                            GL_RGBA, GL_UNSIGNED_BYTE, TextureInfo->Texture->RawData);
+                }
+                stbi_image_free(TextureInfo->Texture->RawData);
+                glBindTexture(GL_TEXTURE_2D, 0);
+                ++Assets->TextureCount;
+
+                InterlockedCompareExchange((uint64 volatile *)&TextureInfo->SlotState,
+                                           AssetState_Loaded,
+                                           AssetState_Queued);
+            }
+        }
+    }
+    
+    for(uint32 Index = 0;
+        Index < GF_FontIDCount;
+        ++Index)
+    {
+        asset_slot *NewFont = &Assets->Fonts[Index];
+        if(NewFont->Font && NewFont->Font->RawData)
+        {
+            CloverCreateSDFTexture(Assets->TransientState, &NewFont->Font->FontAtlas, NewFont->Font->RawData);
+            NewFont->Font->RawData = 0;
+            ++Assets->TextureCount;
+        }
+    }
 }
 
 internal void
@@ -543,11 +606,11 @@ DrawImGui(game_state *State, gl_render_data *RenderData, time_data Time)
 internal
 CLOVER_OGL_RENDER(CloverRender)
 {
-    texture2d *CurrentGameAtlasTexture = GetTextureFromID(TransientState->GameAssets, GT_GameAtlas);
-    shader    *BasicShader             = GetShaderFromID(TransientState->GameAssets, GS_BasicShader);
-    shader    *GBufferShader           = GetShaderFromID(TransientState->GameAssets, GS_GBufferShader);
-    shader    *LightingShader          = GetShaderFromID(TransientState->GameAssets, GS_LightingShader);
-    font_data *CurrentBoundFont        = GetFontFromID(TransientState->GameAssets, 48, GF_UbuntuMono);
+    texture2d *CurrentGameAtlasTexture = GetTextureFromID(GameMemory, GT_GameAtlas);
+    shader    *BasicShader             = GetShaderFromID(GameMemory, GS_BasicShader);
+    shader    *GBufferShader           = GetShaderFromID(GameMemory, GS_GBufferShader);
+    shader    *LightingShader          = GetShaderFromID(GameMemory, GS_LightingShader);
+    font_data *CurrentBoundFont        = GetFontFromID(GameMemory, 48, GF_UbuntuMono);
 
     // OPAQUE GAME OBJECT RENDERING PASS
     glUseProgram(GBufferShader->ShaderID);

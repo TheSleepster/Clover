@@ -718,18 +718,21 @@ CollectGarbage(memory_arena *Trash)
 internal void
 Win32AddEntryToWorkQueue(platform_work_queue *Queue, platform_job_entry_callback *Callback, void *UserData)
 {
-    uint32 NewEntryToWrite = (Queue->NextEntryToWrite + 1) % ArrayCount(Queue->Entries);
+    uint32 ThisEntryToWrite = Queue->NextEntryToWrite;
+    uint32 NewEntryToWrite = (ThisEntryToWrite + 1) % ArrayCount(Queue->Entries);
     Assert(NewEntryToWrite !=  Queue->NextEntryToRead);
 
-    platform_work_queue_entry *Entry = Queue->Entries + Queue->NextEntryToWrite;
+    platform_work_queue_entry *Entry = Queue->Entries + ThisEntryToWrite;
     Entry->UserData = UserData;
     Entry->Callback = Callback;
     Entry->IsValid  = true;
-    ++Queue->CompletionGoal;
+    InterlockedIncrement(&Queue->CompletionGoal);
 
-    WriteBarrier;
+    ReadWriteBarrier;
     // TODO(Sleepster): InterlockedCompareExchange? 
-    Queue->NextEntryToWrite = NewEntryToWrite;
+    InterlockedCompareExchange(&Queue->NextEntryToWrite,
+                                NewEntryToWrite,
+                                ThisEntryToWrite);
     ReleaseSemaphore(Queue->Semaphore, 1, 0);
 }
 
@@ -747,9 +750,14 @@ Win32DoNextJobEntry(platform_work_queue *Queue)
                                                       UnincrementedJobIndex);
         if(JobIndex == UnincrementedJobIndex)
         {
-            platform_work_queue_entry Entry = Queue->Entries[JobIndex];
-            Entry.Callback(Queue, Entry.UserData);
-            InterlockedIncrement(&Queue->JobsCompleted);
+            platform_work_queue_entry *Entry = &Queue->Entries[JobIndex];
+            if(Entry->IsValid)
+            {
+                Entry->IsValid = false;
+
+                Entry->Callback(Queue, Entry->UserData);
+                InterlockedIncrement(&Queue->JobsCompleted);
+            }
         }
     }
     else
@@ -768,8 +776,9 @@ Win32FlushAllWorkerEntries(platform_work_queue *Queue)
         Win32DoNextJobEntry(Queue);
     }
     
-    Queue->CompletionGoal = 0;
-    Queue->JobsCompleted  = 0;
+    ReadWriteBarrier;
+    InterlockedExchange(&Queue->CompletionGoal, 0);
+    InterlockedExchange(&Queue->JobsCompleted, 0);
 }
 
 DWORD WINAPI
@@ -1143,8 +1152,6 @@ WinMain(HINSTANCE hInstance,
                 }
 #endif
 
-                CloverLoadQueuedGLAssets(&GameMemory);
-
                 // NOTE(Sleepster): DELTA TIME 
                 {
                     real64 NewTime     = GetLastTime();
@@ -1164,6 +1171,7 @@ WinMain(HINSTANCE hInstance,
                 // NOTE(Sleepster): UPDATE GAME 
                 {
                     Game.UpdateAndDraw(&GameMemory, &RenderData, GameState, TransientState, Time, SizeData);
+                    LoadQueuedOpenGLTextures(TransientState->GameAssets);
                     // NOTE(Sleepster): UPDATE SOUND 
                     {
                         DWORD BytesToWrite = 0;

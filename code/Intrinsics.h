@@ -85,10 +85,10 @@ typedef double   real64;
 
 // TODO(Sleepster): Double check this stuff
 #define WriteBarrier     _WriteBarrier(); _mm_sfence()
-#define ReadBarrier      _ReadBarrier()
-#define ReadWriteBarrier _ReadWriteBarrier();
-
+#define ReadBarrier      _ReadBarrier();  _mm_sfence()
+#define ReadWriteBarrier _ReadWriteBarrier(); _mm_lfence()
 #else
+
 #define alignas(x)       alignas()
 #define inline           inline
 

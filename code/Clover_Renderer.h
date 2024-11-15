@@ -81,6 +81,8 @@ struct font_data
     
     uint32 FontHeight;
     uint32 GlyphSize;
+
+    char *RawData;
 };
 
 
@@ -244,10 +246,11 @@ HexToRGBA(int64 hex)
 
 void             CloverCreateSDFTexture(transient_state *TransientState, texture2d *TextureInfo, char *TextureData); 
 void             CloverTestShader(GLuint TestID, GLuint Type); 
-void             CloverLoadSDFFont(transient_state *TransientState, font_data *NewFont, string Filepath, uint32 FontSize);
 gl_shader_source CloverLoadShaderSource(memory_arena *Scratch, uint32 ShaderType, string Filepath);
 shader           CloverCreateShader(memory_arena *Memory, string VertexShader, string FragmentShader);
 void             CloverLoadTexture(transient_state *TransientState, texture2d *TextureInfo, string Filepath);
 void             CloverReloadTexture(texture2d *TextureInfo, uint32 TextureIndex);
+char *           CloverLoadSDFFontData(transient_state *TransientState, font_data *NewFont, string Filepath, uint32 FontSize);
+void             CloverLoadSDFFont(transient_state *TransientState, font_data *NewFont, string Filepath, uint32 FontSize);
 
 #endif // _CLOVER_RENDERER_H
