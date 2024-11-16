@@ -13,6 +13,7 @@
 #include "util/FileIO.h"
 #include "util/String.h"
 #include "util/Pairs.h"
+#include "Clover_Asset.h"
 
 #include "Intrinsics.h"
 
@@ -64,6 +65,7 @@ struct riff_iterator
 
 struct loaded_sound
 {
+    uint32 ID;
     uint16 ChannelCount;
     uint32 SampleCount;
     uint32 SamplesConsumed;

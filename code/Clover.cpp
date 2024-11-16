@@ -15,13 +15,6 @@
 #include "../data/deps/stb/stb_image.h"
 #endif
 
-#if 0
-// NOTE(Sleepster: SDL Must come first as well 
-#include "../data/deps/SDL3/include/SDL3/SDL.h"
-#include "../data/deps/SDL3/include/SDL3/SDL_gamepad.h"
-#include "../data/deps/SDL3/include/SDL3/SDL_joystick.h"
-#endif
-
 #include "Intrinsics.h"
 
 // UTILS
@@ -41,9 +34,6 @@
 #include "Clover_UI.h"
 #include "Clover_Asset.h"
 #include "shader/CommonShader.glh"
-
-// IMGUI IMPl
-#include "../data/deps/ImGui/imgui.h"
 
 #include "Clover_Input.cpp"
 #include "Clover_Draw.cpp"
@@ -2086,15 +2076,20 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
 
     if(IsGameKeyPressed(ATTACK, &GameState->GameInput))
     {
-        PlaySound(GameState, GSFX_SunkenSeaTheme);
+        PlaySound(GameState, GSFX_SunkenSeaTheme, 1.0f, 1.0f);
+    }
+
+    if(IsKeyPressed(KEY_RIGHT_MOUSE, &GameState->GameInput))
+    {
+        PlaySound(GameState, GSFX_RoarOfTheJungleDragon, 0.4f, 0.4f);
     }
 }
 
 extern
 GAME_GET_SOUND_SAMPLES(GameGetSoundSamples)
 {
-    real32 *MixerBuffer00 = PushArray(&TransientState->TransientArena, real32, SoundBuffer->SampleOutputCount);
-    real32 *MixerBuffer01 = PushArray(&TransientState->TransientArena, real32, SoundBuffer->SampleOutputCount);
+    real32 *MixerBuffer00 = PushArray(&TransientState->Garbage, real32, SoundBuffer->SampleOutputCount);
+    real32 *MixerBuffer01 = PushArray(&TransientState->Garbage, real32, SoundBuffer->SampleOutputCount);
 
     real32 *Dest00 = MixerBuffer00;
     real32 *Dest01 = MixerBuffer01;
@@ -2109,12 +2104,12 @@ GAME_GET_SOUND_SAMPLES(GameGetSoundSamples)
     real32 MasterVolume  = 1.0f;
     for(playing_sound **PlayingSoundptr = &GameState->FirstPlayingSound;
         *PlayingSoundptr;
-        )
+       )
     {
         bool IsFinished = false;
         playing_sound *PlayingSound = *PlayingSoundptr;
         loaded_sound *CurrentSound = GetSoundFromID(GameMemory, (soundfx_id)PlayingSound->IDToPlay);
-        if(CurrentSound)
+        if(CurrentSound->SampleCount != 0)
         {
             Dest00 = MixerBuffer00;
             Dest01 = MixerBuffer01;

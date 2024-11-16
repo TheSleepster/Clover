@@ -118,7 +118,7 @@ CloverLoadWAVFile(memory_arena *Memory, loaded_sound *Sound, string Filepath)
 }
 
 internal playing_sound *
-PlaySound(game_state *GameState, soundfx_id SoundID)
+PlaySound(game_state *GameState, soundfx_id SoundID, real32 LeftChannelVolume, real32 RightChannelVolume)
 {
     if(!GameState->FirstFreePlayingSound)
     {
@@ -130,7 +130,8 @@ PlaySound(game_state *GameState, soundfx_id SoundID)
     GameState->FirstFreePlayingSound = PlayingSound->Next;
 
     PlayingSound->IDToPlay = SoundID;
-    PlayingSound->Volume   = vec2{1.0f, 1.0f};
+    PlayingSound->Volume   = vec2{LeftChannelVolume, RightChannelVolume};
+    PlayingSound->SamplesConsumed = 0;
 
     PlayingSound->Next = GameState->FirstPlayingSound;
     GameState->FirstPlayingSound = PlayingSound;

@@ -9,7 +9,7 @@
 
 - WASAPI??? XAudio2???
 - # Sound Mixer
-    - [ ] Control how audio is mixed
+    - [x] Control how audio is mixed
     - [ ] Control and determine how a sound is playing
         - [ ] Is the sound looped?
         - [ ] Is the sound multi-instancing? (play more than one of the same sound at a time from the same source)
@@ -18,6 +18,10 @@
     - [ ] Allow for audio streaming on large files (music)
     - [ ] Allow for control on things like pitch 
     - [ ] Create an API for allowing the game to modify sounds in response to certain events
+
+    > [!NOTE]
+    > THIS IS VERY IMPORTANT
+    - [ ] Add a "trigger" object that can begin a sound and prevents multiple instances from being played at once from the same source
 
     > [!NOTE]
     > This is an example of what that could look like

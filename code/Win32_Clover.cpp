@@ -897,7 +897,7 @@ WinMain(HINSTANCE hInstance,
                 TransientState->GameAssets = PushStruct(&TransientState->TransientArena, game_assets);
                 TransientState->GameAssets->TransientState = TransientState;
                 TransientState->GameAssets->AssetArena     = InitSubArena(&TransientState->TransientArena, Megabytes(200));
-                TransientState->Garbage                    = InitSubArena(&TransientState->TransientArena, Megabytes(300));
+                TransientState->Garbage                    = InitSubArena(&TransientState->TransientArena, Megabytes(600));
             }
 
             // NOTE(Sleepster): THREADING 
