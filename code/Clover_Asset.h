@@ -53,6 +53,8 @@ enum soundfx_id
     GSFX_NullSound,
     GSFX_SunkenSeaTheme,
     GSFX_RoarOfTheJungleDragon,
+    GSFX_Boop,
+    GSFX_Bap,
     GSFX_IDCount,
 };
 
@@ -101,6 +103,11 @@ struct game_assets
     asset_slot              Sounds[GSFX_IDCount];
 };
 
+bool IsValid(uint32 ID)
+{
+    return(ID != GSFX_NullSound);
+}
+
 const pair<uint32, string> TextureFilepaths[] = 
 {
     pair<uint32, string>(GT_NullAtlas,               STR("")),
@@ -119,6 +126,8 @@ const pair<uint32, string>SoundFilepaths[] =
     pair<uint32, string>(GSFX_NullSound,             STR("")),
     pair<uint32, string>(GSFX_SunkenSeaTheme,        STR("../data/res/sounds/Test.wav")),
     pair<uint32, string>(GSFX_RoarOfTheJungleDragon, STR("../data/res/sounds/Test2.wav")),
+    pair<uint32, string>(GSFX_Boop,                  STR("../data/res/sounds/boop.wav")),
+    pair<uint32, string>(GSFX_Bap,                   STR("../data/res/sounds/BAP.wav")),
 };
 
 #endif // CLOVER_ASSET_H

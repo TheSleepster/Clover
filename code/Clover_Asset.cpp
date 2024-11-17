@@ -39,6 +39,9 @@ struct load_sound_job
 {
     game_state       *GameState;
     asset_slot       *SoundSlot;
+
+    int32             StreamingSampleIndex;
+    int32             SamplesToStream;
     string            Filepath;
 };
 
@@ -59,28 +62,31 @@ PLATFORM_JOB_ENTRY_CALLBACK(LoadTextureCallback)
 }
 
 internal
-PLATFORM_JOB_ENTRY_CALLBACK(LoadSoundDataCallback)
-{
-    load_sound_job *SoundJob = (load_sound_job *)Data;
-    ReadWriteBarrier;
-    if(SoundJob && SoundJob->SoundSlot->SlotState == AssetState_Queued)
-    {
-        uint32 ID = SoundJob->SoundSlot->Sound->ID;
-        SoundJob->SoundSlot->SlotState = AssetState_Loaded;
-        SoundJob->SoundSlot->Sound->ID = ID;
-        CloverLoadWAVFile(&SoundJob->GameState->SoundArena, SoundJob->SoundSlot->Sound, SoundJob->Filepath);
-    }
-}
-
-internal
 PLATFORM_JOB_ENTRY_CALLBACK(LoadFontDataCallback)
 {
     load_font_job *FontJob = (load_font_job *)Data;
     ReadWriteBarrier;
     if(FontJob && FontJob->FontSlot->SlotState == AssetState_Queued)
     {
-        FontJob->FontSlot->Font->RawData = 
+        asset_slot *FontSlot = FontJob->FontSlot;
+        FontSlot->Font->RawData = 
             CloverLoadSDFFontData(FontJob->Assets->TransientState, FontJob->FontSlot->Font, FontJob->Filepath, FontJob->FontSize);
+    }
+}
+
+internal
+PLATFORM_JOB_ENTRY_CALLBACK(LoadSoundDataCallback)
+{
+    load_sound_job *SoundJob = (load_sound_job *)Data;
+    ReadWriteBarrier;
+
+    uint32 ID = SoundJob->SoundSlot->Sound->ID;
+    AtomicCompareExchangei32((volatile int32 *)&SoundJob->SoundSlot->SlotState, AssetState_Loaded, AssetState_Queued);
+    if(SoundJob->SoundSlot->SlotState == AssetState_Loaded)
+    {
+        SoundJob->SoundSlot->Sound->ID = ID;
+        CloverLoadWAVFile(&SoundJob->GameState->SoundArena, SoundJob->SoundSlot->Sound, 
+                           SoundJob->Filepath, SoundJob->StreamingSampleIndex, SoundJob->SamplesToStream);
     }
 }
 
@@ -183,44 +189,76 @@ GetFontFromID(game_memory *GameMemory, int32 Size, font_id ID)
 }
 
 internal loaded_sound*
-LoadSoundFromID(game_memory *GameMemory, asset_slot *SoundSlot, soundfx_id ID)
+LoadSoundFromID(game_memory *GameMemory, asset_slot *SoundSlot, soundfx_id ID, 
+                int32 StreamingSampleIndex = 0, int32 SamplesToStream = 0)
 {
+    transient_state *TransientState = (transient_state *)GameMemory->TransientStorage.MemoryBlock;
+    game_state *GameState = (game_state *)GameMemory->PermanentStorage.MemoryBlock;
+    SoundSlot->Sound = PushStruct(&TransientState->GameAssets->AssetArena, loaded_sound);
+
+    load_sound_job *LoadSoundJob = PushStruct(&TransientState->Garbage, load_sound_job);
     if(SoundSlot->SlotState == AssetState_Unloaded)
     {
-        transient_state *TransientState = (transient_state *)GameMemory->TransientStorage.MemoryBlock;
-        game_state *GameState = (game_state *)GameMemory->PermanentStorage.MemoryBlock;
-        SoundSlot->Sound = PushStruct(&TransientState->GameAssets->AssetArena, loaded_sound);
-
-        load_sound_job *LoadSoundJob = PushStruct(&TransientState->Garbage, load_sound_job);
         LoadSoundJob->GameState      = GameState;
         LoadSoundJob->SoundSlot      = SoundSlot;
         LoadSoundJob->Filepath       = SoundFilepaths[ID].Second;
-        LoadSoundJob->SoundSlot->Sound->ID      = ID;
+        LoadSoundJob->SoundSlot->Sound->ID                   = ID;
 
         GameMemory->AddWorkQueueEntry(GameMemory->HighPriorityQueue, LoadSoundDataCallback, (void *)LoadSoundJob);
         SoundSlot->SlotState = AssetState_Queued;
+    }
 
-        return(SoundSlot->Sound);
-    }
-    else
-    {
-        return(SoundSlot->Sound);
-    }
+    return(SoundSlot->Sound);
 }
 
 internal loaded_sound*
-GetSoundFromID(game_memory *GameMemory, soundfx_id ID)
+GetSoundFromID(game_memory *GameMemory, soundfx_id ID,
+               int32 StartingIndex = 0, int32 SamplesToStream = 0)
 {
     transient_state *TransientState = (transient_state *)GameMemory->TransientStorage.MemoryBlock;
     asset_slot *SoundSlot = &TransientState->GameAssets->Sounds[ID];
-    if(SoundSlot->Sound && SoundSlot->SlotState == AssetState_Loaded)
+    if(ID != GSFX_NullSound && SoundSlot->SlotState != AssetState_Loaded)
     {
-        return(SoundSlot->Sound);
+        SoundSlot->Sound = LoadSoundFromID(GameMemory, SoundSlot, ID, 
+                                           StartingIndex, SamplesToStream);
     }
-    else if(ID != GSFX_NullSound)
-    {
-        SoundSlot->Sound = LoadSoundFromID(GameMemory, SoundSlot, ID);
-        return(SoundSlot->Sound);
-    }
-    return(0);
+    return(SoundSlot->Sound);
 }
+
+#if 0
+internal loaded_sound *
+DEBUGLoadSoundFromID(game_memory *GameMemory, asset_slot *SoundSlot, playing_sound *PlayingSound,
+                     int32 StreamingIndex = 0, int32 SamplesToStream = 0)
+{
+    transient_state *TransientState = (transient_state *)GameMemory->TransientStorage.MemoryBlock;
+    game_state *GameState = (game_state *)GameMemory->PermanentStorage.MemoryBlock;
+    SoundSlot->Sound = PushStruct(&TransientState->GameAssets->AssetArena, loaded_sound);
+
+    load_sound_job *LoadSoundJob = PushStruct(&TransientState->Garbage, load_sound_job);
+    if(SoundSlot->SlotState == AssetState_Unloaded)
+    {
+        LoadSoundJob->GameState      = GameState;
+        LoadSoundJob->SoundSlot      = SoundSlot;
+        LoadSoundJob->Filepath       = SoundFilepaths[ID].Second;
+        LoadSoundJob->SoundSlot->Sound->ID                   = ID;
+
+        GameMemory->AddWorkQueueEntry(GameMemory->HighPriorityQueue, LoadSoundDataCallback, (void *)LoadSoundJob);
+        SoundSlot->SlotState = AssetState_Queued;
+    }
+
+    return(SoundSlot->Sound);
+}
+
+internal loaded_sound *
+DEBUGGetSoundFromID(game_memory *GameMemory, playing_sound *PlayingSound,
+                    int32 StartingIndex = 0, int32 SamplesToStream = 0)
+{
+    transient_state *TransientState = (transient_state *)GameMemory->TransientStorage.MemoryBlock;
+    asset_slot *SoundSlot = &TransientState->GameAssets->Sounds[PlayingSound->ID];
+    if(PlayingSound->ID != GSFX_NullSound && SoundSlot->SlotState != AssetState_Loaded)
+    {
+        SoundSlot->Sound = DEBUGLoadSoundFromID(GameMemory, SoundSlot, PlayingSound, StartingIndex, SamplesToStream);
+    }
+    return(SoundSlot->Sound);
+}
+#endif

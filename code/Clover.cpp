@@ -2076,7 +2076,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
 
     if(IsGameKeyPressed(ATTACK, &GameState->GameInput))
     {
-        PlaySound(GameState, GSFX_SunkenSeaTheme, 1.0f, 1.0f);
+        PlaySound(GameState, GSFX_Boop, 1.0f, 1.0f);
     }
 
     if(IsKeyPressed(KEY_RIGHT_MOUSE, &GameState->GameInput))
@@ -2108,9 +2108,11 @@ GAME_GET_SOUND_SAMPLES(GameGetSoundSamples)
     {
         bool IsFinished = false;
         playing_sound *PlayingSound = *PlayingSoundptr;
-        loaded_sound *CurrentSound = GetSoundFromID(GameMemory, (soundfx_id)PlayingSound->IDToPlay);
+        loaded_sound *CurrentSound = GetSoundFromID(GameMemory, (soundfx_id)PlayingSound->ID);
         if(CurrentSound->SampleCount != 0)
         {
+            GetSoundFromID(GameMemory, (soundfx_id)PlayingSound->NextIDToPlay,
+                           0, SoundBuffer->SampleOutputCount);
             Dest00 = MixerBuffer00;
             Dest01 = MixerBuffer01;
 
@@ -2133,9 +2135,21 @@ GAME_GET_SOUND_SAMPLES(GameGetSoundSamples)
                 *Dest01++ += RightSampleValue * PlayingSound->Volume[1];
             }
 
-            IsFinished = (PlayingSound->SamplesConsumed == CurrentSound->SampleCount);
             PlayingSound->SamplesConsumed += SamplesToMix;
+            if(PlayingSound->SamplesConsumed >= CurrentSound->TotalSampleCount)
+            {
+                if(IsValid(PlayingSound->NextIDToPlay))
+                {
+                    PlayingSound->ID = PlayingSound->NextIDToPlay;
+                    PlayingSound->SamplesConsumed = 0;
+                }
+                else
+                {
+                    IsFinished = true;
+                }
+            }
         }
+
         if(IsFinished)
         {
             *PlayingSoundptr = PlayingSound->Next;

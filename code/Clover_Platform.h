@@ -19,37 +19,12 @@
 #include "Clover.h"
 #include "Clover_Renderer.h"
 
-
-/* struct win32_master_queue_manager */
-/* { */
-/*     uint32 OpenThreadCount; */
-/*     win32_thread_info *Threads; */
-    
-/*     uint32 QueueCount; */
-/*     work_queue *Queues; */
-
-/*     HANDLE Semaphore; */
-/* }; */
-
-
 struct platform_work_queue;
 #define PLATFORM_JOB_ENTRY_CALLBACK(name) void name(platform_work_queue *Queue, void *Data)
 typedef PLATFORM_JOB_ENTRY_CALLBACK(platform_job_entry_callback);
 
 typedef void platform_add_entry(platform_work_queue *Queue, platform_job_entry_callback *Callback, void *Data);
 typedef void platform_flush_worker_entries(platform_work_queue *Queue);
-
-/*
-// NOTE(Sleepster): For each OS layer
-internal void* 
-PlatformReadEntrieFileMA(memory_arena *Arena, string Filepath)
-{
-    return(0);
-}
-
-// NOTE(Sleepster): For each rendering API 
-internal void CloverLoadTexture();
-*/
 
 struct game_memory
 {
