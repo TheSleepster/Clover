@@ -41,6 +41,7 @@
 #include "Clover_Audio.cpp"
 #include "Clover_Asset.cpp"
 
+
 global_variable entity *Player = {};
 
 
@@ -2093,6 +2094,7 @@ GAME_GET_SOUND_SAMPLES(GameGetSoundSamples)
 
     real32 *Dest00 = MixerBuffer00;
     real32 *Dest01 = MixerBuffer01;
+
     for(int32 SampleIndex = 0;
             SampleIndex < SoundBuffer->SampleOutputCount;
             ++SampleIndex)
