@@ -63,7 +63,7 @@ GetType(riff_iterator Iter)
 
 // NOTE(Sleepster): If Either of the last 2 are 0, get the whole file
 internal void 
-CloverLoadWAVFile(memory_arena *Memory, loaded_sound *Sound, string Filepath, uint32 StreamingSampleIndex = 0, uint32 StreamingSampleCount = 0)
+CloverLoadWAVFile(memory_arena *Memory, asset_slot *SoundSlot, string Filepath, uint32 StreamingSampleIndex = 0, uint32 StreamingSampleCount = 0)
 {
     uint32 FileSize = {};
     string FileContents = ReadEntireFileMA(Memory, Filepath, &FileSize);
@@ -71,7 +71,8 @@ CloverLoadWAVFile(memory_arena *Memory, loaded_sound *Sound, string Filepath, ui
     if(FileContents.Data != 0)
     {
         WAVE_header *Header = (WAVE_header *)FileContents.Data;
-
+        // NOTE(Sleepster): We Crash here sometimes when streaming from a file because the arena gets wiped.
+        //                  WOMP WOMP. Maybe make it where we don't just crash, but instead just do nothing
         Assert(Header->RIFFID == WAVE_ChunkID_RIFF);
         Assert(Header->WAVEID == WAVE_ChunkID_WAVE);
 
@@ -79,8 +80,8 @@ CloverLoadWAVFile(memory_arena *Memory, loaded_sound *Sound, string Filepath, ui
         uint32 SampleDataSize = 0;
         int16 *SampleData     = 0;
         for(riff_iterator Iter = ParseChunkAt(Header + 1, (uint8 *)(Header + 1) + Header->Size - 4);
-            IsChunkValid(Iter);
-            Iter = NextChunk(Iter))
+                IsChunkValid(Iter);
+                Iter = NextChunk(Iter))
         {
             switch(GetType(Iter))
             {
@@ -101,24 +102,22 @@ CloverLoadWAVFile(memory_arena *Memory, loaded_sound *Sound, string Filepath, ui
             }
         }
         Assert(ChannelCount && SampleData);
-        Sound->ChannelCount = ChannelCount;
-        Sound->SampleCount  = (SampleDataSize / (sizeof(uint8)));
-        Sound->SampleCount  = (Sound->SampleCount + 1) & ~1;
-        Sound->TotalSampleCount = Sound->SampleCount;
+        SoundSlot->Sound->ChannelCount = ChannelCount;
+        SoundSlot->Sound->SampleCount  = (SampleDataSize / (sizeof(uint8)));
+        SoundSlot->Sound->SampleCount  = (SoundSlot->Sound->SampleCount + 1) & ~1;
         // NOTE(Sleepster): Mono/Stereo 
         if(ChannelCount == 1||ChannelCount == 2)
         {
-            if(StreamingSampleCount < 0)
+            if(StreamingSampleCount > 0)
             {
-                Assert((StreamingSampleIndex + StreamingSampleIndex) <= Sound->SampleCount);
-                Sound->SampleCount      = StreamingSampleCount;
-                Sound->Samples         += StreamingSampleIndex;
-                Sound->Samples          = SampleData;
-                Sound->StreamingSampleIndex += StreamingSampleIndex;
+                Assert((StreamingSampleIndex + StreamingSampleIndex) <= SoundSlot->Sound->SampleCount);
+                SoundSlot->Sound->SampleCount      = StreamingSampleCount;
+                SoundSlot->Sound->Samples         += StreamingSampleIndex;
+                SoundSlot->Sound->Samples          = SampleData;
             }
             else
             {
-                Sound->Samples = SampleData;
+                SoundSlot->Sound->Samples = SampleData;
             }
         }
         // NOTE(Sleepster): IDK like 5.1 or something  
@@ -131,7 +130,7 @@ CloverLoadWAVFile(memory_arena *Memory, loaded_sound *Sound, string Filepath, ui
 
 internal playing_sound *
 PlaySound(game_state *GameState, soundfx_id SoundID, real32 LeftChannelVolume, real32 RightChannelVolume, 
-          soundfx_id NextSoundID = GSFX_NullSound)
+          bool32 ShouldBeStreamed, soundfx_id NextSoundID = GSFX_NullSound)
 {
     if(!GameState->FirstFreePlayingSound)
     {
@@ -144,7 +143,9 @@ PlaySound(game_state *GameState, soundfx_id SoundID, real32 LeftChannelVolume, r
 
     PlayingSound->ID = SoundID;
     PlayingSound->Volume   = vec2{LeftChannelVolume, RightChannelVolume};
-    PlayingSound->SamplesConsumed = 0;
+    PlayingSound->SamplesCursor = 0;
+    PlayingSound->StreamedFromFile = ShouldBeStreamed;
+    PlayingSound->NextIDToPlay = NextSoundID;
 
     PlayingSound->Next = GameState->FirstPlayingSound;
     GameState->FirstPlayingSound = PlayingSound;
@@ -168,7 +169,7 @@ PlayOrderedSound(game_state *GameState, soundfx_id FirstSoundID, soundfx_id Seco
 
     PlayingSound->ID = FirstSoundID;
     PlayingSound->Volume   = vec2{LeftChannelVolume, RightChannelVolume};
-    PlayingSound->SamplesConsumed = 0;
+    PlayingSound->SamplesCursor = 0;
     PlayingSound->NextIDToPlay = SecondSoundID;
 
     PlayingSound->Next = GameState->FirstPlayingSound;
@@ -192,7 +193,7 @@ PlayLoopedSound(game_state *GameState, soundfx_id ID,
 
     PlayingSound->ID = ID;
     PlayingSound->Volume   = vec2{LeftChannelVolume, RightChannelVolume};
-    PlayingSound->SamplesConsumed = 0;
+    PlayingSound->SamplesCursor = 0;
     PlayingSound->NextIDToPlay = ID;
 
     PlayingSound->Next = GameState->FirstPlayingSound;

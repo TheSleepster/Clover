@@ -67,11 +67,9 @@ struct loaded_sound
 {
     uint32 ID;
     uint16 ChannelCount;
-    uint32 StreamingSampleIndex;
     uint32 SamplesConsumed;
     uint32 SampleCount;
-    uint32 TotalSampleCount;
-
+    
     int16 *Samples;
 };
 
@@ -79,11 +77,8 @@ struct playing_sound
 {
     uint32 ID;
     uint32 NextIDToPlay;
-    uint32 SamplesConsumed;
-
-    uint32 StreamingSampleIndex;
-    uint32 SamplesToStream;
-    bool32 IsStreamed;
+    uint32 SamplesCursor;
+    bool32 StreamedFromFile;
 
     vec2   Volume = {1.0f, 1.0f};
     playing_sound *Next;

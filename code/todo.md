@@ -75,7 +75,7 @@
 ---
 - # Sound API
     - [x] Provide a way for the engine to play a sound, probably by creating a pair between a string and a SoundID that's loaded
-    - [ ] With the Asset System, handle the sounds
+    - [x] With the Asset System, handle the sounds
 
 ---
 - ### Enhance Arenas 

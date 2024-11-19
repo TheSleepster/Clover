@@ -1053,9 +1053,11 @@ WinMain(HINSTANCE hInstance,
             QueryPerformanceCounter(&LastCounter);
             while(Running)
             {
-                MSG Message = {};
+                // NOTE(Sleepster): Clear Garbage 
+                CollectGarbage(&TransientState->Garbage);
 
                 // NOTE(Sleepster): INPUT UPDATING 
+                MSG Message = {};
                 Win32ProcessInputMessages(Message, WindowHandle, GameState);
                 GameState->GameInput.ButtonLookup[LEFT_THUMBSTICK_DOWN]  = XINPUT_GAMEPAD_LEFT_THUMB;
 
@@ -1232,7 +1234,6 @@ WinMain(HINSTANCE hInstance,
                         SwapBuffers(WindowDC);
                     }
                     CloverResetRendererState(&RenderData, TransientState);
-                    CollectGarbage(&TransientState->Garbage);
                 }
                 
                 LARGE_INTEGER EndCounter;
@@ -1248,8 +1249,6 @@ WinMain(HINSTANCE hInstance,
                     Time.MSPerFrame = GetFPSTime();
                     FPSTimer = 0;
                 }
-                //printm("%.02fms\n", MSPerFrame);
-                //printm("FPS: %d\n", FPS);
             }
         }
         else

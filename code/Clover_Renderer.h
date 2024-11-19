@@ -85,7 +85,6 @@ struct font_data
     char *RawData;
 };
 
-
 struct gl_shader_source
 {
     GLuint   SourceID;

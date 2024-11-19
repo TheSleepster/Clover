@@ -2074,16 +2074,6 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
         GameState->GameInput.Controller.LeftRumble = 1000;
         GameState->GameInput.Controller.RightRumble = 1000;
     }
-
-    if(IsGameKeyPressed(ATTACK, &GameState->GameInput))
-    {
-        PlaySound(GameState, GSFX_Boop, 1.0f, 1.0f);
-    }
-
-    if(IsKeyPressed(KEY_RIGHT_MOUSE, &GameState->GameInput))
-    {
-        PlaySound(GameState, GSFX_RoarOfTheJungleDragon, 0.4f, 0.4f);
-    }
 }
 
 extern
@@ -2104,22 +2094,25 @@ GAME_GET_SOUND_SAMPLES(GameGetSoundSamples)
     }
 
     real32 MasterVolume  = 1.0f;
+    real32 FadeOutMultiplier = 1.0f;
     for(playing_sound **PlayingSoundptr = &GameState->FirstPlayingSound;
         *PlayingSoundptr;
        )
     {
-        bool IsFinished = false;
         playing_sound *PlayingSound = *PlayingSoundptr;
-        loaded_sound *CurrentSound = GetSoundFromID(GameMemory, (soundfx_id)PlayingSound->ID);
+        uint32 TotalSamplesToMix = SoundBuffer->SampleOutputCount;
+        bool IsFinished = false;
+        Dest00 = MixerBuffer00;
+        Dest01 = MixerBuffer01;
+
+        loaded_sound *CurrentSound = GetSoundFromID(GameMemory, (soundfx_id)PlayingSound->ID, PlayingSound->StreamedFromFile,
+                                                    PlayingSound->SamplesCursor, SoundBuffer->SampleOutputCount);
         if(CurrentSound->SampleCount != 0)
         {
-            GetSoundFromID(GameMemory, (soundfx_id)PlayingSound->NextIDToPlay,
-                           0, SoundBuffer->SampleOutputCount);
-            Dest00 = MixerBuffer00;
-            Dest01 = MixerBuffer01;
+            GetSoundFromID(GameMemory, (soundfx_id)PlayingSound->NextIDToPlay);
 
-            uint32 SamplesToMix = SoundBuffer->SampleOutputCount;
-            uint32 SamplesRemaining = (CurrentSound->SampleCount - CurrentSound->SamplesConsumed);
+            uint32 SamplesToMix = TotalSamplesToMix;
+            uint32 SamplesRemaining = (CurrentSound->SampleCount - PlayingSound->SamplesCursor);
             if(SamplesToMix > SamplesRemaining)
             {
                 SamplesToMix = SamplesRemaining;
@@ -2129,21 +2122,27 @@ GAME_GET_SOUND_SAMPLES(GameGetSoundSamples)
                 SampleIndex < SamplesToMix;
                 ++SampleIndex)
             {
-                int32  SampleOffset           = (PlayingSound->SamplesConsumed + SampleIndex) % CurrentSound->SampleCount;
-                real32 LeftSampleValue        = CurrentSound->Samples[SampleOffset * 2];
-                real32 RightSampleValue       = CurrentSound->Samples[(SampleOffset * 2) + 1];
+                uint32 FadeParameter = CurrentSound->SampleCount - PlayingSound->SamplesCursor; 
+                if(FadeParameter < 256)
+                {
+                    FadeOutMultiplier = (real32)FadeParameter / 256.0f;
+                }
+                int32  SampleOffset           = (PlayingSound->SamplesCursor + SampleIndex) % CurrentSound->SampleCount;
+                real32 LeftSampleValue        = CurrentSound->Samples[SampleOffset * 2] * FadeOutMultiplier;
+                real32 RightSampleValue       = CurrentSound->Samples[(SampleOffset * 2) + 1] * FadeOutMultiplier;
 
                 *Dest00++ += LeftSampleValue  * PlayingSound->Volume[0];
-                *Dest01++ += RightSampleValue * PlayingSound->Volume[1];
+                *Dest01++ += RightSampleValue * PlayingSound->Volume[1];            
             }
 
-            PlayingSound->SamplesConsumed += SamplesToMix;
-            if(PlayingSound->SamplesConsumed >= CurrentSound->TotalSampleCount)
+            PlayingSound->SamplesCursor += SamplesToMix;
+            TotalSamplesToMix -= SamplesToMix;
+            if(PlayingSound->SamplesCursor >= CurrentSound->SampleCount)
             {
                 if(IsValid(PlayingSound->NextIDToPlay))
                 {
                     PlayingSound->ID = PlayingSound->NextIDToPlay;
-                    PlayingSound->SamplesConsumed = 0;
+                    PlayingSound->SamplesCursor = 0;
                 }
                 else
                 {
@@ -2155,8 +2154,8 @@ GAME_GET_SOUND_SAMPLES(GameGetSoundSamples)
         if(IsFinished)
         {
             *PlayingSoundptr = PlayingSound->Next;
-            PlayingSound->Next = GameState->FirstFreePlayingSound;
-            GameState->FirstFreePlayingSound = PlayingSound;
+             PlayingSound->Next = GameState->FirstFreePlayingSound;
+             GameState->FirstFreePlayingSound = PlayingSound;
         }
         else
         {
