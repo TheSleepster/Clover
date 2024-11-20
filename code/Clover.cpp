@@ -2118,6 +2118,8 @@ GAME_GET_SOUND_SAMPLES(GameGetSoundSamples)
         loaded_sound *CurrentSound = GetSoundFromID(TransientState, (soundfx_id)PlayingSound->ID);
         if(CurrentSound)
         {
+            LoadSoundFromID(GameMemory, (soundfx_id)PlayingSound->NextIDToPlay);
+
             uint32 MixingCount = TotalSamplesToMix;
             uint32 RemainingSamplesInSound = (CurrentSound->SampleCount - PlayingSound->PlayCursor);
             if(MixingCount > RemainingSamplesInSound)
