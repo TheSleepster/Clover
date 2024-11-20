@@ -63,7 +63,8 @@ GetType(riff_iterator Iter)
 
 // NOTE(Sleepster): If Either of the last 2 are 0, get the whole file
 internal void 
-CloverLoadWAVFile(memory_arena *Memory, asset_slot *SoundSlot, string Filepath)
+CloverLoadWAVFile(memory_arena *Memory, asset_slot *SoundSlot, string Filepath, 
+                  uint32 FirstSampleToRead = 0, uint32 SamplesToRead = 0)
 {
     uint32 FileSize = {};
     string FileContents = ReadEntireFileMA(Memory, Filepath, &FileSize);
@@ -108,7 +109,16 @@ CloverLoadWAVFile(memory_arena *Memory, asset_slot *SoundSlot, string Filepath)
         // NOTE(Sleepster): Mono/Stereo 
         if(ChannelCount == 1||ChannelCount == 2)
         {
-            SoundSlot->Sound->Samples = SampleData;
+            if(SamplesToRead)
+            {
+                SoundSlot->Sound->SampleCount = SamplesToRead;
+                SoundSlot->Sound->Samples     = SampleData;
+                SoundSlot->Sound->Samples    += FirstSampleToRead;
+            }
+            else
+            {
+                SoundSlot->Sound->Samples = SampleData;
+            }
         }
         // NOTE(Sleepster): IDK like 5.1 or something  
         else
@@ -120,7 +130,7 @@ CloverLoadWAVFile(memory_arena *Memory, asset_slot *SoundSlot, string Filepath)
 
 internal playing_sound *
 PlaySound(game_state *GameState, soundfx_id SoundID, real32 LeftChannelVolume = 1.0f, real32 RightChannelVolume = 1.0f, 
-          bool32 ShouldBeStreamed = false, soundfx_id NextSoundID = GSFX_NullSound)
+          soundfx_id NextSoundID = GSFX_NullSound, bool32 ShouldBeStreamed = false)
 {
     if(!GameState->FirstFreePlayingSound)
     {
@@ -135,6 +145,7 @@ PlaySound(game_state *GameState, soundfx_id SoundID, real32 LeftChannelVolume = 
     PlayingSound->Volume   = vec2{LeftChannelVolume, RightChannelVolume};
     PlayingSound->PlayCursor = 0;
     PlayingSound->NextIDToPlay = NextSoundID;
+    PlayingSound->IsStreamed = ShouldBeStreamed;
 
     PlayingSound->Next = GameState->FirstPlayingSound;
     GameState->FirstPlayingSound = PlayingSound;

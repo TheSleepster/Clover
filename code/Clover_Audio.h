@@ -63,12 +63,6 @@ struct riff_iterator
     uint8      *End;
 };
 
-struct sound_info
-{
-    uint32 SamplesConsumed;
-    bool32 IsStreamed;
-};
-
 struct loaded_sound
 {
     uint32 ID;
@@ -83,6 +77,10 @@ struct playing_sound
     uint32 ID;
     uint32 NextIDToPlay;
     uint32 PlayCursor;
+
+    bool32 IsStreamed;
+    uint32 FirstSampleToRead;
+    uint32 SamplesToRead;
 
     vec2   Volume = {1.0f, 1.0f};
     playing_sound *Next;

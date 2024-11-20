@@ -2082,7 +2082,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
 
     if(IsKeyPressed(KEY_1, &GameState->GameInput))
     {
-        PlaySound(GameState, GSFX_Bap, 0.5f, 0.5f);
+        PlaySound(GameState, GSFX_Bap, 0.5f, 0.5f, GSFX_Bap);
     }
 }
 
@@ -2118,7 +2118,10 @@ GAME_GET_SOUND_SAMPLES(GameGetSoundSamples)
         loaded_sound *CurrentSound = GetSoundFromID(TransientState, (soundfx_id)PlayingSound->ID);
         if(CurrentSound)
         {
-            LoadSoundFromID(GameMemory, (soundfx_id)PlayingSound->NextIDToPlay);
+            if(PlayingSound->ID != PlayingSound->NextIDToPlay)
+            {
+                LoadSoundFromID(GameMemory, (soundfx_id)PlayingSound->NextIDToPlay);
+            }
 
             uint32 MixingCount = TotalSamplesToMix;
             uint32 RemainingSamplesInSound = (CurrentSound->SampleCount - PlayingSound->PlayCursor);
@@ -2156,7 +2159,8 @@ GAME_GET_SOUND_SAMPLES(GameGetSoundSamples)
         }
         else
         {
-            CurrentSound = LoadSoundFromID(GameMemory, (soundfx_id)PlayingSound->ID);
+            CurrentSound = LoadSoundFromID(GameMemory, (soundfx_id)PlayingSound->ID, PlayingSound->IsStreamed, 
+                                           PlayingSound->FirstSampleToRead, PlayingSound->SamplesToRead); 
         }
 
         if(IsFinished)
