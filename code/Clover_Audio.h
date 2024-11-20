@@ -63,11 +63,16 @@ struct riff_iterator
     uint8      *End;
 };
 
+struct sound_info
+{
+    uint32 SamplesConsumed;
+    bool32 IsStreamed;
+};
+
 struct loaded_sound
 {
     uint32 ID;
     uint16 ChannelCount;
-    uint32 SamplesConsumed;
     uint32 SampleCount;
     
     int16 *Samples;
@@ -77,8 +82,7 @@ struct playing_sound
 {
     uint32 ID;
     uint32 NextIDToPlay;
-    uint32 SamplesCursor;
-    bool32 StreamedFromFile;
+    uint32 PlayCursor;
 
     vec2   Volume = {1.0f, 1.0f};
     playing_sound *Next;

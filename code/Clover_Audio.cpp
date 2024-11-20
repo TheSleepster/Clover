@@ -63,7 +63,7 @@ GetType(riff_iterator Iter)
 
 // NOTE(Sleepster): If Either of the last 2 are 0, get the whole file
 internal void 
-CloverLoadWAVFile(memory_arena *Memory, asset_slot *SoundSlot, string Filepath, uint32 StreamingSampleIndex = 0, uint32 StreamingSampleCount = 0)
+CloverLoadWAVFile(memory_arena *Memory, asset_slot *SoundSlot, string Filepath)
 {
     uint32 FileSize = {};
     string FileContents = ReadEntireFileMA(Memory, Filepath, &FileSize);
@@ -108,17 +108,7 @@ CloverLoadWAVFile(memory_arena *Memory, asset_slot *SoundSlot, string Filepath, 
         // NOTE(Sleepster): Mono/Stereo 
         if(ChannelCount == 1||ChannelCount == 2)
         {
-            if(StreamingSampleCount > 0)
-            {
-                Assert((StreamingSampleIndex + StreamingSampleIndex) <= SoundSlot->Sound->SampleCount);
-                SoundSlot->Sound->SampleCount      = StreamingSampleCount;
-                SoundSlot->Sound->Samples         += StreamingSampleIndex;
-                SoundSlot->Sound->Samples          = SampleData;
-            }
-            else
-            {
-                SoundSlot->Sound->Samples = SampleData;
-            }
+            SoundSlot->Sound->Samples = SampleData;
         }
         // NOTE(Sleepster): IDK like 5.1 or something  
         else
@@ -129,8 +119,8 @@ CloverLoadWAVFile(memory_arena *Memory, asset_slot *SoundSlot, string Filepath, 
 }
 
 internal playing_sound *
-PlaySound(game_state *GameState, soundfx_id SoundID, real32 LeftChannelVolume, real32 RightChannelVolume, 
-          bool32 ShouldBeStreamed, soundfx_id NextSoundID = GSFX_NullSound)
+PlaySound(game_state *GameState, soundfx_id SoundID, real32 LeftChannelVolume = 1.0f, real32 RightChannelVolume = 1.0f, 
+          bool32 ShouldBeStreamed = false, soundfx_id NextSoundID = GSFX_NullSound)
 {
     if(!GameState->FirstFreePlayingSound)
     {
@@ -143,58 +133,8 @@ PlaySound(game_state *GameState, soundfx_id SoundID, real32 LeftChannelVolume, r
 
     PlayingSound->ID = SoundID;
     PlayingSound->Volume   = vec2{LeftChannelVolume, RightChannelVolume};
-    PlayingSound->SamplesCursor = 0;
-    PlayingSound->StreamedFromFile = ShouldBeStreamed;
+    PlayingSound->PlayCursor = 0;
     PlayingSound->NextIDToPlay = NextSoundID;
-
-    PlayingSound->Next = GameState->FirstPlayingSound;
-    GameState->FirstPlayingSound = PlayingSound;
-    
-    return(PlayingSound);
-}
-
-// NOTE(Sleepster): We may want to control the queued sound's volume
-internal playing_sound *
-PlayOrderedSound(game_state *GameState, soundfx_id FirstSoundID, soundfx_id SecondSoundID, 
-                 real32 LeftChannelVolume, real32 RightChannelVolume)
-{
-    if(!GameState->FirstFreePlayingSound)
-    {
-        GameState->FirstFreePlayingSound = PushStruct(&GameState->SoundArena, playing_sound);
-        GameState->FirstFreePlayingSound->Next = 0;
-    }
-
-    playing_sound *PlayingSound = GameState->FirstFreePlayingSound;
-    GameState->FirstFreePlayingSound = PlayingSound->Next;
-
-    PlayingSound->ID = FirstSoundID;
-    PlayingSound->Volume   = vec2{LeftChannelVolume, RightChannelVolume};
-    PlayingSound->SamplesCursor = 0;
-    PlayingSound->NextIDToPlay = SecondSoundID;
-
-    PlayingSound->Next = GameState->FirstPlayingSound;
-    GameState->FirstPlayingSound = PlayingSound;
-    
-    return(PlayingSound);
-}
-
-internal playing_sound *
-PlayLoopedSound(game_state *GameState, soundfx_id ID, 
-                real32 LeftChannelVolume, real32 RightChannelVolume)
-{
-    if(!GameState->FirstFreePlayingSound)
-    {
-        GameState->FirstFreePlayingSound = PushStruct(&GameState->SoundArena, playing_sound);
-        GameState->FirstFreePlayingSound->Next = 0;
-    }
-
-    playing_sound *PlayingSound = GameState->FirstFreePlayingSound;
-    GameState->FirstFreePlayingSound = PlayingSound->Next;
-
-    PlayingSound->ID = ID;
-    PlayingSound->Volume   = vec2{LeftChannelVolume, RightChannelVolume};
-    PlayingSound->SamplesCursor = 0;
-    PlayingSound->NextIDToPlay = ID;
 
     PlayingSound->Next = GameState->FirstPlayingSound;
     GameState->FirstPlayingSound = PlayingSound;

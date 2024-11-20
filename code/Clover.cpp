@@ -2074,6 +2074,16 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
         GameState->GameInput.Controller.LeftRumble = 1000;
         GameState->GameInput.Controller.RightRumble = 1000;
     }
+
+    if(IsKeyPressed(KEY_0, &GameState->GameInput))
+    {
+        PlaySound(GameState, GSFX_RoarOfTheJungleDragon, 0.5f, 0.5f);
+    }
+
+    if(IsKeyPressed(KEY_1, &GameState->GameInput))
+    {
+        PlaySound(GameState, GSFX_Bap, 0.5f, 0.5f);
+    }
 }
 
 extern
@@ -2094,61 +2104,57 @@ GAME_GET_SOUND_SAMPLES(GameGetSoundSamples)
     }
 
     real32 MasterVolume  = 1.0f;
-    real32 FadeOutMultiplier = 1.0f;
     for(playing_sound **PlayingSoundptr = &GameState->FirstPlayingSound;
         *PlayingSoundptr;
        )
     {
         playing_sound *PlayingSound = *PlayingSoundptr;
         uint32 TotalSamplesToMix = SoundBuffer->SampleOutputCount;
-        bool IsFinished = false;
         Dest00 = MixerBuffer00;
         Dest01 = MixerBuffer01;
 
-        loaded_sound *CurrentSound = GetSoundFromID(GameMemory, (soundfx_id)PlayingSound->ID, PlayingSound->StreamedFromFile,
-                                                    PlayingSound->SamplesCursor, SoundBuffer->SampleOutputCount);
-        if(CurrentSound->SampleCount != 0)
+        bool32 IsFinished = false;
+        
+        loaded_sound *CurrentSound = GetSoundFromID(TransientState, (soundfx_id)PlayingSound->ID);
+        if(CurrentSound)
         {
-            GetSoundFromID(GameMemory, (soundfx_id)PlayingSound->NextIDToPlay);
-
-            uint32 SamplesToMix = TotalSamplesToMix;
-            uint32 SamplesRemaining = (CurrentSound->SampleCount - PlayingSound->SamplesCursor);
-            if(SamplesToMix > SamplesRemaining)
+            uint32 MixingCount = TotalSamplesToMix;
+            uint32 RemainingSamplesInSound = (CurrentSound->SampleCount - PlayingSound->PlayCursor);
+            if(MixingCount > RemainingSamplesInSound)
             {
-                SamplesToMix = SamplesRemaining;
+                MixingCount = RemainingSamplesInSound;
             }
 
-            for(uint32 SampleIndex = 0;
-                SampleIndex < SamplesToMix;
+            for(uint32 SampleIndex = PlayingSound->PlayCursor;
+                SampleIndex < (PlayingSound->PlayCursor + MixingCount);
                 ++SampleIndex)
             {
-                uint32 FadeParameter = CurrentSound->SampleCount - PlayingSound->SamplesCursor; 
-                if(FadeParameter < 256)
-                {
-                    FadeOutMultiplier = (real32)FadeParameter / 256.0f;
-                }
-                int32  SampleOffset           = (PlayingSound->SamplesCursor + SampleIndex) % CurrentSound->SampleCount;
-                real32 LeftSampleValue        = CurrentSound->Samples[SampleOffset * 2] * FadeOutMultiplier;
-                real32 RightSampleValue       = CurrentSound->Samples[(SampleOffset * 2) + 1] * FadeOutMultiplier;
+                int32  SampleOffset           = SampleIndex % CurrentSound->SampleCount;
+                real32 LeftSampleValue        = real32(CurrentSound->Samples[SampleOffset * 2]);
+                real32 RightSampleValue       = real32(CurrentSound->Samples[(SampleOffset * 2) + 1]);
 
                 *Dest00++ += LeftSampleValue  * PlayingSound->Volume[0];
-                *Dest01++ += RightSampleValue * PlayingSound->Volume[1];            
+                *Dest01++ += RightSampleValue * PlayingSound->Volume[1];
             }
-
-            PlayingSound->SamplesCursor += SamplesToMix;
-            TotalSamplesToMix -= SamplesToMix;
-            if(PlayingSound->SamplesCursor >= CurrentSound->SampleCount)
+            
+            PlayingSound->PlayCursor += MixingCount;
+            TotalSamplesToMix -= MixingCount;
+            if(PlayingSound->PlayCursor >= CurrentSound->SampleCount)
             {
                 if(IsValid(PlayingSound->NextIDToPlay))
                 {
                     PlayingSound->ID = PlayingSound->NextIDToPlay;
-                    PlayingSound->SamplesCursor = 0;
+                    PlayingSound->PlayCursor = 0;
                 }
                 else
                 {
                     IsFinished = true;
                 }
             }
+        }
+        else
+        {
+            CurrentSound = LoadSoundFromID(GameMemory, (soundfx_id)PlayingSound->ID);
         }
 
         if(IsFinished)

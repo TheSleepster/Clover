@@ -41,11 +41,8 @@ struct load_sound_job
     transient_state  *TransientState;
     asset_slot       *SoundSlot;
 
-    int32             StreamingSampleIndex;
-    int32             SamplesToStream;
+    int32             SoundID;
     string            Filepath;
-
-    bool32            IsStreamed;
 };
 
 internal
@@ -83,13 +80,11 @@ PLATFORM_JOB_ENTRY_CALLBACK(LoadSoundDataCallback)
     load_sound_job *SoundJob = (load_sound_job *)Data;
     ReadWriteBarrier;
 
-    uint32 ID = SoundJob->SoundSlot->Sound->ID;
     AtomicCompareExchangei32((volatile int32 *)&SoundJob->SoundSlot->SlotState, AssetState_Loaded, AssetState_Queued);
-    if(SoundJob->SoundSlot->SlotState == AssetState_Loaded && !SoundJob->IsStreamed)
+    if(SoundJob->SoundSlot->SlotState == AssetState_Loaded)
     {
-        SoundJob->SoundSlot->Sound->ID = ID;
-            CloverLoadWAVFile(&SoundJob->GameState->SoundArena, SoundJob->SoundSlot, 
-                    SoundJob->Filepath, SoundJob->StreamingSampleIndex, SoundJob->SamplesToStream);
+        CloverLoadWAVFile(&SoundJob->TransientState->GameAssets->AssetArena, 
+                           SoundJob->SoundSlot, SoundJob->Filepath);
     }
 }
 
@@ -192,46 +187,36 @@ GetFontFromID(game_memory *GameMemory, int32 Size, font_id ID)
 }
 
 internal loaded_sound*
-LoadSoundFromID(game_memory *GameMemory, asset_slot *SoundSlot, soundfx_id ID, 
-                bool32 StreamedFromFile = 0, int32 StreamingSampleIndex = 0, int32 SamplesToStream = 0)
+LoadSoundFromID(game_memory *GameMemory, soundfx_id ID)
 {
     transient_state *TransientState = (transient_state *)GameMemory->TransientStorage.MemoryBlock;
-    game_state *GameState = (game_state *)GameMemory->PermanentStorage.MemoryBlock;
+    asset_slot *SoundSlot = &TransientState->GameAssets->Sounds[ID];
     SoundSlot->Sound = PushStruct(&TransientState->GameAssets->AssetArena, loaded_sound);
 
-    load_sound_job *LoadSoundJob = PushStruct(&TransientState->Garbage, load_sound_job);
-    if(SoundSlot->SlotState == AssetState_Unloaded || StreamedFromFile)
+    if(SoundSlot->SlotState == AssetState_Unloaded)
     {
-        LoadSoundJob->GameState      = GameState;
-        LoadSoundJob->SoundSlot      = SoundSlot;
-        LoadSoundJob->Filepath       = SoundFilepaths[ID].Second;
-        LoadSoundJob->TransientState = TransientState;
-        LoadSoundJob->SoundSlot->Sound->ID                   = ID;
-        LoadSoundJob->IsStreamed = StreamedFromFile;
-        if(StreamedFromFile)
-        {
-            LoadSoundJob->StreamingSampleIndex = StreamingSampleIndex;
-            LoadSoundJob->SamplesToStream      = SamplesToStream;
-        }
+        load_sound_job *SoundJob       = PushStruct(&TransientState->Garbage, load_sound_job);
+        SoundJob->SoundSlot            = SoundSlot;
+        SoundJob->TransientState       = TransientState;
+        SoundJob->Filepath             = SoundFilepaths[ID].Second;
+        SoundJob->SoundID              = ID;
 
-        GameMemory->AddWorkQueueEntry(GameMemory->HighPriorityQueue, LoadSoundDataCallback, (void *)LoadSoundJob);
         SoundSlot->SlotState = AssetState_Queued;
+        GameMemory->AddWorkQueueEntry(GameMemory->HighPriorityQueue, LoadSoundDataCallback, (void *)SoundJob);
     }
     return(SoundSlot->Sound);
 }
 
 internal loaded_sound*
-GetSoundFromID(game_memory *GameMemory, soundfx_id ID, 
-               bool32 StreamedFromFile = 0, int32 StreamingSampleIndex = 0, int32 SamplesToStream = 0)
+GetSoundFromID(transient_state *TransientState, soundfx_id ID)
 {
-    transient_state *TransientState = (transient_state *)GameMemory->TransientStorage.MemoryBlock;
     asset_slot *SoundSlot = &TransientState->GameAssets->Sounds[ID];
-    if(ID != GSFX_NullSound 
-       && SoundSlot->SlotState != AssetState_Loaded)
+    if(SoundSlot->Sound)
     {
-        SoundSlot->Sound = LoadSoundFromID(GameMemory, SoundSlot, ID, 
-                                           StreamedFromFile, StreamingSampleIndex, SamplesToStream);
+        return(SoundSlot->Sound);
     }
-
-    return(SoundSlot->Sound);
+    else
+    {
+        return(0);
+    }
 }
