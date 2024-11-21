@@ -30,6 +30,7 @@
 struct game_memory;
 struct transient_state;
 
+// TODO(Sleepster): Fix this, this is stupid
 enum   asset_state;
 
 struct static_sprite_data

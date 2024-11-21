@@ -297,8 +297,8 @@ HandleInput(game_state *GameState, entity *PlayerIn, time_data Time)
     }
 
     {
-        InputAxis.X = (abs(GameState->GameInput.Controller.LeftStick.X) > GAMEPAD_LEFT_THUMB_DEADZONE) ? (GameState->GameInput.Controller.LeftStick.X / 32766.0f) : InputAxis.X;
-        InputAxis.Y = (abs(GameState->GameInput.Controller.LeftStick.Y) > GAMEPAD_RIGHT_THUMB_DEADZONE) ? (GameState->GameInput.Controller.LeftStick.Y / 32767.0f) : InputAxis.Y;
+        InputAxis.X = (abs(GameState->GameInput.Controller.LeftStick.X) > (int32)GAMEPAD_LEFT_THUMB_DEADZONE)  ? (GameState->GameInput.Controller.LeftStick.X / 32766.0f) : InputAxis.X;
+        InputAxis.Y = (abs(GameState->GameInput.Controller.LeftStick.Y) > (int32)GAMEPAD_RIGHT_THUMB_DEADZONE) ? (GameState->GameInput.Controller.LeftStick.Y / 32767.0f) : InputAxis.Y;
         InputAxis.Y *= 1.0f;
     }
 
@@ -2077,7 +2077,8 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
 
     if(IsKeyPressed(KEY_0, &GameState->GameInput))
     {
-        PlaySound(GameState, GSFX_RoarOfTheJungleDragon, 0.5f, 0.5f);
+        playing_sound *Sound = PlaySound(GameState, GSFX_RoarOfTheJungleDragon, 0.5f, 0.5f);
+        SetSoundVolume(Sound, vec2{0.0f, 0.0f}, 0.4f);
     }
 
     if(IsKeyPressed(KEY_1, &GameState->GameInput))
@@ -2138,9 +2139,15 @@ GAME_GET_SOUND_SAMPLES(GameGetSoundSamples)
                 real32 LeftSampleValue        = real32(CurrentSound->Samples[SampleOffset * 2]);
                 real32 RightSampleValue       = real32(CurrentSound->Samples[(SampleOffset * 2) + 1]);
 
-                *Dest00++ += LeftSampleValue  * PlayingSound->Volume[0];
-                *Dest01++ += RightSampleValue * PlayingSound->Volume[1];
+                *Dest00++ += LeftSampleValue  * PlayingSound->CurrentVolume[0];
+                *Dest01++ += RightSampleValue * PlayingSound->CurrentVolume[1];
             }
+
+            // NOTE(Sleepster): Animate the volume 
+            v2Approach(&PlayingSound->CurrentVolume, 
+                        PlayingSound->TargetVolume, 
+                        PlayingSound->dVolumeRate, 
+                        Time.Delta);
             
             PlayingSound->PlayCursor += MixingCount;
             TotalSamplesToMix -= MixingCount;

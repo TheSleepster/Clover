@@ -91,6 +91,7 @@ PLATFORM_JOB_ENTRY_CALLBACK(LoadSoundDataCallback)
     }
 }
 
+
 internal inline shader*
 GetShaderFromID(game_memory *GameMemory, shader_id ID)
 {

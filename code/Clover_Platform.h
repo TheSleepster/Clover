@@ -70,7 +70,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDrawStub)
 {
 }
 
-#define GAME_GET_SOUND_SAMPLES(name) void name(game_memory *GameMemory, sound_buffer *SoundBuffer, game_state *GameState, transient_state *TransientState)
+#define GAME_GET_SOUND_SAMPLES(name) void name(game_memory *GameMemory, sound_buffer *SoundBuffer, game_state *GameState, transient_state *TransientState, time_data Time)
 typedef GAME_GET_SOUND_SAMPLES(game_get_sound_samples);
 GAME_GET_SOUND_SAMPLES(GameGetSoundSamplesStub)
 {

@@ -566,7 +566,7 @@ Win32InitDSound(HWND WindowHandle, int32 SamplesPerSecond, int32 BufferSize)
         
         DSBUFFERDESC DSBufferDesc = {};
         DSBufferDesc.dwSize  = sizeof(DSBufferDesc);
-        DSBufferDesc.dwFlags = 0;
+        DSBufferDesc.dwFlags = DSBCAPS_GETCURRENTPOSITION2|DSBCAPS_GLOBALFOCUS;
         DSBufferDesc.dwBufferBytes = BufferSize;
         DSBufferDesc.lpwfxFormat = &Result.DirectSoundBufferFormat;
         
@@ -786,7 +786,6 @@ ThreadProc(void *lpParam)
 {
    win32_thread_info *ThreadInfo = (win32_thread_info *)lpParam;
 
-    platform_work_queue_entry Entry = {};
     for(;;)
     {
         if(Win32DoNextJobEntry(ThreadInfo->Queue))
@@ -801,7 +800,7 @@ PLATFORM_JOB_ENTRY_CALLBACK(DoWorkerWork)
 {
     char Buffer[256];
     wsprintf(Buffer, "Thread %u: %s\n", GetCurrentThreadId(), (char *)Data);
-    cl_Info(Buffer);
+    cl_Info("%s", Buffer);
 }
 
 int CALLBACK
@@ -930,16 +929,16 @@ WinMain(HINSTANCE hInstance,
                     CloseHandle(ThreadHandle);
                 }
 
-                Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String A0");
-                Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String A1");
-                Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String A2");
-                Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String A3");
-                Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String A4");
-                Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String A5");
-                Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String A6");
-                Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String A7");
-                Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String A8");
-                Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, "String A9");
+                Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, (void *)"String A0");
+                Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, (void *)"String A1");
+                Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, (void *)"String A2");
+                Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, (void *)"String A3");
+                Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, (void *)"String A4");
+                Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, (void *)"String A5");
+                Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, (void *)"String A6");
+                Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, (void *)"String A7");
+                Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, (void *)"String A8");
+                Win32AddEntryToWorkQueue(&WorkQueue, DoWorkerWork, (void *)"String A9");
 
                 Win32FlushAllWorkerEntries(&WorkQueue);
             }
@@ -1206,7 +1205,7 @@ WinMain(HINSTANCE hInstance,
                         SoundBufferData.SampleOutputCount = BytesToWrite / SoundOutput.BytesPerSample; 
                         SoundBufferData.SampleBuffer      = SampleBufferStorage; 
 
-                        Game.GetSoundSamples(&GameMemory, &SoundBufferData, GameState, TransientState);
+                        Game.GetSoundSamples(&GameMemory, &SoundBufferData, GameState, TransientState, Time);
                         if(SoundIsValid)
                         {
                             Win32FillSoundBuffer(&DSound, &SoundOutput, &SoundBufferData, BytesToLock, BytesToWrite);

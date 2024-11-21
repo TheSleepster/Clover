@@ -82,7 +82,12 @@ struct playing_sound
     uint32 FirstSampleToRead;
     uint32 SamplesToRead;
 
-    vec2   Volume = {1.0f, 1.0f};
+    real32 dPitch;
+
+    vec2   CurrentVolume;
+    vec2   TargetVolume;
+    real32 dVolumeRate;
+
     playing_sound *Next;
 };
 

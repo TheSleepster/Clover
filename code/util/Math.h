@@ -2543,6 +2543,12 @@ static inline quat quatCreateFromAxisAngle_LH(vec3 Axis, float AngleOfRotation)
     return quatCreateFromAxisAngle_RH(Axis, -AngleOfRotation);
 }
 
+static inline float
+r32Squared(float Value)
+{
+    return(Value * Value);
+}
+
 #ifdef __cplusplus
 
 static inline float Length(vec2 A)

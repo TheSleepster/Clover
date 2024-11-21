@@ -41,6 +41,17 @@
 #define InvalidCodePath
 #endif
 
+#else
+
+#define Assert(Expression)
+#define Check(Expression, Message, ...)
+#define Trace(Message)
+#define printm(Message, ...)
+#define printlm(Message, ...)
+#define cl_Error(Message, ...)
+#define cl_Info(Message, ...) 
+#define InvalidCodePath
+
 #endif
 
 #define Kilobytes(Value) ((uint64)(Value) * 1024)

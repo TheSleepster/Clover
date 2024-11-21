@@ -142,7 +142,10 @@ PlaySound(game_state *GameState, soundfx_id SoundID, real32 LeftChannelVolume = 
     GameState->FirstFreePlayingSound = PlayingSound->Next;
 
     PlayingSound->ID = SoundID;
-    PlayingSound->Volume   = vec2{LeftChannelVolume, RightChannelVolume};
+    PlayingSound->CurrentVolume = vec2{LeftChannelVolume, RightChannelVolume};
+    PlayingSound->TargetVolume  = PlayingSound->CurrentVolume;
+    PlayingSound->dVolumeRate   = 0.0f;
+
     PlayingSound->PlayCursor = 0;
     PlayingSound->NextIDToPlay = NextSoundID;
     PlayingSound->IsStreamed = ShouldBeStreamed;
@@ -151,4 +154,11 @@ PlaySound(game_state *GameState, soundfx_id SoundID, real32 LeftChannelVolume = 
     GameState->FirstPlayingSound = PlayingSound;
     
     return(PlayingSound);
+}
+
+internal void
+SetSoundVolume(playing_sound *PlayingSound, vec2 TargetVolume, real32 Rate)
+{
+    PlayingSound->TargetVolume = TargetVolume;
+    PlayingSound->dVolumeRate  = Rate;
 }
