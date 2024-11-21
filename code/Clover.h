@@ -14,8 +14,8 @@
 #include "Clover_Input.h"
 #include "Clover_Renderer.h"
 #include "Clover_UI.h"
-#include "Clover_Audio.h"
 #include "Clover_Asset.h"
+#include "Clover_Audio.h"
 
 struct box2D : range_v2
 {
@@ -191,6 +191,8 @@ struct entity
     item_id               DroppedFromInventoryItemID;
     int32                 DroppedFromInventoryItemCount;
 
+    sound_trigger        *SoundNode;
+
     // DROPS ON DEATH
     entity_item_drop      EntityDrops[MAX_ENTITY_DROPS];
     int32                 UniqueDropCount;
@@ -262,9 +264,7 @@ struct game_state
     item             *ActiveRecipe;
     item             *ActiveBlueprint;
 
-    memory_arena       SoundArena;
-    playing_sound     *FirstPlayingSound;
-    playing_sound     *FirstFreePlayingSound;
+    clover_audio_state AudioState;
     
     game_world_data World;
     struct 

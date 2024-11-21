@@ -13,11 +13,13 @@
 #include "util/FileIO.h"
 #include "util/String.h"
 #include "util/Pairs.h"
-#include "Clover_Asset.h"
 
 #include "Intrinsics.h"
 
-constexpr uint32 SampleRate = 48000;
+#include "Clover_Asset.h"
+#include "Clover.h"
+
+enum soundfx_id;
 
 #define RIFF_CODE(a, b, c, d) (((uint32)(a) << 0) | ((uint32)(b) << 8) | ((uint32)(c) << 16) | ((uint32)(d) << 24)) 
 enum 
@@ -88,6 +90,8 @@ struct playing_sound
     vec2   TargetVolume;
     real32 dVolumeRate;
 
+    bool32 IsPlaying;
+
     playing_sound *Next;
 };
 
@@ -108,6 +112,27 @@ struct sound_buffer
     int16 *SampleBuffer;
     int32  SamplesPerSecond;
     int32  SampleOutputCount;
+};
+
+struct sound_trigger
+{
+    vec2   Position;
+    bool32 IsActive;
+    soundfx_id IDToPlay;
+
+    playing_sound *ActiveSound;
+
+    bool32 IsValid;
+};
+
+struct clover_audio_state
+{
+    memory_arena       SoundArena;
+    playing_sound     *FirstPlayingSound;
+    playing_sound     *FirstFreePlayingSound;
+
+    sound_trigger      Triggers[1000];
+    uint32             ActiveTriggerCount;
 };
 
 #endif // CLOVER_AUDIOENGINE_H

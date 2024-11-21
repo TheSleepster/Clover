@@ -73,6 +73,7 @@
 #include "Clover_Asset.cpp"
 #include "Clover_Renderer.cpp"
 #include "Clover_Input.cpp"
+#include "Clover_Mixer.cpp"
 
 // NOTE(Sleepster): ImGui WNDPROC. It uses this for input
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -878,11 +879,11 @@ WinMain(HINSTANCE hInstance,
                 GameMemory.TransientStorage.BlockOffset += sizeof(transient_state);
                 
                 // NOTE(Sleepster): ARENA INIT 
-                InitializeArena(&RenderData.VertexArena,         sizeof(vertex) * TRUE_MAX_VERTICES, &GameMemory.PermanentStorage);
-                InitializeArena(&RenderData.UIVertexArena,       sizeof(vertex) * TRUE_MAX_VERTICES, &GameMemory.PermanentStorage);
-                InitializeArena(&GameState->SoundArena,          Megabytes(400),                     &GameMemory.PermanentStorage);
-                InitializeArena(&TransientState->TransientArena, Megabytes(1024),                    &GameMemory.TransientStorage);
-                InitializeArena(&GameState->World.WorldArena,    (sizeof(struct entity) * MAX_ENTITIES) + sizeof(struct item) * MAX_ITEMS, &GameMemory.PermanentStorage);
+                InitializeArena(&RenderData.VertexArena,           sizeof(vertex) * TRUE_MAX_VERTICES, &GameMemory.PermanentStorage);
+                InitializeArena(&RenderData.UIVertexArena,         sizeof(vertex) * TRUE_MAX_VERTICES, &GameMemory.PermanentStorage);
+                InitializeArena(&GameState->AudioState.SoundArena, Megabytes(400),                     &GameMemory.PermanentStorage);
+                InitializeArena(&TransientState->TransientArena,   Megabytes(1024),                    &GameMemory.TransientStorage);
+                InitializeArena(&GameState->World.WorldArena,      (sizeof(struct entity) * MAX_ENTITIES) + sizeof(struct item) * MAX_ITEMS, &GameMemory.PermanentStorage);
 
                 GameState->World.Entities = PushArray(&GameState->World.WorldArena, entity, MAX_ENTITIES);
                 GameState->World.Items    = PushArray(&GameState->World.WorldArena, item,   MAX_ITEMS);
@@ -1205,7 +1206,8 @@ WinMain(HINSTANCE hInstance,
                         SoundBufferData.SampleOutputCount = BytesToWrite / SoundOutput.BytesPerSample; 
                         SoundBufferData.SampleBuffer      = SampleBufferStorage; 
 
-                        Game.GetSoundSamples(&GameMemory, &SoundBufferData, GameState, TransientState, Time);
+                        // NOTE(Sleepster): If you wanna use this, you're limited to 0.5f scaling on the pitch, or lower than ~2:30 of audio
+                        CloverMixerPlayAllSounds(&GameMemory, &SoundBufferData, Time);
                         if(SoundIsValid)
                         {
                             Win32FillSoundBuffer(&DSound, &SoundOutput, &SoundBufferData, BytesToLock, BytesToWrite);

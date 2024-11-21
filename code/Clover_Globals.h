@@ -14,6 +14,8 @@
 global_variable ivec4  SizeData = {0, 0, 1920, 1080};
 global_variable bool32 Running  = 0;
 
+constexpr uint32 SampleRate = 48000;
+
 // TIMING DATA
 global_variable int64 PerfCountFrequency;
 global_variable real64 DeltaCounter;

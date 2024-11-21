@@ -10,14 +10,14 @@
 - WASAPI??? XAudio2???
 - # Sound Mixer
     - [x] Control how audio is mixed
-    - [ ] Control and determine how a sound is playing
-        - [ ] Is the sound looped?
+    - [x] Control and determine how a sound is playing
+        - [x] Is the sound looped?
         - [ ] Is the sound multi-instancing? (play more than one of the same sound at a time from the same source)
         - [ ] Is the second of code calling to play the sound already playing it?
         - [ ] Is there a cap on the maximum number of sounds we can mix at a given time?
-    - [ ] Allow for audio streaming on large files (music)
-    - [ ] Allow for control on things like pitch 
-    - [ ] Create an API for allowing the game to modify sounds in response to certain events
+    - [x] Allow for audio streaming on large files (music)
+    - [x] Allow for control on things like pitch 
+    - [x] Create an API for allowing the game to modify sounds in response to certain events
 
     > [!NOTE]
     > THIS IS VERY IMPORTANT

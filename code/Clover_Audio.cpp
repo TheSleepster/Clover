@@ -132,26 +132,27 @@ internal playing_sound *
 PlaySound(game_state *GameState, soundfx_id SoundID, real32 LeftChannelVolume = 1.0f, real32 RightChannelVolume = 1.0f, 
           soundfx_id NextSoundID = GSFX_NullSound, bool32 ShouldBeStreamed = false)
 {
-    if(!GameState->FirstFreePlayingSound)
+    if(!GameState->AudioState.FirstFreePlayingSound)
     {
-        GameState->FirstFreePlayingSound = PushStruct(&GameState->SoundArena, playing_sound);
-        GameState->FirstFreePlayingSound->Next = 0;
+        GameState->AudioState.FirstFreePlayingSound = PushStruct(&GameState->AudioState.SoundArena, playing_sound);
+        GameState->AudioState.FirstFreePlayingSound->Next = 0;
     }
 
-    playing_sound *PlayingSound = GameState->FirstFreePlayingSound;
-    GameState->FirstFreePlayingSound = PlayingSound->Next;
+    playing_sound *PlayingSound = GameState->AudioState.FirstFreePlayingSound;
+    GameState->AudioState.FirstFreePlayingSound = PlayingSound->Next;
 
     PlayingSound->ID = SoundID;
     PlayingSound->CurrentVolume = vec2{LeftChannelVolume, RightChannelVolume};
     PlayingSound->TargetVolume  = PlayingSound->CurrentVolume;
     PlayingSound->dVolumeRate   = 0.0f;
 
-    PlayingSound->PlayCursor = 0;
+    PlayingSound->PlayCursor   = 0;
     PlayingSound->NextIDToPlay = NextSoundID;
-    PlayingSound->IsStreamed = ShouldBeStreamed;
+    PlayingSound->IsStreamed   = ShouldBeStreamed;
+    PlayingSound->IsPlaying    = true;
 
-    PlayingSound->Next = GameState->FirstPlayingSound;
-    GameState->FirstPlayingSound = PlayingSound;
+    PlayingSound->Next = GameState->AudioState.FirstPlayingSound;
+    GameState->AudioState.FirstPlayingSound = PlayingSound;
     
     return(PlayingSound);
 }
@@ -167,4 +168,10 @@ internal inline void
 SetSoundPitch(playing_sound *PlayingSound, real32 Pitch)
 {
     PlayingSound->dPitch = Pitch;
+}
+
+internal inline void
+StopSound(playing_sound *PlayingSound)
+{
+    PlayingSound->IsPlaying = false;
 }
