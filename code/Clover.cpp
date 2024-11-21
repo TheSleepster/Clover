@@ -2078,7 +2078,9 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
     if(IsKeyPressed(KEY_0, &GameState->GameInput))
     {
         playing_sound *Sound = PlaySound(GameState, GSFX_RoarOfTheJungleDragon, 0.5f, 0.5f);
-        SetSoundVolume(Sound, vec2{0.0f, 0.0f}, 0.4f);
+        SetSoundPitch(Sound, 1.0f);
+
+        //SetSoundVolume(Sound, vec2{0.0f, 0.0f}, 0.4f);
     }
 
     if(IsKeyPressed(KEY_1, &GameState->GameInput))
@@ -2087,6 +2089,8 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
     }
 }
 
+
+// NOTE(Sleepster): If you wanna use this, you're limited to 0.5f scaling on the pitch, or lower than ~2:30 of audio
 extern
 GAME_GET_SOUND_SAMPLES(GameGetSoundSamples)
 {
@@ -2125,22 +2129,28 @@ GAME_GET_SOUND_SAMPLES(GameGetSoundSamples)
             }
 
             uint32 MixingCount = TotalSamplesToMix;
-            uint32 RemainingSamplesInSound = (CurrentSound->SampleCount - PlayingSound->PlayCursor);
+            real32 RealRemainingSamplesInSound = (CurrentSound->SampleCount - (int32)floorf(PlayingSound->PlayCursor)) / PlayingSound->dPitch;
+            uint32 RemainingSamplesInSound = (int32)floorf(RealRemainingSamplesInSound); 
             if(MixingCount > RemainingSamplesInSound)
             {
                 MixingCount = RemainingSamplesInSound;
             }
 
-            for(uint32 SampleIndex = PlayingSound->PlayCursor;
-                SampleIndex < (PlayingSound->PlayCursor + MixingCount);
-                ++SampleIndex)
+            real32 SampleIndex = PlayingSound->PlayCursor;
+            for(uint32 LoopIndex = 0;
+                LoopIndex < MixingCount;
+                ++LoopIndex)
             {
-                int32  SampleOffset           = SampleIndex % CurrentSound->SampleCount;
+                int32  FlooredIndex    = (int32)SampleIndex;
+
+                int32  SampleOffset           = FlooredIndex % CurrentSound->SampleCount;
                 real32 LeftSampleValue        = real32(CurrentSound->Samples[SampleOffset * 2]);
                 real32 RightSampleValue       = real32(CurrentSound->Samples[(SampleOffset * 2) + 1]);
 
                 *Dest00++ += LeftSampleValue  * PlayingSound->CurrentVolume[0];
                 *Dest01++ += RightSampleValue * PlayingSound->CurrentVolume[1];
+                
+                SampleIndex += PlayingSound->dPitch;
             }
 
             // NOTE(Sleepster): Animate the volume 
@@ -2149,14 +2159,14 @@ GAME_GET_SOUND_SAMPLES(GameGetSoundSamples)
                         PlayingSound->dVolumeRate, 
                         Time.Delta);
             
-            PlayingSound->PlayCursor += MixingCount;
+            PlayingSound->PlayCursor = SampleIndex;
             TotalSamplesToMix -= MixingCount;
             if(PlayingSound->PlayCursor >= CurrentSound->SampleCount)
             {
                 if(IsValid(PlayingSound->NextIDToPlay))
                 {
                     PlayingSound->ID = PlayingSound->NextIDToPlay;
-                    PlayingSound->PlayCursor = 0;
+                    PlayingSound->PlayCursor = 0.0f;
                 }
                 else
                 {

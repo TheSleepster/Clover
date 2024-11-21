@@ -76,7 +76,7 @@ struct playing_sound
 {
     uint32 ID;
     uint32 NextIDToPlay;
-    uint32 PlayCursor;
+    real32 PlayCursor;
 
     bool32 IsStreamed;
     uint32 FirstSampleToRead;

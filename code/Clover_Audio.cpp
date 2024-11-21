@@ -156,9 +156,15 @@ PlaySound(game_state *GameState, soundfx_id SoundID, real32 LeftChannelVolume = 
     return(PlayingSound);
 }
 
-internal void
+internal inline void
 SetSoundVolume(playing_sound *PlayingSound, vec2 TargetVolume, real32 Rate)
 {
     PlayingSound->TargetVolume = TargetVolume;
     PlayingSound->dVolumeRate  = Rate;
+}
+
+internal inline void
+SetSoundPitch(playing_sound *PlayingSound, real32 Pitch)
+{
+    PlayingSound->dPitch = Pitch;
 }
