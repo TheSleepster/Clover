@@ -114,26 +114,13 @@ struct sound_buffer
     int32  SampleOutputCount;
 };
 
-struct sound_trigger
-{
-    vec2   Position;
-    bool32 IsActive;
-    soundfx_id IDToPlay;
-
-    playing_sound *ActiveSound;
-
-    bool32 IsValid;
-};
-
 struct clover_audio_state
 {
     memory_arena       SoundArena;
     playing_sound     *FirstPlayingSound;
     playing_sound     *FirstFreePlayingSound;
-
-    sound_trigger      Triggers[1000];
-    uint32             ActiveTriggerCount;
 };
+
 
 #endif // CLOVER_AUDIOENGINE_H
 

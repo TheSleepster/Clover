@@ -12,16 +12,16 @@
     - [x] Control how audio is mixed
     - [x] Control and determine how a sound is playing
         - [x] Is the sound looped?
-        - [ ] Is the sound multi-instancing? (play more than one of the same sound at a time from the same source)
-        - [ ] Is the second of code calling to play the sound already playing it?
-        - [ ] Is there a cap on the maximum number of sounds we can mix at a given time?
+        - [x] Is the sound multi-instancing? (play more than one of the same sound at a time from the same source)
+        - [x] Is the second of code calling to play the sound already playing it?
+        - [x] Is there a cap on the maximum number of sounds we can mix at a given time?
     - [x] Allow for audio streaming on large files (music)
     - [x] Allow for control on things like pitch 
     - [x] Create an API for allowing the game to modify sounds in response to certain events
 
     > [!NOTE]
     > THIS IS VERY IMPORTANT
-    - [ ] Add a "trigger" object that can begin a sound and prevents multiple instances from being played at once from the same source
+    - [x] Add a "trigger" object that can begin a sound and prevents multiple instances from being played at once from the same source
 
     > [!NOTE]
     > This is an example of what that could look like
@@ -87,8 +87,6 @@
 - #### Multithreading (if needed)
     - [x] Job system
     - [x] Multithreaded asset loading
-    - [ ] Multithreaded rendering
-    - [ ] Multithreaded game code execution
 
 ---
 - ##### Preprocessor for introspection of assets and other such runtime information 

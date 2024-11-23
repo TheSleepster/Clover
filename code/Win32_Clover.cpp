@@ -1206,7 +1206,8 @@ WinMain(HINSTANCE hInstance,
                         SoundBufferData.SampleOutputCount = BytesToWrite / SoundOutput.BytesPerSample; 
                         SoundBufferData.SampleBuffer      = SampleBufferStorage; 
 
-                        // NOTE(Sleepster): If you wanna use this, you're limited to 0.5f scaling on the pitch, or lower than ~2:30 of audio
+                        // IMPORTANT(Sleepster): If you wanna use this, you're limited to 0.5f scaling on the pitch,
+                        //                       or lower than ~2:30 of audio
                         CloverMixerPlayAllSounds(&GameMemory, &SoundBufferData, Time);
                         if(SoundIsValid)
                         {

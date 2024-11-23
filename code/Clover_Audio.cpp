@@ -128,7 +128,7 @@ CloverLoadWAVFile(memory_arena *Memory, asset_slot *SoundSlot, string Filepath,
     }
 }
 
-internal playing_sound *
+internal playing_sound * 
 PlaySound(game_state *GameState, soundfx_id SoundID, real32 LeftChannelVolume = 1.0f, real32 RightChannelVolume = 1.0f, 
           soundfx_id NextSoundID = GSFX_NullSound, bool32 ShouldBeStreamed = false)
 {
@@ -153,14 +153,14 @@ PlaySound(game_state *GameState, soundfx_id SoundID, real32 LeftChannelVolume = 
 
     PlayingSound->Next = GameState->AudioState.FirstPlayingSound;
     GameState->AudioState.FirstPlayingSound = PlayingSound;
-    
+
     return(PlayingSound);
 }
 
 internal inline void
-SetSoundVolume(playing_sound *PlayingSound, vec2 TargetVolume, real32 Rate)
+SetSoundVolume(playing_sound *PlayingSound, real32 LeftChannelVolume, real32 RightChannelVolume, real32 Rate)
 {
-    PlayingSound->TargetVolume = TargetVolume;
+    PlayingSound->TargetVolume = vec2{LeftChannelVolume, RightChannelVolume};
     PlayingSound->dVolumeRate  = Rate;
 }
 

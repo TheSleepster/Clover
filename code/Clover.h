@@ -167,12 +167,42 @@ struct entity_item_drop
     int32 DropAmount;
 };
 
+struct entity_sound
+{
+    vec2   	   Position;
+    bool32 	   IsActive;
+
+    playing_sound *TriggerSound;
+};
+
+struct entity_properties
+{
+	vec2 				  Size;
+    real32				  Rotation;
+    real32 				  Speed;
+
+    uint32 				  Health;
+
+    range_v2	 		  SelectionBox;
+    range_v2 			  BoxCollider;
+
+    entity_item_inventory Inventory;
+
+    entity_sound 		  WhenStruck;
+
+    item_id               DroppedFromInventoryItemID;
+    int32                 DroppedFromInventoryItemCount;
+
+    entity_item_drop 	  EntityDrops[MAX_ENTITY_DROPS];
+    int32 				  UniqueDropCount;
+};
+
 struct entity
 {
     int32                 EntityID;
-    sprite_type           Sprite;
-    
     uint32                Archetype;
+    sprite_type           Sprite;
+
     uint32                Flags;
     uint32                Health;
     
@@ -191,7 +221,7 @@ struct entity
     item_id               DroppedFromInventoryItemID;
     int32                 DroppedFromInventoryItemCount;
 
-    sound_trigger        *SoundNode;
+    entity_sound          WhenStruck;
 
     // DROPS ON DEATH
     entity_item_drop      EntityDrops[MAX_ENTITY_DROPS];
@@ -361,40 +391,6 @@ RangeFromQuad(quad *Quad)
     Result.Max = Quad->TopRight.Position.XY;
     
     return(Result);
-}
-
-// NOTE(Sleepster): Random Number Generation stuff
-#define RAND_MAX_64 0xFFFFFFFFFFFFFFFFull
-#define MULTIPLIER 6364136223846793005ull
-#define INCREMENT 1442695040888963407ull
-
-// TODO(Sleepster): This is windows????
-global_variable uint64 RDTSCRandomSeed = __rdtsc();
-
-internal inline uint64
-PeekRandom()
-{
-    RDTSCRandomSeed = RDTSCRandomSeed * MULTIPLIER + INCREMENT;
-    return(RDTSCRandomSeed);
-}
-
-internal inline uint64 
-GetRandom(void)
-{
-    uint64 RandomSeed = PeekRandom();
-    return(RandomSeed);
-}
-
-internal inline real32
-GetRandomReal32(void)
-{
-    return((real32)GetRandom() / (real32)UINT64_MAX);
-}
-
-internal inline real32
-GetRandomReal32_Range(real32 Minimum, real32 Maximum)
-{
-    return((Maximum - Minimum)*GetRandomReal32() + Minimum);
 }
 
 // NOTE(Sleepster): EASINGS

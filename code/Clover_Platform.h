@@ -52,6 +52,41 @@ struct time_data
     real32 CurrentTimeInSeconds;
 };
 
+// NOTE(Sleepster): Random Number Generation stuff
+#define RAND_MAX_64 0xFFFFFFFFFFFFFFFFull
+#define MULTIPLIER 6364136223846793005ull
+#define INCREMENT 1442695040888963407ull
+
+// TODO(Sleepster): This is windows????
+global_variable uint64 RDTSCRandomSeed = __rdtsc();
+
+internal inline uint64
+PeekRandom()
+{
+    RDTSCRandomSeed = RDTSCRandomSeed * MULTIPLIER + INCREMENT;
+    return(RDTSCRandomSeed);
+}
+
+internal inline uint64 
+GetRandom(void)
+{
+    uint64 RandomSeed = PeekRandom();
+    return(RandomSeed);
+}
+
+internal inline real32
+GetRandomReal32(void)
+{
+    return((real32)GetRandom() / (real32)UINT64_MAX);
+}
+
+internal inline real32
+GetRandomReal32_Range(real32 Minimum, real32 Maximum)
+{
+    return((Maximum - Minimum)*GetRandomReal32() + Minimum);
+}
+
+
 #define GAME_ON_AWAKE(name) void name(game_memory *GameMemory, gl_render_data *RenderData, game_state *GameState, transient_state *TransientState)
 typedef GAME_ON_AWAKE(game_on_awake);
 GAME_ON_AWAKE(GameOnAwakeStub)

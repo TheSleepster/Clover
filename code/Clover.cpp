@@ -35,15 +35,19 @@
 #include "Clover_Audio.h"
 #include "shader/CommonShader.glh"
 
+// CLOVER ENGINE CPP FILES
 #include "Clover_Input.cpp"
 #include "Clover_Draw.cpp"
 #include "Clover_UI.cpp"
 #include "Clover_Audio.cpp"
 #include "Clover_Asset.cpp"
 
-
 global_variable entity *Player = {};
 
+
+// CLOVER GAME CPP FILES
+#include "Clover_GameData.cpp"
+#include "Clover_Entity.cpp"
 
 internal inline void
 LoadSpriteData(game_state *GameState)
@@ -61,7 +65,7 @@ LoadSpriteData(game_state *GameState)
     GameState->GameData.Sprites[SPRITE_Workbench]             = {.AtlasOffset = { 16, 80}, .SpriteSize = {16, 16}};
     GameState->GameData.Sprites[SPRITE_Furnace]               = {.AtlasOffset = {  0, 80}, .SpriteSize = {16, 16}};
     GameState->GameData.Sprites[SPRITE_Outline]               = {.AtlasOffset = {128,  0}, .SpriteSize = {16, 16}};
-    
+   
     GameState->GameData.Sprites[SPRITE_Rock]                  = {.AtlasOffset = { 48, 35}, .SpriteSize = {16, 13}};
     GameState->GameData.Sprites[SPRITE_Pebbles]               = {.AtlasOffset = { 48, 48}, .SpriteSize = {13, 12}};
     GameState->GameData.Sprites[SPRITE_Tree00]                = {.AtlasOffset = { 96, 31}, .SpriteSize = {16, 17}};
@@ -241,494 +245,7 @@ LoadItemData(game_state *GameState)
     GameState->GameData.ItemSprites[ITEM_ToolPickaxe]      = MakePair(ITEM_ToolPickaxe,      SPRITE_ToolPickaxe);
     GameState->GameData.ItemSprites[ITEM_ToolWoodAxe]      = MakePair(ITEM_ToolWoodAxe,      SPRITE_ToolWoodAxe);
     GameState->GameData.ItemSprites[ITEM_Workbench]        = MakePair(ITEM_Workbench,        SPRITE_Workbench);
-    GameState->GameData.ItemSprites[ITEM_Furnace]          = MakePair(ITEM_Furnace,          SPRITE_Furnace);
-}
-
-internal sound_trigger*
-CreateSoundTrigger(game_state *GameState)
-{
-    sound_trigger *Result = {};
-    for(uint32 TriggerIndex = 1;
-        TriggerIndex < 1000;
-        ++TriggerIndex)
-    {
-        sound_trigger *Found = &GameState->AudioState.Triggers[TriggerIndex];
-        if(!Found->IsValid)
-        {
-            Result = Found;
-            Result->IsValid = true;
-            break;
-        }
-    }
-    Assert(Result);
-
-    ++GameState->AudioState.ActiveTriggerCount;
-    return(Result);
-}
-
-internal inline void
-SetupSoundTrigger(sound_trigger *Trigger, soundfx_id Sound)
-{
-    Trigger->IDToPlay = Sound;
-}
-
-internal inline void
-AttachSoundTrigger(entity *Entity, sound_trigger *Trigger)
-{
-    Entity->SoundNode = Trigger;
-}
-
-internal inline playing_sound *
-ActivateTriggerSound(game_state *GameState, sound_trigger *Trigger)
-{
-    if(!Trigger->IsActive)
-    {
-        Trigger->IsActive = true;
-        Trigger->ActiveSound = PlaySound(GameState, Trigger->IDToPlay);
-    }
-
-    return(Trigger->ActiveSound);
-}
-
-internal inline playing_sound*
-KillTriggerSoundInstance(game_state *GameState, sound_trigger *Trigger)
-{
-    if(!GameState->AudioState.FirstFreePlayingSound)
-    {
-        GameState->AudioState.FirstFreePlayingSound = PushStruct(&GameState->AudioState.SoundArena, playing_sound);
-        GameState->AudioState.FirstFreePlayingSound->Next = 0;
-    }
-
-    Trigger->ActiveSound = GameState->AudioState.FirstFreePlayingSound;
-    GameState->AudioState.FirstFreePlayingSound = Trigger->ActiveSound->Next;
-
-    return(0);
-}
-
-internal inline void
-StopTriggerSound(game_state *GameState, sound_trigger *Trigger)
-{
-    if(Trigger->IsActive)
-    {
-        Trigger->IsActive = false;
-        Trigger->ActiveSound = KillTriggerSoundInstance(GameState, Trigger);
-    }
-}
-
-internal entity*
-CreateEntity(game_state *GameState)
-{
-    entity *Result = {};
-    
-    for(uint32 EntityIndex = 1;
-        EntityIndex < MAX_ENTITIES;
-        ++EntityIndex)
-    {
-        entity *Found = &GameState->World.Entities[EntityIndex]; 
-        if(!(Found->Flags & IS_VALID))
-        {
-            Result = Found;
-            Result->EntityID = EntityIndex;
-            break;
-        }
-    }
-    Assert(Result);
-    
-    ++GameState->World.EntityCounter;
-    Result->Flags = IS_VALID;
-    return(Result);
-}
-
-internal inline void
-DeleteEntity(entity *Entity, game_state *GameState)
-{
-    memset(Entity, 0, sizeof(struct entity));
-}
-
-internal void
-HandleInput(game_state *GameState, entity *PlayerIn, time_data Time)
-{
-    vec2 InputAxis = {};
-    if(IsGameKeyDown(MOVE_UP, &GameState->GameInput))
-    {
-        InputAxis.Y += 1.0f;
-    }
-    else if(IsGameKeyDown(MOVE_DOWN, &GameState->GameInput))
-    {
-        InputAxis.Y -= 1.0f;
-    }
-
-    if(IsGameKeyDown(MOVE_LEFT, &GameState->GameInput))
-    {
-        InputAxis.X -= 1.0f;
-    }
-    else if(IsGameKeyDown(MOVE_RIGHT, &GameState->GameInput))
-    {
-        InputAxis.X += 1.0f;
-    }
-
-    {
-        InputAxis.X = (abs(GameState->GameInput.Controller.LeftStick.X) > (int32)GAMEPAD_LEFT_THUMB_DEADZONE)  ? (GameState->GameInput.Controller.LeftStick.X / 32766.0f) : InputAxis.X;
-        InputAxis.Y = (abs(GameState->GameInput.Controller.LeftStick.Y) > (int32)GAMEPAD_RIGHT_THUMB_DEADZONE) ? (GameState->GameInput.Controller.LeftStick.Y / 32767.0f) : InputAxis.Y;
-        InputAxis.Y *= 1.0f;
-    }
-
-    // NOTE(Sleepster): Player Position 
-    vec2 OldPlayerP = PlayerIn->Position;
-    vec2 NextPos = {PlayerIn->Position.X + (PlayerIn->Position.X - OldPlayerP.X) + (PlayerIn->Speed * InputAxis.X) * (Time.Delta),
-        PlayerIn->Position.Y + (PlayerIn->Position.Y - OldPlayerP.Y) + (PlayerIn->Speed * InputAxis.Y) * (Time.Delta)};
-    PlayerIn->Position = v2Lerp(NextPos, Time.Delta, OldPlayerP);
-    
-    // TODO(Sleepster): Break this out into not fucking cancer 
-    if(IsKeyPressed(KEY_ESCAPE, &GameState->GameInput))
-    {
-        Player->Inventory.SelectedInventoryItem = {};
-    }
-    if(IsGameKeyPressed(INVENTORY, &GameState->GameInput))
-    {
-        GameState->DisplayPlayerInventory = !GameState->DisplayPlayerInventory;
-    }
-    if(IsGameKeyPressed(SHOW_HOTBAR, &GameState->GameInput))
-    {
-        GameState->DisplayPlayerHotbar = !GameState->DisplayPlayerHotbar;
-    }
-    if(IsGameKeyPressed(BUILD_MENU, &GameState->GameInput))
-    {
-        if(GameState->GameUIState == UI_State_Building)
-        {
-            GameState->GameUIState = UI_State_Nil;
-            return;
-        }
-        GameState->GameUIState = UI_State_Building;
-    }
-    if(IsGameKeyPressed(HOTBAR_01, &GameState->GameInput))
-    {
-        if(Player->Inventory.CurrentInventorySlot == 0) 
-        {
-            Player->Inventory.CurrentInventorySlot = NULLSLOT;
-            return;
-        }
-        Player->Inventory.CurrentInventorySlot = 0;
-    }
-    if(IsGameKeyPressed(HOTBAR_02, &GameState->GameInput))
-    {
-        if(Player->Inventory.CurrentInventorySlot == 1) 
-        {
-            Player->Inventory.CurrentInventorySlot = NULLSLOT;
-            return;
-        }
-        Player->Inventory.CurrentInventorySlot = 1;
-    }
-    if(IsGameKeyPressed(HOTBAR_03, &GameState->GameInput))
-    {
-        if(Player->Inventory.CurrentInventorySlot == 2) 
-        {
-            Player->Inventory.CurrentInventorySlot = NULLSLOT;
-            return;
-        }
-        Player->Inventory.CurrentInventorySlot = 2;
-    }
-    if(IsGameKeyPressed(HOTBAR_04, &GameState->GameInput))
-    {
-        if(Player->Inventory.CurrentInventorySlot == 3) 
-        {
-            Player->Inventory.CurrentInventorySlot = NULLSLOT;
-            return;
-        }
-        Player->Inventory.CurrentInventorySlot = 3;
-    }
-    if(IsGameKeyPressed(HOTBAR_05, &GameState->GameInput))
-    {
-        if(Player->Inventory.CurrentInventorySlot == 4) 
-        {
-            Player->Inventory.CurrentInventorySlot = NULLSLOT;
-            return;
-        }
-        Player->Inventory.CurrentInventorySlot = 4;
-    }
-    if(IsGameKeyPressed(HOTBAR_06, &GameState->GameInput))
-    {
-        if(Player->Inventory.CurrentInventorySlot == 5) 
-        {
-            Player->Inventory.CurrentInventorySlot = NULLSLOT;
-            return;
-        }
-        Player->Inventory.CurrentInventorySlot = 5;
-    }
-    if(IsGameKeyPressed(HOTBAR_07, &GameState->GameInput))
-    {
-        if(Player->Inventory.CurrentInventorySlot == 6) 
-        {
-            Player->Inventory.CurrentInventorySlot = NULLSLOT;
-            return;
-        }
-        Player->Inventory.CurrentInventorySlot = 6;
-    }
-    
-    if(IsKeyPressed(KEY_HOME, &GameState->GameInput))
-    {
-        GameState->DrawDebug = !GameState->DrawDebug;
-    }
-
-    if(IsGamepadButtonPressed(DPAD_LEFT, &GameState->GameInput))
-    {
-        if(Player->Inventory.CurrentInventorySlot > 0) Player->Inventory.CurrentInventorySlot--;
-    }
-    if(IsGamepadButtonPressed(DPAD_RIGHT, &GameState->GameInput))
-    {
-        if(Player->Inventory.CurrentInventorySlot < PLAYER_HOTBAR_COUNT) Player->Inventory.CurrentInventorySlot++;
-    }
-}
-
-internal void
-SetupPlayer(game_state *GameState, entity *Entity)
-{
-    Entity->Archetype   = ARCH_Player;
-    Entity->Sprite      = SPRITE_Player; 
-    Entity->Flags      += IS_ACTIVE|IS_ACTOR;
-    Entity->Size        = v2Cast(GameState->GameData.Sprites[SPRITE_Player].SpriteSize); 
-    Entity->Health      = PlayerHealth;
-    Entity->Position    = {};
-    Entity->Rotation    = 0;
-    Entity->Speed       = 100.0f;              // PIXELS PER SECOND
-    Entity->BoxCollider = {};
-    Entity->DroppedFromInventoryItemID  = ITEM_Nil;            // DROPS
-}
-
-internal void
-SetupRock(game_state *GameState, entity *Entity)
-{
-    Entity->Archetype   = ARCH_Rock;
-    Entity->Sprite      = SPRITE_Rock; 
-    Entity->Flags      += IS_ACTIVE|IS_SOLID|IS_DESTRUCTABLE;
-    Entity->Size        = v2Cast(GameState->GameData.Sprites[SPRITE_Rock].SpriteSize);
-    Entity->Health      = RockHealth;
-    Entity->Position    = {};
-    Entity->Rotation    = 0;
-    Entity->Speed       = 1.0f;
-    Entity->BoxCollider = {};
-    Entity->SoundNode   = CreateSoundTrigger(GameState); 
-    
-    Entity->UniqueDropCount = 1;
-    Entity->EntityDrops[0] = 
-    {
-        entity_item_drop{ITEM_Pebbles, 1},
-    };
-}
-
-internal void
-SetupTree00(game_state *GameState, entity *Entity)
-{
-    Entity->Archetype   = ARCH_Tree00;
-    Entity->Sprite      = SPRITE_Tree00; 
-    Entity->Flags      += IS_ACTIVE|IS_SOLID|IS_DESTRUCTABLE;
-    Entity->Size        = v2Cast(GameState->GameData.Sprites[SPRITE_Tree00].SpriteSize);
-    Entity->Health      = TreeHealth;
-    Entity->Position    = {};
-    Entity->Rotation    = 0;
-    Entity->Speed       = 1.0f;
-    Entity->BoxCollider = {};
-    Entity->SoundNode   = CreateSoundTrigger(GameState); 
-    
-    Entity->UniqueDropCount = 1;
-    Entity->EntityDrops[0] = 
-    {
-        entity_item_drop{ITEM_Branches, 1},
-    };
-}
-
-internal void
-SetupTree01(game_state *GameState, entity *Entity)
-{
-    Entity->Archetype   = ARCH_Tree01;
-    Entity->Sprite      = SPRITE_Tree01; 
-    Entity->Flags      += IS_ACTIVE|IS_SOLID|IS_DESTRUCTABLE;
-    Entity->Size        = v2Cast(GameState->GameData.Sprites[SPRITE_Tree01].SpriteSize);
-    Entity->Health      = TreeHealth;
-    Entity->Position    = {};
-    Entity->Rotation    = 0;
-    Entity->Speed       = 1.0f;
-    Entity->BoxCollider = {};
-    Entity->SoundNode   = CreateSoundTrigger(GameState); 
-    
-    Entity->UniqueDropCount = 1;
-    Entity->EntityDrops[0] = 
-    {
-        entity_item_drop{ITEM_Trunk, 1},
-    };
-}
-
-internal void
-SetupRubyNode(game_state *GameState, entity *Entity)
-{
-    Entity->Archetype   = ARCH_RubyNode;
-    Entity->Sprite      = SPRITE_RubyOre; 
-    Entity->Flags      += IS_ACTIVE|IS_SOLID|IS_DESTRUCTABLE;
-    Entity->Size        = v2Cast(GameState->GameData.Sprites[SPRITE_RubyOre].SpriteSize);
-    Entity->Health      = NodeHealth;
-    Entity->Position    = {};
-    Entity->Rotation    = 0;
-    Entity->Speed       = 1.0f;
-    Entity->BoxCollider = {};
-    Entity->SoundNode   = CreateSoundTrigger(GameState); 
-    
-    Entity->UniqueDropCount = 1;
-    Entity->EntityDrops[0] = 
-    {
-        entity_item_drop{ITEM_RubyOreChunk, 1},
-    };
-}
-
-internal void
-SetupSapphireNode(game_state *GameState, entity *Entity)
-{
-    Entity->Archetype   = ARCH_SapphireNode;
-    Entity->Sprite      = SPRITE_SapphireOre; 
-    Entity->Flags      += IS_ACTIVE|IS_SOLID|IS_DESTRUCTABLE;
-    Entity->Size        = v2Cast(GameState->GameData.Sprites[SPRITE_SapphireOre].SpriteSize);
-    Entity->Health      = NodeHealth;
-    Entity->Position    = {};
-    Entity->Rotation    = 0;
-    Entity->Speed       = 1.0f;
-    Entity->BoxCollider = {};
-    Entity->SoundNode   = CreateSoundTrigger(GameState); 
-    
-    Entity->UniqueDropCount = 1;
-    Entity->EntityDrops[0] = 
-    {
-        entity_item_drop{ITEM_SapphireOreChunk, 1},
-    };
-}
-
-internal void
-SetupItemPebbles(game_state *GameState, entity *Entity)
-{
-    Entity->Archetype = ARCH_Pebbles;
-    Entity->Sprite    = SPRITE_Pebbles;
-    Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP;
-    Entity->Size        = v2Cast(GameState->GameData.Sprites[SPRITE_Pebbles].SpriteSize) * 0.8f;
-    Entity->DroppedFromInventoryItemID    = ITEM_Pebbles;
-}
-
-internal void
-SetupItemBranches(game_state *GameState, entity *Entity)
-{
-    Entity->Archetype = ARCH_Branches;
-    Entity->Sprite    = SPRITE_Branches;
-    Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP;
-    Entity->Size        = v2Cast(GameState->GameData.Sprites[SPRITE_Branches].SpriteSize) * 0.8f;
-    Entity->DroppedFromInventoryItemID    = ITEM_Branches;
-}
-
-internal void
-SetupItemTrunk(game_state *GameState, entity *Entity)
-{
-    Entity->Archetype = ARCH_Trunk;
-    Entity->Sprite    = SPRITE_Trunk;
-    Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP;
-    Entity->Size        = v2Cast(GameState->GameData.Sprites[SPRITE_Trunk].SpriteSize) * 0.8f;
-    Entity->DroppedFromInventoryItemID    = ITEM_Trunk;
-}
-
-internal void
-SetupItemRubyChunk(game_state *GameState, entity *Entity)
-{
-    Entity->Archetype = ARCH_RubyOreChunk;
-    Entity->Sprite    = SPRITE_RubyChunk;
-    Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP;
-    Entity->Size        = v2Cast(GameState->GameData.Sprites[SPRITE_RubyChunk].SpriteSize) * 0.8f;
-    Entity->DroppedFromInventoryItemID    = ITEM_RubyOreChunk;
-}
-
-internal void
-SetupItemSapphireChunk(game_state *GameState, entity *Entity)
-{
-    Entity->Archetype = ARCH_SapphireOreChunk;
-    Entity->Sprite    = SPRITE_SapphireChunk;
-    Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP;
-    Entity->Size        = v2Cast(GameState->GameData.Sprites[SPRITE_SapphireChunk].SpriteSize) * 0.8f;
-    Entity->DroppedFromInventoryItemID    = ITEM_SapphireOreChunk;
-}
-
-internal void
-SetupItemToolPickaxe(game_state *GameState, entity *Entity)
-{
-    Entity->Archetype = ARCH_SimplePickaxe;
-    Entity->Sprite    = SPRITE_ToolPickaxe;
-    Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP;
-    Entity->Size        = v2Cast(GameState->GameData.Sprites[SPRITE_ToolPickaxe].SpriteSize);
-    Entity->DroppedFromInventoryItemID    = ITEM_ToolPickaxe;
-}
-
-internal void
-SetupItemToolWoodAxe(game_state *GameState, entity *Entity)
-{
-    Entity->Archetype = ARCH_SimpleWoodAxe;
-    Entity->Sprite    = SPRITE_ToolWoodAxe;
-    Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP;
-    Entity->Size        = v2Cast(GameState->GameData.Sprites[SPRITE_ToolWoodAxe].SpriteSize);
-    Entity->DroppedFromInventoryItemID    = ITEM_ToolWoodAxe;
-}
-
-internal void
-SetupItemWorkbench(game_state *GameState, entity *Entity)
-{
-    Entity->Archetype = ARCH_Workbench;
-    Entity->Sprite    = SPRITE_Workbench;
-    Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP|IS_BUILDABLE;
-    Entity->Size        = v2Cast(GameState->GameData.Sprites[SPRITE_Workbench].SpriteSize) * 0.5f;
-    Entity->DroppedFromInventoryItemID    = ITEM_Workbench;
-}
-
-internal void
-SetupItemFurnace(game_state *GameState, entity *Entity)
-{
-    Entity->Archetype = ARCH_Furnace,
-    Entity->Sprite    = SPRITE_Furnace;
-    Entity->Flags    += IS_ACTIVE|IS_ITEM|CAN_BE_PICKED_UP|IS_BUILDABLE;
-    Entity->Size        = v2Cast(GameState->GameData.Sprites[SPRITE_Furnace].SpriteSize) * 0.5f;
-    Entity->DroppedFromInventoryItemID    = ITEM_Furnace;
-}
-
-internal void
-SetupBuildingWorkbench(game_state *GameState, entity *Entity)
-{
-    Entity->Archetype = ARCH_Workbench;
-    Entity->Sprite    = SPRITE_Workbench;
-    Entity->Flags    += IS_ACTIVE|IS_BUILDABLE|IS_PLACED|IS_DESTRUCTABLE;
-    Entity->Size        = v2Cast(GameState->GameData.Sprites[SPRITE_Workbench].SpriteSize);
-    Entity->Health      = NodeHealth;
-    Entity->Rotation    = 0;
-    Entity->Speed       = 1.0f;
-    Entity->BoxCollider = {};
-    Entity->SoundNode   = CreateSoundTrigger(GameState); 
-    
-    Entity->UniqueDropCount = 1;
-    Entity->EntityDrops[0] = 
-    {
-        entity_item_drop{ITEM_Workbench, 1},
-    };
-}
-
-internal void
-SetupBuildingFurnace(game_state *GameState, entity *Entity)
-{
-    Entity->Archetype = ARCH_Workbench;
-    Entity->Sprite    = SPRITE_Furnace;
-    Entity->Flags    += IS_ACTIVE|IS_BUILDABLE|IS_PLACED|IS_DESTRUCTABLE;
-    Entity->Size        = v2Cast(GameState->GameData.Sprites[SPRITE_Furnace].SpriteSize);
-    
-    Entity->Health      = NodeHealth;
-    Entity->Rotation    = 0;
-    Entity->Speed       = 1.0f;
-    Entity->BoxCollider = {};
-    Entity->SoundNode   = CreateSoundTrigger(GameState); 
-
-    Entity->UniqueDropCount = 1;
-    Entity->EntityDrops[0] = 
-    {
-        entity_item_drop{ITEM_Furnace, 1},
-    };
+    GameState->GameData.ItemSprites[ITEM_Furnace]          = MakePair(ITEM_Furnace,          SPRITE_Furnace); 
 }
 
 internal inline void
@@ -751,6 +268,7 @@ ResetGame(gl_render_data *RenderData, game_state *GameState, game_memory *GameMe
     GameState->DisplayCraftingMenu = false;
     GameState->ActiveCraftingStation = {};
     GameState->ActiveRecipe = {};
+
 }
 
 internal int32
@@ -940,6 +458,142 @@ IsItemCraftable(int *ItemCounts, item *Craft)
 }
 
 internal void
+HandleInput(game_state *GameState, entity *PlayerIn, time_data Time)
+{
+    vec2 InputAxis = {};
+    if(IsGameKeyDown(MOVE_UP, &GameState->GameInput))
+    {
+        InputAxis.Y += 1.0f;
+    }
+    else if(IsGameKeyDown(MOVE_DOWN, &GameState->GameInput))
+    {
+        InputAxis.Y -= 1.0f;
+    }
+
+    if(IsGameKeyDown(MOVE_LEFT, &GameState->GameInput))
+    {
+        InputAxis.X -= 1.0f;
+    }
+    else if(IsGameKeyDown(MOVE_RIGHT, &GameState->GameInput))
+    {
+   		InputAxis.X += 1.0f;
+    }
+	
+    {
+        InputAxis.X = (abs(GameState->GameInput.Controller.LeftStick.X) > (int32)GAMEPAD_LEFT_THUMB_DEADZONE)  ? (GameState->GameInput.Controller.LeftStick.X / 32766.0f) : InputAxis.X;
+        InputAxis.Y = (abs(GameState->GameInput.Controller.LeftStick.Y) > (int32)GAMEPAD_RIGHT_THUMB_DEADZONE) ? (GameState->GameInput.Controller.LeftStick.Y / 32767.0f) : InputAxis.Y;
+        InputAxis.Y *= 1.0f;
+    }
+
+    // NOTE(Sleepster): Player Position 
+    vec2 OldPlayerP = PlayerIn->Position;
+    vec2 NextPos = {PlayerIn->Position.X + (PlayerIn->Position.X - OldPlayerP.X) + (PlayerIn->Speed * InputAxis.X) * (Time.Delta),
+        PlayerIn->Position.Y + (PlayerIn->Position.Y - OldPlayerP.Y) + (PlayerIn->Speed * InputAxis.Y) * (Time.Delta)};
+    PlayerIn->Position = v2Lerp(NextPos, Time.Delta, OldPlayerP);
+    
+    // TODO(Sleepster): Break this out into not fucking cancer 
+    if(IsKeyPressed(KEY_ESCAPE, &GameState->GameInput))
+    {
+    Player->Inventory.SelectedInventoryItem = {};
+    }
+    if(IsGameKeyPressed(INVENTORY, &GameState->GameInput))
+    {
+        GameState->DisplayPlayerInventory = !GameState->DisplayPlayerInventory;
+    }
+    if(IsGameKeyPressed(SHOW_HOTBAR, &GameState->GameInput))
+    {
+        GameState->DisplayPlayerHotbar = !GameState->DisplayPlayerHotbar;
+    }
+    if(IsGameKeyPressed(BUILD_MENU, &GameState->GameInput))
+    {
+        if(GameState->GameUIState == UI_State_Building)
+        {
+            GameState->GameUIState = UI_State_Nil;
+            return;
+        }
+        GameState->GameUIState = UI_State_Building;
+    }
+    if(IsGameKeyPressed(HOTBAR_01, &GameState->GameInput))
+    {
+        if(Player->Inventory.CurrentInventorySlot == 0) 
+        {
+            Player->Inventory.CurrentInventorySlot = NULLSLOT;
+            return;
+        }
+        Player->Inventory.CurrentInventorySlot = 0;
+    }
+    if(IsGameKeyPressed(HOTBAR_02, &GameState->GameInput))
+    {
+        if(Player->Inventory.CurrentInventorySlot == 1) 
+        {
+            Player->Inventory.CurrentInventorySlot = NULLSLOT;
+            return;
+        }
+        Player->Inventory.CurrentInventorySlot = 1;
+    }
+    if(IsGameKeyPressed(HOTBAR_03, &GameState->GameInput))
+    {
+        if(Player->Inventory.CurrentInventorySlot == 2) 
+        {
+            Player->Inventory.CurrentInventorySlot = NULLSLOT;
+            return;
+        }
+        Player->Inventory.CurrentInventorySlot = 2;
+    }
+    if(IsGameKeyPressed(HOTBAR_04, &GameState->GameInput))
+    {
+        if(Player->Inventory.CurrentInventorySlot == 3) 
+        {
+            Player->Inventory.CurrentInventorySlot = NULLSLOT;
+            return;
+        }
+        Player->Inventory.CurrentInventorySlot = 3;
+    }
+    if(IsGameKeyPressed(HOTBAR_05, &GameState->GameInput))
+    {
+        if(Player->Inventory.CurrentInventorySlot == 4) 
+        {
+            Player->Inventory.CurrentInventorySlot = NULLSLOT;
+            return;
+        }
+        Player->Inventory.CurrentInventorySlot = 4;
+    }
+    if(IsGameKeyPressed(HOTBAR_06, &GameState->GameInput))
+    {
+        if(Player->Inventory.CurrentInventorySlot == 5) 
+        {
+            Player->Inventory.CurrentInventorySlot = NULLSLOT;
+            return;
+        }
+        Player->Inventory.CurrentInventorySlot = 5;
+    }
+    if(IsGameKeyPressed(HOTBAR_07, &GameState->GameInput))
+    {
+        if(Player->Inventory.CurrentInventorySlot == 6) 
+        {
+            Player->Inventory.CurrentInventorySlot = NULLSLOT;
+            return;
+        }
+        Player->Inventory.CurrentInventorySlot = 6;
+    }
+    
+    if(IsKeyPressed(KEY_HOME, &GameState->GameInput))
+    {
+        GameState->DrawDebug = !GameState->DrawDebug;
+    }
+
+    if(IsGamepadButtonPressed(DPAD_LEFT, &GameState->GameInput))
+    {
+        if(Player->Inventory.CurrentInventorySlot > 0) Player->Inventory.CurrentInventorySlot--;
+    }
+    if(IsGamepadButtonPressed(DPAD_RIGHT, &GameState->GameInput))
+    {
+	    if(Player->Inventory.CurrentInventorySlot < PLAYER_HOTBAR_COUNT) Player->Inventory.CurrentInventorySlot++;
+    }
+}
+
+
+internal void
 AddItemToPlayerInventory(game_state *GameState, entity *PlayerEntity, entity *Temp)
 {
     if((Temp->Flags & IS_ITEM) && (Temp->Flags & CAN_BE_PICKED_UP))
@@ -985,193 +639,9 @@ AddItemToPlayerInventory(game_state *GameState, entity *PlayerEntity, entity *Te
     }
 }
 
-extern
-GAME_ON_AWAKE(GameOnAwake)
+internal void
+RenderHotbarUI(game_state *GameState, transient_state *TransientState)
 {
-    ResetGame(RenderData, GameState, GameMemory);
-    LoadSpriteData(GameState);
-    LoadItemData(GameState);
-    
-    real32 SizeScaler = WORLD_SIZE * 10;
-    for(uint32 EntityIndex = 0;
-        EntityIndex < 50;
-        ++EntityIndex)
-    {
-        entity *En = CreateEntity(GameState);
-        SetupRock(GameState, En);
-        En->Position = vec2{GetRandomReal32_Range(-SizeScaler, SizeScaler), GetRandomReal32_Range(-SizeScaler, SizeScaler)};
-        En->Position = TileToWorldPos(WorldToTilePos(En->Position));
-        
-        
-        entity *En2 = CreateEntity(GameState);
-        SetupTree00(GameState, En2);
-        En2->Position = vec2{GetRandomReal32_Range(-SizeScaler, SizeScaler), GetRandomReal32_Range(-SizeScaler, SizeScaler)};
-        En2->Position = TileToWorldPos(WorldToTilePos(En2->Position));
-        
-        
-        entity *En3 = CreateEntity(GameState);
-        SetupTree01(GameState, En3);
-        En3->Position = vec2{GetRandomReal32_Range(-SizeScaler, SizeScaler), GetRandomReal32_Range(-SizeScaler, SizeScaler)};
-        En3->Position = TileToWorldPos(WorldToTilePos(En3->Position));
-        
-        
-        entity *En4 = CreateEntity(GameState);
-        SetupRubyNode(GameState, En4);
-        En4->Position = vec2{GetRandomReal32_Range(-SizeScaler, SizeScaler), GetRandomReal32_Range(-SizeScaler, SizeScaler)};
-        En4->Position = TileToWorldPos(WorldToTilePos(En4->Position));
-        
-        
-        entity *En5 = CreateEntity(GameState);
-        SetupSapphireNode(GameState, En5);
-        En5->Position = vec2{GetRandomReal32_Range(-SizeScaler, SizeScaler), GetRandomReal32_Range(-SizeScaler, SizeScaler)};
-        En5->Position = TileToWorldPos(WorldToTilePos(En5->Position));
-    }
-    
-    entity *WorkbenchTest = CreateEntity(GameState);
-    SetupBuildingWorkbench(GameState, WorkbenchTest);
-    WorkbenchTest->Position = {0, -80};
-    WorkbenchTest->Position = TileToWorldPos(WorldToTilePos(WorkbenchTest->Position));
-    WorkbenchTest->BoxCollider = CreateRange(vec2{WorkbenchTest->Position.X - (TILE_SIZE * 0.5f), WorkbenchTest->Position.Y}, 
-                                             vec2{WorkbenchTest->Position.X - (TILE_SIZE * 0.5f), WorkbenchTest->Position.Y} + WorkbenchTest->Size);
-    
-    entity *FurnaceTest = CreateEntity(GameState);
-    SetupBuildingFurnace(GameState, FurnaceTest);
-    FurnaceTest->Position = {20, -80};
-    FurnaceTest->Position = TileToWorldPos(WorldToTilePos(FurnaceTest->Position));
-    FurnaceTest->BoxCollider = CreateRange(vec2{FurnaceTest->Position.X - (TILE_SIZE * 0.5f), FurnaceTest->Position.Y}, 
-                                           vec2{FurnaceTest->Position.X - (TILE_SIZE * 0.5f), FurnaceTest->Position.Y} + FurnaceTest->Size);
-    
-    entity *GroundWorkbench = CreateEntity(GameState);
-    SetupItemWorkbench(GameState, GroundWorkbench);
-    GroundWorkbench->Position = {0, -100};
-    GroundWorkbench->Target   = {0, -100};
-    GroundWorkbench->BoxCollider = CreateRange(vec2{GroundWorkbench->Position.X - (TILE_SIZE * 0.5f), GroundWorkbench->Position.Y}, 
-                                               vec2{GroundWorkbench->Position.X - (TILE_SIZE * 0.5f), GroundWorkbench->Position.Y} + GroundWorkbench->Size);
-    
-    entity *GroundFurnace = CreateEntity(GameState);
-    SetupItemFurnace(GameState, GroundFurnace);
-    GroundFurnace->Position = {20, -100};
-    GroundFurnace->Target   = {20, -100};
-    
-    entity *Pickaxe = CreateEntity(GameState);
-    SetupItemToolPickaxe(GameState, Pickaxe);
-    Pickaxe->Position = {0, 150};
-    Pickaxe->Target  = {0, 150};
-    
-    
-    entity *Pickaxe2 = CreateEntity(GameState);
-    SetupItemToolPickaxe(GameState, Pickaxe2);
-    Pickaxe2->Position = {32, 150};
-    Pickaxe2->Target = {32, 150};
-    
-    Player = CreateEntity(GameState);
-    SetupPlayer(GameState, Player);
-    
-    GameState->DisplayPlayerHotbar = true;
-}
-
-extern
-GAME_FIXED_UPDATE(GameFixedUpdate)
-{
-}
-
-extern
-GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
-{
-    TransientState->SelectedEntityThisFrame = {};
-    // MATRICES
-    {
-        // NOTE(Sleepster): GAME 
-        RenderData->GameCamera.Zoom = 5.3f;
-        
-        mat4 ScaleMatrix                              = mat4MakeScale(vec3{1.0f * RenderData->GameCamera.Zoom, 1.0f * RenderData->GameCamera.Zoom, 1.0f});
-        mat4 TranslationMatrix                        = mat4Translate(vec3{-RenderData->GameCamera.Position.X, -RenderData->GameCamera.Position.Y, 0.0f});
-        
-        RenderData->GameCamera.ViewMatrix             = mat4Identity(1.0f);
-        RenderData->GameCamera.ViewMatrix             = mat4Multiply(TranslationMatrix, RenderData->GameCamera.ViewMatrix);
-        RenderData->GameCamera.ViewMatrix             = mat4Multiply(ScaleMatrix, RenderData->GameCamera.ViewMatrix);
-        RenderData->GameCamera.ProjectionMatrix       = mat4RHGLOrtho((real32)SizeData.Width * -0.5f, (real32)SizeData.Width * 0.5f, (real32)SizeData.Height * -0.5f, (real32)SizeData.Height * 0.5f, -1.0f, 1.0f); 
-        RenderData->GameCamera.ProjectionViewMatrix   = mat4Multiply(RenderData->GameCamera.ProjectionMatrix, RenderData->GameCamera.ViewMatrix);        
-        
-        // NOTE(Sleepster): UI
-        RenderData->GameUICamera.ProjectionMatrix     = mat4RHGLOrtho((real32)SizeData.Width * -0.5f, (real32)SizeData.Width * 0.5f, (real32)SizeData.Height * -0.5f, (real32)SizeData.Height * 0.5f, -1.0f, 1.0f); 
-        RenderData->GameUICamera.ViewMatrix           = mat4Multiply(mat4Identity(1.0f), ScaleMatrix);
-        RenderData->GameUICamera.ProjectionViewMatrix = mat4Multiply(RenderData->GameUICamera.ProjectionMatrix, RenderData->GameUICamera.ViewMatrix);
-        
-        GameState->UIContext.UICameraViewMatrix       = RenderData->GameUICamera.ViewMatrix;
-        GameState->UIContext.UICameraProjectionMatrix = RenderData->GameUICamera.ProjectionMatrix;
-        GameState->UIContext.GameInput                = &GameState->GameInput;
-        GameState->UIContext.ActiveFont               = TransientState->GameAssets->Fonts[GF_UbuntuMono].Font;
-        GameState->UIContext.ActiveFontIndex          = GF_UbuntuMono;
-    }
-    
-    vec2 MouseToWorld  = TransformMouseCoords(RenderData->GameCamera.ViewMatrix, 
-                                              RenderData->GameCamera.ProjectionMatrix, 
-                                              GameState->GameInput.Keyboard.CurrentMouse, 
-                                              SizeData);
-    
-    // vec2 MouseToScreen = TransformMouseCoords(RenderData->GameUICamera.ViewMatrix,
-    //                                           RenderData->GameUICamera.ProjectionMatrix, 
-    //                                           GameState->GameInput.Keyboard.CurrentMouse, 
-    //                                           SizeData);
-    
-    // NOTE(Sleepster): SELECTED ENTITY
-    real32 SelectionDistance = 32.0f;
-    real32 MinimumDistance = 0;
-    for(uint32 EntityIndex = 0;
-        EntityIndex <= GameState->World.EntityCounter;
-        ++EntityIndex)
-    {
-        entity *Temp = &GameState->World.Entities[EntityIndex];
-        if((Temp->Flags & IS_VALID))
-        {
-            real32 Distance = fabsf(v2Distance(Temp->Position, MouseToWorld));
-            real32 PlayerToObjectDistance = fabsf(v2Distance(Temp->Position, Player->Position));
-            if(Distance <= SelectionDistance && PlayerToObjectDistance <= MaxHitRange)
-            {
-                if(!TransientState->SelectedEntityThisFrame || (Distance < MinimumDistance) || (Temp->EntityID != TransientState->SelectedEntityThisFrame->EntityID))
-                {
-                    TransientState->SelectedEntityThisFrame = Temp;
-                    MinimumDistance = Distance;
-                }
-                
-                // NOTE(Sleepster): Handle Entity Destruction 
-                if(IsGameKeyPressed(ATTACK, &GameState->GameInput) && 
-                   (Temp->Flags & IS_DESTRUCTABLE) && 
-                   !(Temp->Flags & IS_UI) && 
-                   PlayerToObjectDistance <= MaxHitRange &&
-                   GameState->GameUIState == UI_State_Nil)
-                {
-                    --Temp->Health;
-                    if(Temp->Health <= 0)
-                    {
-                        for(int32 DropIndex = 0;
-                            DropIndex < Temp->UniqueDropCount;
-                            DropIndex++)
-                        {
-                            for(int32 DropCount = 0;
-                                DropCount < Temp->EntityDrops[DropIndex].DropAmount;
-                                DropCount++)
-                            {
-                                entity *CreatedEntity = CreateEntity(GameState);
-                                item DroppedItem = GameState->GameData.GameItems[Temp->EntityDrops[DropCount].DroppedItem];
-                                
-                                SetupDroppedEntity(RenderData, GameState, &DroppedItem, CreatedEntity);
-                                CreatedEntity->Position = Temp->Position;
-                                CreatedEntity->Target   = Temp->Position;
-                            }
-                        }
-                        
-                        TransientState->SelectedEntityThisFrame = {};
-                        DeleteEntity(Temp, GameState);
-                    }
-                }
-            }
-            // NOTE(Sleepster): Add Item to Inventory
-            AddItemToPlayerInventory(GameState, Player, Temp);
-        }
-    }
-    
     // NOTE(Sleepster): New Hotbar UI 
     if(GameState->DisplayPlayerHotbar)
     {
@@ -1304,117 +774,323 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             }
         }
     }
-    
-    // NOTE(Sleepster): Large Inventory UI 
-    const real32 InventoryYOffset = -70.0f;
+}
+
+internal void
+RenderInventoryUI(game_state *GameState, transient_state *TransientState)
+{
     if(GameState->DisplayPlayerInventory)
     {
-        const real32 Width = SizeData.X * 0.25f;
-        const real32 Padding = 1.00f;
-        const real32 IconSize = 16.0f;
-        const real32 TotalWidth = ((PLAYER_INVENTORY_SIZE * IconSize) + (IconSize * 2) - 7) + ((PLAYER_INVENTORY_SIZE - 1) * Padding);
-        const real32 StartingX = (Width / 2.0f) - (TotalWidth / 2.0f);
-        
-        for(uint32 InventorySlot = PLAYER_HOTBAR_COUNT;
-            InventorySlot < TOTAL_INVENTORY_SIZE;
-            ++InventorySlot)
+        const real32 InventoryYOffset = -70.0f;
+        if(GameState->DisplayPlayerInventory)
         {
-            real32 SlotOffset = (IconSize + Padding) * (InventorySlot - 6);
-            
-            mat4 XForm = mat4Identity(1.0f);
-            XForm = mat4Multiply(XForm, mat4Translate(vec3{StartingX + SlotOffset, InventoryYOffset, 0.0}));
-            XForm = mat4Multiply(XForm, mat4Translate(vec3{IconSize * -0.55f, 0.0f, 0.0f}));
-            XForm = mat4Multiply(XForm, mat4MakeScale(vec3{IconSize, IconSize, 1.0}));
-            
-            vec4 MatrixPosition = XForm.Columns[3];
-            vec2 SlotPosition   = {MatrixPosition.X, MatrixPosition.Y};
-            
-            static_sprite_data Sprite = GetSprite(GameState, SPRITE_UIItemBox);
-            ui_element_state HotbarSlotState = CloverUIButton(&GameState->UIContext, STR("InventorySlot"), SlotPosition, {IconSize, IconSize}, Sprite, WHITE);
-            ui_element *HotbarSlot = &GameState->UIContext.UIElements[HotbarSlotState.UIID.ID];
-            
-            Player->Inventory.InventorySlotButtons[InventorySlot] = HotbarSlot;
-            
-            HotbarSlot->XForm = XForm;
-            HotbarSlot->Sprite = Sprite;
-            HotbarSlot->DrawColor = WHITE;
-            
-            item *Item = &Player->Inventory.Items[InventorySlot];
-            Item->OccupiedInventorySlot = InventorySlot;
-            
-            Sprite = GetSprite(GameState, Item->Sprite);
-            if(Sprite != GameState->GameData.Sprites[SPRITE_Nil] && !HotbarSlotState.IsHot)
-            {
-                XForm = mat4Multiply(XForm, mat4MakeScale(vec3{0.65, 0.65, 1.0}));
-                DrawUISpriteXForm(TransientState, XForm, Sprite, 0, WHITE);
-            }
-            
-            if(HotbarSlotState.IsHot)
-            {
-                HotbarSlot->DrawColor = RED;
-                if(Item->Sprite != SPRITE_Nil)
-                {
-                    XForm = mat4Multiply(XForm, mat4MakeScale(vec3{1.0, 1.0, 1.0}));
-                    DrawUISpriteXForm(TransientState, XForm, Sprite, 0, WHITE);
-                    
-                    real32 NewUIYOffset;
-                    real32 NewUIYDescOffset;
-                    real32 SpriteYOffset;
-                    if(GameState->DisplayPlayerInventory)
-                    {
-                        NewUIYOffset = 24.0f;
-                        NewUIYDescOffset = 8.0f;
-                        SpriteYOffset = 25.0f;
-                    }
-                    else
-                    {
-                        NewUIYOffset = 16.0f;
-                        NewUIYDescOffset = 3.0f;
-                        SpriteYOffset = 20.0f;
-                    }
-                    
-                    vec2 UIBoxSize = {10, 25};
-                    
-                    mat4 UIXForm = mat4Identity(1.0f);
-                    UIXForm = mat4Multiply(UIXForm, mat4Translate(vec3{StartingX + SlotOffset, -90, 0.0}));
-                    UIXForm = mat4Multiply(UIXForm, mat4Translate(vec3{IconSize * -0.55f, NewUIYOffset, 0.0f}));
-                    
-                    vec4 UIMatrixPosition = UIXForm.Columns[3];
-                    vec2 Position = vec2{UIMatrixPosition.X, UIMatrixPosition.Y};
-                    
-                    static_sprite_data SpriteData = GetSprite(GameState, Item->Sprite);
-                    
-                    ui_element *ItemDescData = CloverUIMakeTextElement(&GameState->UIContext, Item->ItemDesc, {Position.X, Position.Y + NewUIYDescOffset}, 10, TEXT_ALIGNMENT_Center, GREEN);
-                    CloverUIMakeTextElement(&GameState->UIContext, Item->ItemName, {Position.X + 4, Position.Y + NewUIYOffset}, 10, TEXT_ALIGNMENT_Center, GREEN);
-                    
-                    mat4 SpriteXForm = UIXForm;
-                    UIXForm = mat4Multiply(UIXForm, mat4Translate(vec3{0, NewUIYOffset, 0}));
-                    UIXForm = mat4Multiply(UIXForm, mat4MakeScale(v2Expand(UIBoxSize + ItemDescData->Size, 1.0f)));
-                    DrawUISpriteXForm(TransientState, UIXForm, GetSprite(GameState, SPRITE_Nil), 0, vec4{0.2f, 0.2f, 0.2f, 0.2f});
-                    
-                    SpriteXForm = mat4Multiply(SpriteXForm, mat4Translate(vec3{UIBoxSize.X + ItemDescData->Size.X * -0.5f, SpriteYOffset, 0}));
-                    SpriteXForm = mat4Multiply(SpriteXForm, mat4MakeScale(vec3{IconSize, IconSize, 1.0f}));
-                    DrawUISpriteXForm(TransientState, SpriteXForm, SpriteData, 0, WHITE);
-                    
-                    SpriteXForm = mat4Multiply(SpriteXForm, mat4MakeScale(vec3{1 / IconSize, 1 / IconSize, 1.0f}));
-                    SpriteXForm = mat4Multiply(SpriteXForm, mat4Translate(vec3{-(UIBoxSize.X + ItemDescData->Size.X * -0.5f), 0, 0}));
-                    SpriteXForm = mat4Multiply(SpriteXForm, mat4Translate(vec3{(UIBoxSize.X + ItemDescData->Size.X * -0.5f), 19, 0}));
-                    SpriteXForm = mat4Multiply(SpriteXForm, mat4Translate(vec3{-7, 0, 0}));
-                    SpriteXForm = mat4Multiply(SpriteXForm, mat4MakeScale(vec3{16, 16, 1.0f}));
-                    DrawUISpriteXForm(TransientState, SpriteXForm, GetSprite(GameState, SPRITE_Nil), 0, vec4{0.1f, 0.1f, 0.1f, 0.4f});
-                    
-                    SpriteXForm = mat4Multiply(SpriteXForm, mat4MakeScale(vec3{1 / IconSize, 1 / IconSize, 1.0f}));
-                    SpriteXForm = mat4Multiply(SpriteXForm, mat4Translate(vec3{2, -6, 0}));
-                    SpriteXForm = mat4Multiply(SpriteXForm, mat4MakeScale(vec3{16, 16, 1.0f}));
-                    
-                    vec4 ItemCountTextPosition = SpriteXForm.Columns[3];
-                    Position = vec2{ItemCountTextPosition.X, ItemCountTextPosition.Y};
+            const real32 Width = SizeData.X * 0.25f;
+            const real32 Padding = 1.00f;
+            const real32 IconSize = 16.0f;
+            const real32 TotalWidth = ((PLAYER_INVENTORY_SIZE * IconSize) + (IconSize * 2) - 7) + ((PLAYER_INVENTORY_SIZE - 1) * Padding);
+            const real32 StartingX = (Width / 2.0f) - (TotalWidth / 2.0f);
 
-                    CloverUIMakeTextElement(&GameState->UIContext, sprints(&TransientState->Garbage, STR("x%d"), Item->CurrentStack), {Position.X + 3, Position.Y}, 15, TEXT_ALIGNMENT_Center, GREEN);
+            for(uint32 InventorySlot = PLAYER_HOTBAR_COUNT;
+                InventorySlot < TOTAL_INVENTORY_SIZE;
+                ++InventorySlot)
+            {
+                real32 SlotOffset = (IconSize + Padding) * (InventorySlot - 6);
+
+                mat4 XForm = mat4Identity(1.0f);
+                XForm = mat4Multiply(XForm, mat4Translate(vec3{StartingX + SlotOffset, InventoryYOffset, 0.0}));
+                XForm = mat4Multiply(XForm, mat4Translate(vec3{IconSize * -0.55f, 0.0f, 0.0f}));
+                XForm = mat4Multiply(XForm, mat4MakeScale(vec3{IconSize, IconSize, 1.0}));
+
+                vec4 MatrixPosition = XForm.Columns[3];
+                vec2 SlotPosition   = {MatrixPosition.X, MatrixPosition.Y};
+
+                static_sprite_data Sprite = GetSprite(GameState, SPRITE_UIItemBox);
+                ui_element_state HotbarSlotState = CloverUIButton(&GameState->UIContext, STR("InventorySlot"), SlotPosition, {IconSize, IconSize}, Sprite, WHITE);
+                ui_element *HotbarSlot = &GameState->UIContext.UIElements[HotbarSlotState.UIID.ID];
+
+                Player->Inventory.InventorySlotButtons[InventorySlot] = HotbarSlot;
+
+                HotbarSlot->XForm = XForm;
+                HotbarSlot->Sprite = Sprite;
+                HotbarSlot->DrawColor = WHITE;
+
+                item *Item = &Player->Inventory.Items[InventorySlot];
+                Item->OccupiedInventorySlot = InventorySlot;
+
+                Sprite = GetSprite(GameState, Item->Sprite);
+                if(Sprite != GameState->GameData.Sprites[SPRITE_Nil] && !HotbarSlotState.IsHot)
+                {
+                    XForm = mat4Multiply(XForm, mat4MakeScale(vec3{0.65, 0.65, 1.0}));
+                    DrawUISpriteXForm(TransientState, XForm, Sprite, 0, WHITE);
+                }
+
+                if(HotbarSlotState.IsHot)
+                {
+                    HotbarSlot->DrawColor = RED;
+                    if(Item->Sprite != SPRITE_Nil)
+                    {
+                        XForm = mat4Multiply(XForm, mat4MakeScale(vec3{1.0, 1.0, 1.0}));
+                        DrawUISpriteXForm(TransientState, XForm, Sprite, 0, WHITE);
+
+                        real32 NewUIYOffset;
+                        real32 NewUIYDescOffset;
+                        real32 SpriteYOffset;
+                        if(GameState->DisplayPlayerInventory)
+                        {
+                            NewUIYOffset = 24.0f;
+                            NewUIYDescOffset = 8.0f;
+                            SpriteYOffset = 25.0f;
+                        }
+                        else
+                        {
+                            NewUIYOffset = 16.0f;
+                            NewUIYDescOffset = 3.0f;
+                            SpriteYOffset = 20.0f;
+                        }
+
+                        vec2 UIBoxSize = {10, 25};
+
+                        mat4 UIXForm = mat4Identity(1.0f);
+                        UIXForm = mat4Multiply(UIXForm, mat4Translate(vec3{StartingX + SlotOffset, -90, 0.0}));
+                        UIXForm = mat4Multiply(UIXForm, mat4Translate(vec3{IconSize * -0.55f, NewUIYOffset, 0.0f}));
+
+                        vec4 UIMatrixPosition = UIXForm.Columns[3];
+                        vec2 Position = vec2{UIMatrixPosition.X, UIMatrixPosition.Y};
+
+                        static_sprite_data SpriteData = GetSprite(GameState, Item->Sprite);
+
+                        ui_element *ItemDescData = CloverUIMakeTextElement(&GameState->UIContext, Item->ItemDesc, {Position.X, Position.Y + NewUIYDescOffset}, 10, TEXT_ALIGNMENT_Center, GREEN);
+                        CloverUIMakeTextElement(&GameState->UIContext, Item->ItemName, {Position.X + 4, Position.Y + NewUIYOffset}, 10, TEXT_ALIGNMENT_Center, GREEN);
+
+                        mat4 SpriteXForm = UIXForm;
+                        UIXForm = mat4Multiply(UIXForm, mat4Translate(vec3{0, NewUIYOffset, 0}));
+                        UIXForm = mat4Multiply(UIXForm, mat4MakeScale(v2Expand(UIBoxSize + ItemDescData->Size, 1.0f)));
+                        DrawUISpriteXForm(TransientState, UIXForm, GetSprite(GameState, SPRITE_Nil), 0, vec4{0.2f, 0.2f, 0.2f, 0.2f});
+
+                        SpriteXForm = mat4Multiply(SpriteXForm, mat4Translate(vec3{UIBoxSize.X + ItemDescData->Size.X * -0.5f, SpriteYOffset, 0}));
+                        SpriteXForm = mat4Multiply(SpriteXForm, mat4MakeScale(vec3{IconSize, IconSize, 1.0f}));
+                        DrawUISpriteXForm(TransientState, SpriteXForm, SpriteData, 0, WHITE);
+
+                        SpriteXForm = mat4Multiply(SpriteXForm, mat4MakeScale(vec3{1 / IconSize, 1 / IconSize, 1.0f}));
+                        SpriteXForm = mat4Multiply(SpriteXForm, mat4Translate(vec3{-(UIBoxSize.X + ItemDescData->Size.X * -0.5f), 0, 0}));
+                        SpriteXForm = mat4Multiply(SpriteXForm, mat4Translate(vec3{(UIBoxSize.X + ItemDescData->Size.X * -0.5f), 19, 0}));
+                        SpriteXForm = mat4Multiply(SpriteXForm, mat4Translate(vec3{-7, 0, 0}));
+                        SpriteXForm = mat4Multiply(SpriteXForm, mat4MakeScale(vec3{16, 16, 1.0f}));
+                        DrawUISpriteXForm(TransientState, SpriteXForm, GetSprite(GameState, SPRITE_Nil), 0, vec4{0.1f, 0.1f, 0.1f, 0.4f});
+
+                        SpriteXForm = mat4Multiply(SpriteXForm, mat4MakeScale(vec3{1 / IconSize, 1 / IconSize, 1.0f}));
+                        SpriteXForm = mat4Multiply(SpriteXForm, mat4Translate(vec3{2, -6, 0}));
+                        SpriteXForm = mat4Multiply(SpriteXForm, mat4MakeScale(vec3{16, 16, 1.0f}));
+
+                        vec4 ItemCountTextPosition = SpriteXForm.Columns[3];
+                        Position = vec2{ItemCountTextPosition.X, ItemCountTextPosition.Y};
+
+                        CloverUIMakeTextElement(&GameState->UIContext, sprints(&TransientState->Garbage, STR("x%d"), Item->CurrentStack), {Position.X + 3, Position.Y}, 15, TEXT_ALIGNMENT_Center, GREEN);
+                    }
                 }
             }
         }
     }
+}
+
+extern
+GAME_ON_AWAKE(GameOnAwake)
+{
+    ResetGame(RenderData, GameState, GameMemory);
+    LoadSpriteData(GameState);
+    LoadItemData(GameState);
+
+    LoadSoundFromID(GameMemory, GSFX_RoarOfTheJungleDragon);
+
+    real32 SizeScaler = WORLD_SIZE * 10;
+    for(uint32 EntityIndex = 0;
+        EntityIndex < 50;
+        ++EntityIndex)
+    {
+        entity *En = CreateEntity(GameState);
+        SetupRock(GameState, En);
+        En->Position = vec2{GetRandomReal32_Range(-SizeScaler, SizeScaler), GetRandomReal32_Range(-SizeScaler, SizeScaler)};
+        En->Position = TileToWorldPos(WorldToTilePos(En->Position));
+        
+
+
+        entity *En2 = CreateEntity(GameState);
+        SetupTree00(GameState, En2);
+        En2->Position = vec2{GetRandomReal32_Range(-SizeScaler, SizeScaler), GetRandomReal32_Range(-SizeScaler, SizeScaler)};
+        En2->Position = TileToWorldPos(WorldToTilePos(En2->Position));
+        
+        
+        entity *En3 = CreateEntity(GameState);
+        SetupTree01(GameState, En3);
+        En3->Position = vec2{GetRandomReal32_Range(-SizeScaler, SizeScaler), GetRandomReal32_Range(-SizeScaler, SizeScaler)};
+        En3->Position = TileToWorldPos(WorldToTilePos(En3->Position));
+
+
+        
+        entity *En4 = CreateEntity(GameState);
+        SetupRubyNode(GameState, En4);
+        En4->Position = vec2{GetRandomReal32_Range(-SizeScaler, SizeScaler), GetRandomReal32_Range(-SizeScaler, SizeScaler)};
+        En4->Position = TileToWorldPos(WorldToTilePos(En4->Position));
+
+
+        
+        entity *En5 = CreateEntity(GameState);
+        SetupSapphireNode(GameState, En5);
+        En5->Position = vec2{GetRandomReal32_Range(-SizeScaler, SizeScaler), GetRandomReal32_Range(-SizeScaler, SizeScaler)};
+        En5->Position = TileToWorldPos(WorldToTilePos(En5->Position));
+    }
+    
+    entity *WorkbenchTest = CreateEntity(GameState);
+    SetupBuildingWorkbench(GameState, WorkbenchTest);
+    WorkbenchTest->Position = {0, -80};
+    WorkbenchTest->Position = TileToWorldPos(WorldToTilePos(WorkbenchTest->Position));
+    WorkbenchTest->BoxCollider = CreateRange(vec2{WorkbenchTest->Position.X - (TILE_SIZE * 0.5f), WorkbenchTest->Position.Y}, 
+                                             vec2{WorkbenchTest->Position.X - (TILE_SIZE * 0.5f), WorkbenchTest->Position.Y} + WorkbenchTest->Size);
+    
+    entity *FurnaceTest = CreateEntity(GameState);
+    SetupBuildingFurnace(GameState, FurnaceTest);
+    FurnaceTest->Position = {20, -80};
+    FurnaceTest->Position = TileToWorldPos(WorldToTilePos(FurnaceTest->Position));
+    FurnaceTest->BoxCollider = CreateRange(vec2{FurnaceTest->Position.X - (TILE_SIZE * 0.5f), FurnaceTest->Position.Y}, 
+                                           vec2{FurnaceTest->Position.X - (TILE_SIZE * 0.5f), FurnaceTest->Position.Y} + FurnaceTest->Size);
+    
+    entity *GroundWorkbench = CreateEntity(GameState);
+    SetupItemWorkbench(GameState, GroundWorkbench);
+    GroundWorkbench->Position = {0, -100};
+    GroundWorkbench->Target   = {0, -100};
+    GroundWorkbench->BoxCollider = CreateRange(vec2{GroundWorkbench->Position.X - (TILE_SIZE * 0.5f), GroundWorkbench->Position.Y}, 
+                                               vec2{GroundWorkbench->Position.X - (TILE_SIZE * 0.5f), GroundWorkbench->Position.Y} + GroundWorkbench->Size);
+    
+    entity *GroundFurnace = CreateEntity(GameState);
+    SetupItemFurnace(GameState, GroundFurnace);
+    GroundFurnace->Position = {20, -100};
+    GroundFurnace->Target   = {20, -100};
+    
+    entity *Pickaxe = CreateEntity(GameState);
+    SetupItemToolPickaxe(GameState, Pickaxe);
+    Pickaxe->Position = {0, 150};
+    Pickaxe->Target  = {0, 150};
+    
+    
+    entity *Pickaxe2 = CreateEntity(GameState);
+    SetupItemToolPickaxe(GameState, Pickaxe2);
+    Pickaxe2->Position = {32, 150};
+    Pickaxe2->Target = {32, 150};
+    
+    Player = CreateEntity(GameState);
+    SetupPlayer(GameState, Player);
+    
+    GameState->DisplayPlayerHotbar = true;
+}
+
+extern
+GAME_FIXED_UPDATE(GameFixedUpdate)
+{
+}
+
+extern
+GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
+{
+    TransientState->SelectedEntityThisFrame = {};
+    // MATRICES
+    {
+        // NOTE(Sleepster): GAME 
+        RenderData->GameCamera.Zoom = 5.3f;
+        
+        mat4 ScaleMatrix                              = mat4MakeScale(vec3{1.0f * RenderData->GameCamera.Zoom, 1.0f * RenderData->GameCamera.Zoom, 1.0f});
+        mat4 TranslationMatrix                        = mat4Translate(vec3{-RenderData->GameCamera.Position.X, -RenderData->GameCamera.Position.Y, 0.0f});
+        
+        RenderData->GameCamera.ViewMatrix             = mat4Identity(1.0f);
+        RenderData->GameCamera.ViewMatrix             = mat4Multiply(TranslationMatrix, RenderData->GameCamera.ViewMatrix);
+        RenderData->GameCamera.ViewMatrix             = mat4Multiply(ScaleMatrix, RenderData->GameCamera.ViewMatrix);
+        RenderData->GameCamera.ProjectionMatrix       = mat4RHGLOrtho((real32)SizeData.Width * -0.5f, (real32)SizeData.Width * 0.5f, (real32)SizeData.Height * -0.5f, (real32)SizeData.Height * 0.5f, -1.0f, 1.0f); 
+        RenderData->GameCamera.ProjectionViewMatrix   = mat4Multiply(RenderData->GameCamera.ProjectionMatrix, RenderData->GameCamera.ViewMatrix);        
+        
+        // NOTE(Sleepster): UI
+        RenderData->GameUICamera.ProjectionMatrix     = mat4RHGLOrtho((real32)SizeData.Width * -0.5f, (real32)SizeData.Width * 0.5f, (real32)SizeData.Height * -0.5f, (real32)SizeData.Height * 0.5f, -1.0f, 1.0f); 
+        RenderData->GameUICamera.ViewMatrix           = mat4Multiply(mat4Identity(1.0f), ScaleMatrix);
+        RenderData->GameUICamera.ProjectionViewMatrix = mat4Multiply(RenderData->GameUICamera.ProjectionMatrix, RenderData->GameUICamera.ViewMatrix);
+        
+        GameState->UIContext.UICameraViewMatrix       = RenderData->GameUICamera.ViewMatrix;
+        GameState->UIContext.UICameraProjectionMatrix = RenderData->GameUICamera.ProjectionMatrix;
+        GameState->UIContext.GameInput                = &GameState->GameInput;
+        GameState->UIContext.ActiveFont               = TransientState->GameAssets->Fonts[GF_UbuntuMono].Font;
+        GameState->UIContext.ActiveFontIndex          = GF_UbuntuMono;
+    }
+    
+    vec2 MouseToWorld  = TransformMouseCoords(RenderData->GameCamera.ViewMatrix, 
+                                              RenderData->GameCamera.ProjectionMatrix, 
+                                              GameState->GameInput.Keyboard.CurrentMouse, 
+                                              SizeData);
+    
+    // vec2 MouseToScreen = TransformMouseCoords(RenderData->GameUICamera.ViewMatrix,
+    //                                           RenderData->GameUICamera.ProjectionMatrix, 
+    //                                           GameState->GameInput.Keyboard.CurrentMouse, 
+    //                                           SizeData);
+    
+    // NOTE(Sleepster): SELECTED ENTITY
+    real32 SelectionDistance = 32.0f;
+    real32 MinimumDistance = 0;
+    for(uint32 EntityIndex = 0;
+        EntityIndex <= GameState->World.EntityCounter;
+        ++EntityIndex)
+    {
+        entity *Temp = &GameState->World.Entities[EntityIndex];
+        if((Temp->Flags & IS_VALID))
+        {
+            real32 Distance = fabsf(v2Distance(Temp->Position, MouseToWorld));
+            real32 PlayerToObjectDistance = fabsf(v2Distance(Temp->Position, Player->Position));
+            if(Distance <= SelectionDistance && PlayerToObjectDistance <= MaxHitRange)
+            {
+                if(!TransientState->SelectedEntityThisFrame || (Distance < MinimumDistance) || (Temp->EntityID != TransientState->SelectedEntityThisFrame->EntityID))
+                {
+                    TransientState->SelectedEntityThisFrame = Temp;
+                    MinimumDistance = Distance;
+                }
+                
+                // NOTE(Sleepster): Handle Entity Destruction 
+                if(IsGameKeyPressed(ATTACK, &GameState->GameInput) && 
+                   (Temp->Flags & IS_DESTRUCTABLE) && 
+                   !(Temp->Flags & IS_UI) && 
+                   PlayerToObjectDistance <= MaxHitRange &&
+                   GameState->GameUIState == UI_State_Nil)
+                {
+                    --Temp->Health;
+
+                    playing_sound *PlayingSound = PlaySound(GameState, GSFX_Bap, 0.5f, 0.5f);
+                    SetSoundPitch(PlayingSound, 1.0f);
+
+                    if(Temp->Health <= 0)
+                    {
+                        for(int32 DropIndex = 0;
+                            DropIndex < Temp->UniqueDropCount;
+                            DropIndex++)
+                        {
+                            for(int32 DropCount = 0;
+                                DropCount < Temp->EntityDrops[DropIndex].DropAmount;
+                                DropCount++)
+                            {
+                                entity *CreatedEntity = CreateEntity(GameState);
+                                item DroppedItem = GameState->GameData.GameItems[Temp->EntityDrops[DropCount].DroppedItem];
+                                
+                                SetupDroppedEntity(RenderData, GameState, &DroppedItem, CreatedEntity);
+                                CreatedEntity->Position = Temp->Position;
+                                CreatedEntity->Target   = Temp->Position;
+                            }
+                        }
+                        
+                        TransientState->SelectedEntityThisFrame = {};
+                        DeleteEntity(Temp, GameState);
+                    }
+                }
+            }
+            // NOTE(Sleepster): Add Item to Inventory
+            AddItemToPlayerInventory(GameState, Player, Temp);
+        }
+    }
+
+    RenderHotbarUI(GameState, TransientState);
+    RenderInventoryUI(GameState, TransientState);
     
     // NOTE(Sleepster): Swapping Inventory Positions 
     for(uint32 InventoryIndexSlot = 0;
@@ -2150,13 +1826,6 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
     {
         GameState->GameInput.Controller.LeftRumble = 1000;
         GameState->GameInput.Controller.RightRumble = 1000;
-    }
-
-    if(IsKeyPressed(KEY_0, &GameState->GameInput))
-    {
-        playing_sound *Sound = PlaySound(GameState, GSFX_RoarOfTheJungleDragon, 0.5f, 0.5f);
-        SetSoundPitch(Sound, 1.0f);
-        //SetSoundVolume(Sound, vec2{0.0f, 0.0f}, 0.4f);
     }
 }
 
