@@ -619,16 +619,17 @@ CLOVER_OGL_RENDER(CloverRender)
 
 
     // OPAQUE GAME OBJECT RENDERING PASS
-    glUseProgram(GBufferShader->ShaderID);
-    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
     if(TransientState->DrawFrameData.OpaqueQuadCount > 0)
     {
         // GBUFFER RENDERING
         {
             glBindFramebuffer(GL_FRAMEBUFFER, RenderData->gBuffer);
             glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+    		glUseProgram(GBufferShader->ShaderID);
 
             glEnable(GL_DEPTH_TEST);
+            glDepthFunc(GL_LEQUAL);
+            
             glEnable(GL_FRAMEBUFFER_SRGB);
             glDisable(GL_BLEND);        
             glDisable(0x809D); // Disabling multisampling

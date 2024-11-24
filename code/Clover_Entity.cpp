@@ -5,21 +5,6 @@
    $Creator: Justin Lewis $
    ======================================================================== */
 
-#if 0
-internal void
-SetupEntityByArchetype(game_state *GameState, entity *Entity, vec2 Position,
-                       entity_arch_id EntityArchID, entity_flags Flags)
-{
-    Entity->Archetype = EntityID;
-    Entity->Sprite    = GetEntitySpriteFromID(GameState, EntityID);
-    Entity->Flags    += Flags;
-    Entity->Position  = Position;
-
-    Entity->EntityProperties = GetEntityProperties(GameState, EntityID);
-}
-
-#endif
-
 internal entity*
 CreateEntity(game_state *GameState)
 {
@@ -77,6 +62,12 @@ SetupRock(game_state *GameState, entity *Entity)
     Entity->Rotation    = 0;
     Entity->Speed       = 1.0f;
     Entity->BoxCollider = {};
+
+    Entity->WhenStruck  =
+    {
+        .IsActive = false,
+        .IDToPlay = GSFX_Bap,
+    };
     
     Entity->UniqueDropCount = 1;
     Entity->EntityDrops[0] = 
@@ -97,6 +88,12 @@ SetupTree00(game_state *GameState, entity *Entity)
     Entity->Rotation    = 0;
     Entity->Speed       = 1.0f;
     Entity->BoxCollider = {};
+
+    Entity->WhenStruck  =
+    {
+        .IsActive = false,
+        .IDToPlay = GSFX_Bap,
+    };
     
     Entity->UniqueDropCount = 1;
     Entity->EntityDrops[0] = 
@@ -117,6 +114,12 @@ SetupTree01(game_state *GameState, entity *Entity)
     Entity->Rotation    = 0;
     Entity->Speed       = 1.0f;
     Entity->BoxCollider = {};
+
+    Entity->WhenStruck  =
+    {
+        .IsActive = false,
+        .IDToPlay = GSFX_Bap,
+    };
     
     Entity->UniqueDropCount = 1;
     Entity->EntityDrops[0] = 
@@ -137,6 +140,12 @@ SetupRubyNode(game_state *GameState, entity *Entity)
     Entity->Rotation    = 0;
     Entity->Speed       = 1.0f;
     Entity->BoxCollider = {};
+
+    Entity->WhenStruck  =
+    {
+        .IsActive = false,
+        .IDToPlay = GSFX_Bap,
+    };
     
     Entity->UniqueDropCount = 1;
     Entity->EntityDrops[0] = 
@@ -157,6 +166,12 @@ SetupSapphireNode(game_state *GameState, entity *Entity)
     Entity->Rotation    = 0;
     Entity->Speed       = 1.0f;
     Entity->BoxCollider = {};
+
+    Entity->WhenStruck  =
+    {
+        .IsActive = false,
+        .IDToPlay = GSFX_Bap,
+    };
 
     Entity->UniqueDropCount = 1;
     Entity->EntityDrops[0] = 

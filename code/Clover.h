@@ -169,14 +169,22 @@ struct entity_item_drop
 
 struct entity_sound
 {
-    vec2   	   Position;
-    bool32 	   IsActive;
-
-    playing_sound *TriggerSound;
+    bool32 	   	   IsActive;
+    soundfx_id     IDToPlay;
+    playing_sound *Sound;
 };
 
-struct entity_properties
+struct entity
 {
+    int32                 EntityID;
+    uint32                Archetype;
+    uint32                Flags;
+    sprite_type           Sprite;
+
+
+    vec2                  Position;
+    vec2                  Target;
+
 	vec2 				  Size;
     real32				  Rotation;
     real32 				  Speed;
@@ -186,8 +194,6 @@ struct entity_properties
     range_v2	 		  SelectionBox;
     range_v2 			  BoxCollider;
 
-    entity_item_inventory Inventory;
-
     entity_sound 		  WhenStruck;
 
     item_id               DroppedFromInventoryItemID;
@@ -195,37 +201,17 @@ struct entity_properties
 
     entity_item_drop 	  EntityDrops[MAX_ENTITY_DROPS];
     int32 				  UniqueDropCount;
+
+    entity_item_inventory Inventory;
 };
 
-struct entity
-{
-    int32                 EntityID;
-    uint32                Archetype;
-    sprite_type           Sprite;
+struct persisant_game_data 
+{ 
+    static_sprite_data          Sprites[SPRITE_Count];
+    item                        GameItems[ITEM_IDCount];
+    pair <item_id, sprite_type> ItemSprites[ITEM_IDCount];
 
-    uint32                Flags;
-    uint32                Health;
-    
-    vec2                  Position;
-    vec2                  Target;
-    vec2                  Size;
-    
-    real32                Speed;
-    real32                Rotation;
-    
-    box2D                 SelectionBox;
-    range_v2              BoxCollider;
-    
-    entity_item_inventory Inventory;
-    
-    item_id               DroppedFromInventoryItemID;
-    int32                 DroppedFromInventoryItemCount;
-
-    entity_sound          WhenStruck;
-
-    // DROPS ON DEATH
-    entity_item_drop      EntityDrops[MAX_ENTITY_DROPS];
-    int32                 UniqueDropCount;
+    entity                      DefaultEntityData[ARCH_ID_MAX];
 };
 
 struct game_world_data
@@ -235,6 +221,32 @@ struct game_world_data
     entity *Entities;  
     item   *Items;
     uint32 EntityCounter;
+};
+
+struct game_state
+{
+    bool32            IsInitialized;
+    
+    input             GameInput;
+    
+    clover_ui_context UIContext;
+    game_ui_state     GameUIState;
+    
+    // TODO(Sleepster): Get Rid of these bool32s 
+    bool32            DisplayPlayerHotbar;
+    bool32            DisplayPlayerInventory;
+    bool32            DisplayCraftingMenu;
+    bool32            DisplayBuildMenu;
+    bool32            DrawDebug;
+    
+    entity           *ActiveCraftingStation;
+    item             *ActiveRecipe;
+    item             *ActiveBlueprint;
+
+    clover_audio_state AudioState;
+
+    persisant_game_data GameData;
+    game_world_data    	World;
 };
 
 struct transient_state
@@ -272,37 +284,6 @@ struct transient_state
         int32       PointLightCount;
         int32       SpotLightCount;
     }DrawFrameData;
-};
-
-struct game_state
-{
-    bool32            IsInitialized;
-    
-    input             GameInput;
-    
-    clover_ui_context UIContext;
-    game_ui_state     GameUIState;
-    
-    // TODO(Sleepster): Get Rid of these bool32s 
-    bool32            DisplayPlayerHotbar;
-    bool32            DisplayPlayerInventory;
-    bool32            DisplayCraftingMenu;
-    bool32            DisplayBuildMenu;
-    bool32            DrawDebug;
-    
-    entity           *ActiveCraftingStation;
-    item             *ActiveRecipe;
-    item             *ActiveBlueprint;
-
-    clover_audio_state AudioState;
-    
-    game_world_data World;
-    struct 
-    { 
-        static_sprite_data          Sprites[SPRITE_Count];
-        item                        GameItems[ITEM_IDCount];
-        pair <item_id, sprite_type> ItemSprites[ITEM_IDCount];
-    }GameData;
 };
 
 // NOTE(Sleepster): Utilities

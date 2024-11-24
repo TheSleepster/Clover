@@ -50,7 +50,7 @@ global_variable entity *Player = {};
 #include "Clover_Entity.cpp"
 
 internal inline void
-LoadSpriteData(game_state *GameState)
+InitGameSpriteData(game_state *GameState)
 {
     GameState->GameData.Sprites[SPRITE_Nil]                   = {.AtlasOffset = {  0,  0}, .SpriteSize = {16, 16}};
     GameState->GameData.Sprites[SPRITE_Player]                = {.AtlasOffset = { 17,  0}, .SpriteSize = {12, 11}};
@@ -79,7 +79,7 @@ LoadSpriteData(game_state *GameState)
 }
 
 internal inline void
-LoadItemData(game_state *GameState)
+InitGameItemData(game_state *GameState)
 {
     GameState->GameData.GameItems[ITEM_Nil] = {};
     GameState->GameData.GameItems[ITEM_Pebbles] = 
@@ -236,7 +236,11 @@ LoadItemData(game_state *GameState)
         .FormulaResultCount  = 1,
         .Craftable = true,
     };
-    
+}
+
+internal void
+InitGameItemSpritePairData(game_state *GameState)
+{
     GameState->GameData.ItemSprites[ITEM_Pebbles]          = MakePair(ITEM_Pebbles,          SPRITE_Pebbles);
     GameState->GameData.ItemSprites[ITEM_Branches]         = MakePair(ITEM_Branches,         SPRITE_Branches);
     GameState->GameData.ItemSprites[ITEM_Trunk]            = MakePair(ITEM_Trunk,            SPRITE_Trunk);
@@ -897,8 +901,10 @@ extern
 GAME_ON_AWAKE(GameOnAwake)
 {
     ResetGame(RenderData, GameState, GameMemory);
-    LoadSpriteData(GameState);
-    LoadItemData(GameState);
+    InitGameSpriteData(GameState);
+    InitGameItemData(GameState);
+    InitGameItemSpritePairData(GameState);
+
 
     LoadSoundFromID(GameMemory, GSFX_RoarOfTheJungleDragon);
 
@@ -976,6 +982,11 @@ GAME_ON_AWAKE(GameOnAwake)
     SetupItemToolPickaxe(GameState, Pickaxe2);
     Pickaxe2->Position = {32, 150};
     Pickaxe2->Target = {32, 150};
+
+    entity *WoodAxe0 = CreateEntity(GameState);
+    SetupItemToolWoodAxe(GameState, WoodAxe0);
+    WoodAxe0->Position = {-32, 150};
+    WoodAxe0->Target   = {-32, 150};
     
     Player = CreateEntity(GameState);
     SetupPlayer(GameState, Player);
@@ -1057,7 +1068,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                 {
                     --Temp->Health;
 
-                    playing_sound *PlayingSound = PlaySound(GameState, GSFX_Bap, 0.5f, 0.5f);
+                    playing_sound *PlayingSound = PlaySound(GameState, Temp->WhenStruck.IDToPlay, 0.5f, 0.5f);
                     SetSoundPitch(PlayingSound, 1.0f);
 
                     if(Temp->Health <= 0)
@@ -1735,6 +1746,37 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
         }
     }
     
+    // NOTE(Sleepster): DRAW FLOOR TILES
+    ivec2  PlayerOffset = WorldToTilePos(Player->Position);
+    ivec2  TileRadius   = {14, 16};
+    
+    for(int32 TileX = PlayerOffset.X - TileRadius.X;
+        TileX < PlayerOffset.X + TileRadius.Y;
+        ++TileX)
+    {
+        for(int32 TileY = PlayerOffset.Y - TileRadius.Y;
+            TileY < PlayerOffset.Y + TileRadius.Y;
+            ++TileY)
+        {
+            if((TileX + (TileY % 2 == 0)) % 2 == 0)
+            {
+                real32 X = TileX * TILE_SIZE;
+                real32 Y = TileY * TILE_SIZE;
+                DrawQuadTextured(TransientState, {X, Y - (TILE_SIZE)}, vec2{16, 16}, ivec2{0, 0}, ivec2{16, 16}, 0, DARK_GRAY, 0, 0);
+            }
+            else
+            {
+                real32 X = TileX * TILE_SIZE;
+                real32 Y = TileY * TILE_SIZE;
+                DrawQuadTextured(TransientState, {X, Y - (TILE_SIZE)}, vec2{16, 16}, ivec2{0, 0}, ivec2{16, 16}, 0, DARKER_GRAY, 0, 0);
+            }
+        }
+    }
+    
+    attenuation_data TestLightData = {.Constant = 0.05, .Linear = 0.0009, .Quadratic = 0.001};
+    CreatePointLight(TransientState, vec2{ 80, 80}, 2.0, 100, &TestLightData, RED);
+    CreatePointLight(TransientState, vec2{-80, 80}, 2.0, 100, &TestLightData, WHITE);
+    
     // NOTE(Sleepster): DRAW ENTITIES
     vec2 SelectionBoxDrawSize = {16, 16};
     for(uint32 EntityIndex = 0;
@@ -1756,7 +1798,14 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     RenderData->GameCamera.Target = Temp->Position;
                     
                     v2Approach(&RenderData->GameCamera.Position, RenderData->GameCamera.Target, 5.0f, Time.Delta);
-                    DrawEntity(TransientState, GameState, Temp, Temp->Position, WHITE);
+                    quad *PlayerQuad = DrawEntity(TransientState, GameState, Temp, Temp->Position, WHITE);
+                    
+                    mat4 XForm = mat4Identity(1.0f);
+                    XForm = mat4Translation(XForm, vec3{PlayerQuad->Position.X, PlayerQuad->Position.Y - 2, -0.0f});
+                    XForm = mat4Scale(XForm, vec3{14, 2, 1});
+
+                    DrawRectXForm(TransientState, XForm, vec2{0}, 0, vec4{1.0f, 0.0f, 0.0f, 1.0f});
+                    DrawRectXForm(TransientState, XForm, vec2{0}, 0, vec4{0.1f, 0.1f, 0.1f, 0.1f});
                 }break;
                 default:
                 {
@@ -1790,37 +1839,6 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             }
         }
     }
-    
-    // NOTE(Sleepster): DRAW FLOOR TILES
-    ivec2  PlayerOffset = WorldToTilePos(Player->Position);
-    ivec2  TileRadius   = {14, 16};
-    
-    for(int32 TileX = PlayerOffset.X - TileRadius.X;
-        TileX < PlayerOffset.X + TileRadius.Y;
-        ++TileX)
-    {
-        for(int32 TileY = PlayerOffset.Y - TileRadius.Y;
-            TileY < PlayerOffset.Y + TileRadius.Y;
-            ++TileY)
-        {
-            if((TileX + (TileY % 2 == 0)) % 2 == 0)
-            {
-                real32 X = TileX * TILE_SIZE;
-                real32 Y = TileY * TILE_SIZE;
-                DrawQuadTextured(TransientState, {X, Y - (TILE_SIZE)}, vec2{16, 16}, ivec2{0, 0}, ivec2{16, 16}, 0, DARK_GRAY, 0, 0);
-            }
-            else
-            {
-                real32 X = TileX * TILE_SIZE;
-                real32 Y = TileY * TILE_SIZE;
-                DrawQuadTextured(TransientState, {X, Y - (TILE_SIZE)}, vec2{16, 16}, ivec2{0, 0}, ivec2{16, 16}, 0, DARKER_GRAY, 0, 0);
-            }
-        }
-    }
-    
-    attenuation_data TestLightData = {.Constant = 0.05, .Linear = 0.0009, .Quadratic = 0.001};
-    CreatePointLight(TransientState, vec2{ 80, 80}, 2.0, 100, &TestLightData, RED);
-    CreatePointLight(TransientState, vec2{-80, 80}, 2.0, 100, &TestLightData, WHITE);
     
     if(IsGamepadButtonDown(A_BUTTON, &GameState->GameInput))
     {

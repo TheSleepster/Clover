@@ -99,10 +99,10 @@ DrawQuadXForm(transient_state *TransientState, quad *Quad, mat4 *Transform, bool
         //RenderData->CloverRender(RenderData);
     }
     
-    Quad->Elements[0].Position = vec4{-0.5f,  0.5f, 0.0f, 1.0f};
-    Quad->Elements[1].Position = vec4{ 0.5f,  0.5f, 0.0f, 1.0f};
-    Quad->Elements[2].Position = vec4{ 0.5f, -0.5f, 0.0f, 1.0f};
-    Quad->Elements[3].Position = vec4{-0.5f, -0.5f, 0.0f, 1.0f};
+    Quad->Elements[0].Position = vec4{-0.5f,  0.5f,  1.0f, 1.0f};
+    Quad->Elements[1].Position = vec4{ 0.5f,  0.5f,  1.0f, 1.0f};
+    Quad->Elements[2].Position = vec4{ 0.5f, -0.5f,  1.0f, 1.0f};
+    Quad->Elements[3].Position = vec4{-0.5f, -0.5f,  1.0f, 1.0f};
     
     Quad->Elements[0].Position = mat4Transform(*Transform, Quad->Elements[0].Position);
     Quad->Elements[1].Position = mat4Transform(*Transform, Quad->Elements[1].Position);
@@ -489,7 +489,7 @@ DrawUIText(transient_state *TransientState,
         char C = (Text.Data[StringIndex]);
         font_glyph Glyph = TransientState->GameAssets->Fonts[Font].Font->Glyphs[C];
         
-        vec2 RenderScale    = {Glyph.GlyphSize.X * TrueScale, (real32)Glyph.GlyphSize.Y * (TrueScale * 2)};
+        vec2  RenderScale   = {Glyph.GlyphSize.X * TrueScale, (real32)Glyph.GlyphSize.Y * (TrueScale * 2)};
         ivec2 AtlasOffset   = Glyph.GlyphUVs;
         ivec2 GlyphSize     = Glyph.GlyphSize;
         
