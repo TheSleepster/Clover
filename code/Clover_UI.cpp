@@ -290,7 +290,7 @@ CloverUIDrawWidgets(gl_render_data *RenderData, transient_state *TransientState,
             {
                 case UI_Button:
                 {
-                    quad WidgetQuad = CreateDrawQuad(TransientState, 
+                    quad WidgetQuad = CreateDrawQuad(RenderData, 
                                                      Widget->Position, 
                                                      Widget->Size,
                                                      Widget->Sprite.SpriteSize,
@@ -298,11 +298,11 @@ CloverUIDrawWidgets(gl_render_data *RenderData, transient_state *TransientState,
                                                      0,
                                                      Widget->DrawColor,
                                                      0);
-                    DrawUIQuadXForm(TransientState, &WidgetQuad, &Widget->XForm, 0);
+                    DrawUIQuadXForm(RenderData, &WidgetQuad, &Widget->XForm, 0);
                 }break;
                 case UI_TextBox:
                 {
-                    quad WidgetQuad = CreateDrawQuad(TransientState, 
+                    quad WidgetQuad = CreateDrawQuad(RenderData, 
                                                      Widget->Position, 
                                                      Widget->Size,
                                                      Widget->Sprite.SpriteSize,
@@ -310,12 +310,12 @@ CloverUIDrawWidgets(gl_render_data *RenderData, transient_state *TransientState,
                                                      0,
                                                      Widget->DrawColor,
                                                      0);
-                    DrawUIQuadXForm(TransientState, &WidgetQuad, &Widget->XForm, 0);
+                    DrawUIQuadXForm(RenderData, &WidgetQuad, &Widget->XForm, 0);
                     DrawUIText(TransientState, RenderData, Widget->ElementText, Widget->TextOrigin, Widget->FontScale, Context->ActiveFontIndex, Widget->TextDrawColor);
                 }break;
                 case UI_ItemSprite:
                 {
-                    quad WidgetQuad = CreateDrawQuad(TransientState, 
+                    quad WidgetQuad = CreateDrawQuad(RenderData, 
                                                      Widget->Position, 
                                                      Widget->Size,
                                                      Widget->Sprite.SpriteSize,
@@ -323,7 +323,7 @@ CloverUIDrawWidgets(gl_render_data *RenderData, transient_state *TransientState,
                                                      0,
                                                      Widget->DrawColor,
                                                      0);
-                    DrawUIQuadXForm(TransientState, &WidgetQuad, &Widget->XForm, 0);
+                    DrawUIQuadXForm(RenderData, &WidgetQuad, &Widget->XForm, 0);
                 }break;
                 case UI_Text:
                 {

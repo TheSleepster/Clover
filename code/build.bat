@@ -15,5 +15,5 @@ IF NOT EXIST ..\build mkdir ..\build
 pushd ..\build
 del *.pdb
 cl %opts% ../code/Win32_Clover.cpp %CommonIncludes% %CommonCompilerFlags% -MT -link %CommonLinkerFlags% -OUT:"CloverGame.exe" 
-cl %opts% ../code/Clover.cpp %CommonIncludes% %CommonCompilerFlags% -MT -LD -link -PDB:CloverGame_%RANDOM%.pdb %Exports% -OUT:"CloverGame.dll" 
+REM cl %opts% ../code/Clover.cpp %CommonIncludes% %CommonCompilerFlags% -MT -LD -link -PDB:CloverGame_%RANDOM%.pdb %Exports% -OUT:"CloverGame.dll" 
 popd

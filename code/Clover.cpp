@@ -4,7 +4,6 @@
    $Revision: $
    $Creator: Justin Lewis $
    ======================================================================== */
-
 // NOTE(Sleepster): Freetype must come first due to the #define internal static inside of the intrinsics header
 #include "../data/deps/Freetype/include/ft2build.h"
 #include FT_FREETYPE_H
@@ -23,6 +22,7 @@
 #include "util/FileIO.h"
 #include "util/String.h"
 #include "util/Pairs.h"
+#include "util/Sorting.h"
 
 // CLOVER HEADERS
 #include "Clover.h"
@@ -41,6 +41,7 @@
 #include "Clover_UI.cpp"
 #include "Clover_Audio.cpp"
 #include "Clover_Asset.cpp"
+
 
 global_variable entity *Player = {};
 
@@ -135,7 +136,7 @@ InitGameItemData(game_state *GameState)
         .FormulaResultCount  = 1,
         .Craftable = true,
     };
-    
+
     GameState->GameData.GameItems[ITEM_RubyOreChunk] = 
     {
         .Archetype = ARCH_RubyOreChunk,
@@ -644,7 +645,7 @@ AddItemToPlayerInventory(game_state *GameState, entity *PlayerEntity, entity *Te
 }
 
 internal void
-RenderHotbarUI(game_state *GameState, transient_state *TransientState)
+RenderHotbarUI(game_state *GameState, transient_state *TransientState, gl_render_data *RenderData)
 {
     // NOTE(Sleepster): New Hotbar UI 
     if(GameState->DisplayPlayerHotbar)
@@ -695,7 +696,7 @@ RenderHotbarUI(game_state *GameState, transient_state *TransientState)
                 {
                     XForm = mat4Multiply(XForm, mat4MakeScale(vec3{1.2, 1.2, 1.0}));
                 }
-                DrawUISpriteXForm(TransientState, XForm, Sprite, 0, WHITE);
+                DrawUISpriteXForm(RenderData, XForm, Sprite, 0, WHITE);
             }
             
             if(HotbarSlotState.IsHot)
@@ -739,18 +740,18 @@ RenderHotbarUI(game_state *GameState, transient_state *TransientState)
                     mat4 SpriteXForm = UIXForm;
                     UIXForm = mat4Multiply(UIXForm, mat4Translate(vec3{0, NewUIYOffset, 0}));
                     UIXForm = mat4Multiply(UIXForm, mat4MakeScale(v2Expand(UIBoxSize + ItemDescData->Size, 1.0f)));
-                    DrawUISpriteXForm(TransientState, UIXForm, GetSprite(GameState, SPRITE_Nil), 0, vec4{0.2f, 0.2f, 0.2f, 0.2f});
+                    DrawUISpriteXForm(RenderData, UIXForm, GetSprite(GameState, SPRITE_Nil), 0, vec4{0.2f, 0.2f, 0.2f, 0.2f});
                     
                     SpriteXForm = mat4Multiply(SpriteXForm, mat4Translate(vec3{UIBoxSize.X + ItemDescData->Size.X * -0.5f, SpriteYOffset, 0}));
                     SpriteXForm = mat4Multiply(SpriteXForm, mat4MakeScale(vec3{IconSize, IconSize, 1.0f}));
-                    DrawUISpriteXForm(TransientState, SpriteXForm, SpriteData, 0, WHITE);
+                    DrawUISpriteXForm(RenderData, SpriteXForm, SpriteData, 0, WHITE);
                     
                     SpriteXForm = mat4Multiply(SpriteXForm, mat4MakeScale(vec3{1 / IconSize, 1 / IconSize, 1.0f}));
                     SpriteXForm = mat4Multiply(SpriteXForm, mat4Translate(vec3{-(UIBoxSize.X + ItemDescData->Size.X * -0.5f), 0, 0}));
                     SpriteXForm = mat4Multiply(SpriteXForm, mat4Translate(vec3{(UIBoxSize.X + ItemDescData->Size.X * -0.5f), 19, 0}));
                     SpriteXForm = mat4Multiply(SpriteXForm, mat4Translate(vec3{-7, 0, 0}));
                     SpriteXForm = mat4Multiply(SpriteXForm, mat4MakeScale(vec3{16, 16, 1.0f}));
-                    DrawUISpriteXForm(TransientState, SpriteXForm, GetSprite(GameState, SPRITE_Nil), 0, vec4{0.1f, 0.1f, 0.1f, 0.4f});
+                    DrawUISpriteXForm(RenderData, SpriteXForm, GetSprite(GameState, SPRITE_Nil), 0, vec4{0.1f, 0.1f, 0.1f, 0.4f});
                     
                     SpriteXForm = mat4Multiply(SpriteXForm, mat4MakeScale(vec3{1 / IconSize, 1 / IconSize, 1.0f}));
                     SpriteXForm = mat4Multiply(SpriteXForm, mat4Translate(vec3{2, -6, 0}));
@@ -781,7 +782,7 @@ RenderHotbarUI(game_state *GameState, transient_state *TransientState)
 }
 
 internal void
-RenderInventoryUI(game_state *GameState, transient_state *TransientState)
+RenderInventoryUI(game_state *GameState, transient_state *TransientState, gl_render_data *RenderData)
 {
     if(GameState->DisplayPlayerInventory)
     {
@@ -825,7 +826,7 @@ RenderInventoryUI(game_state *GameState, transient_state *TransientState)
                 if(Sprite != GameState->GameData.Sprites[SPRITE_Nil] && !HotbarSlotState.IsHot)
                 {
                     XForm = mat4Multiply(XForm, mat4MakeScale(vec3{0.65, 0.65, 1.0}));
-                    DrawUISpriteXForm(TransientState, XForm, Sprite, 0, WHITE);
+                    DrawUISpriteXForm(RenderData, XForm, Sprite, 0, WHITE);
                 }
 
                 if(HotbarSlotState.IsHot)
@@ -834,7 +835,7 @@ RenderInventoryUI(game_state *GameState, transient_state *TransientState)
                     if(Item->Sprite != SPRITE_Nil)
                     {
                         XForm = mat4Multiply(XForm, mat4MakeScale(vec3{1.0, 1.0, 1.0}));
-                        DrawUISpriteXForm(TransientState, XForm, Sprite, 0, WHITE);
+                        DrawUISpriteXForm(RenderData, XForm, Sprite, 0, WHITE);
 
                         real32 NewUIYOffset;
                         real32 NewUIYDescOffset;
@@ -869,18 +870,18 @@ RenderInventoryUI(game_state *GameState, transient_state *TransientState)
                         mat4 SpriteXForm = UIXForm;
                         UIXForm = mat4Multiply(UIXForm, mat4Translate(vec3{0, NewUIYOffset, 0}));
                         UIXForm = mat4Multiply(UIXForm, mat4MakeScale(v2Expand(UIBoxSize + ItemDescData->Size, 1.0f)));
-                        DrawUISpriteXForm(TransientState, UIXForm, GetSprite(GameState, SPRITE_Nil), 0, vec4{0.2f, 0.2f, 0.2f, 0.2f});
+                        DrawUISpriteXForm(RenderData, UIXForm, GetSprite(GameState, SPRITE_Nil), 0, vec4{0.2f, 0.2f, 0.2f, 0.2f});
 
                         SpriteXForm = mat4Multiply(SpriteXForm, mat4Translate(vec3{UIBoxSize.X + ItemDescData->Size.X * -0.5f, SpriteYOffset, 0}));
                         SpriteXForm = mat4Multiply(SpriteXForm, mat4MakeScale(vec3{IconSize, IconSize, 1.0f}));
-                        DrawUISpriteXForm(TransientState, SpriteXForm, SpriteData, 0, WHITE);
+                        DrawUISpriteXForm(RenderData, SpriteXForm, SpriteData, 0, WHITE);
 
                         SpriteXForm = mat4Multiply(SpriteXForm, mat4MakeScale(vec3{1 / IconSize, 1 / IconSize, 1.0f}));
                         SpriteXForm = mat4Multiply(SpriteXForm, mat4Translate(vec3{-(UIBoxSize.X + ItemDescData->Size.X * -0.5f), 0, 0}));
                         SpriteXForm = mat4Multiply(SpriteXForm, mat4Translate(vec3{(UIBoxSize.X + ItemDescData->Size.X * -0.5f), 19, 0}));
                         SpriteXForm = mat4Multiply(SpriteXForm, mat4Translate(vec3{-7, 0, 0}));
                         SpriteXForm = mat4Multiply(SpriteXForm, mat4MakeScale(vec3{16, 16, 1.0f}));
-                        DrawUISpriteXForm(TransientState, SpriteXForm, GetSprite(GameState, SPRITE_Nil), 0, vec4{0.1f, 0.1f, 0.1f, 0.4f});
+                        DrawUISpriteXForm(RenderData, SpriteXForm, GetSprite(GameState, SPRITE_Nil), 0, vec4{0.1f, 0.1f, 0.1f, 0.4f});
 
                         SpriteXForm = mat4Multiply(SpriteXForm, mat4MakeScale(vec3{1 / IconSize, 1 / IconSize, 1.0f}));
                         SpriteXForm = mat4Multiply(SpriteXForm, mat4Translate(vec3{2, -6, 0}));
@@ -1100,8 +1101,8 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
         }
     }
 
-    RenderHotbarUI(GameState, TransientState);
-    RenderInventoryUI(GameState, TransientState);
+    RenderHotbarUI(GameState, TransientState, RenderData);
+    RenderInventoryUI(GameState, TransientState, RenderData);
     
     // NOTE(Sleepster): Swapping Inventory Positions 
     for(uint32 InventoryIndexSlot = 0;
@@ -1284,7 +1285,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                 XForm = mat4Multiply(XForm, mat4MakeScale(vec3{BoxWidth, 2, 1}));
                 
                 CloverUIPushLayer(&GameState->UIContext, 1);
-                DrawUISpriteXForm(TransientState, XForm, GetSprite(GameState, SPRITE_Nil), 0, vec4{0.0, 0.0, 0.0, 0.8f});
+                DrawUISpriteXForm(RenderData, XForm, GetSprite(GameState, SPRITE_Nil), 0, vec4{0.0, 0.0, 0.0, 0.8f});
                 CloverUIPushLayer(&GameState->UIContext, 0);
                 
                 int InventoryCount[MAX_CRAFTING_ELEMENTS] = {};
@@ -1401,7 +1402,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             XForm = mat4Multiply(XForm, mat4Translate(v2Expand(BoxPosition, 0)));
             XForm = mat4Multiply(XForm, mat4MakeScale(vec3{BoxWidth, BoxHeight, 1}));
             
-            DrawUISpriteXForm(TransientState, XForm, GetSprite(GameState, SPRITE_Nil), 0, vec4{0.0, 0.0, 0.0, 0.8f});
+            DrawUISpriteXForm(RenderData, XForm, GetSprite(GameState, SPRITE_Nil), 0, vec4{0.0, 0.0, 0.0, 0.8f});
             DrawUIText(TransientState, RenderData, STR("Building..."), {-IconSize, 20}, 15, GF_UbuntuMono, WHITE);
         }
         
@@ -1443,7 +1444,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                 mat4 XForm = mat4Identity(1.0f);
                 XForm = mat4Multiply(XForm, mat4Translate(vec3{MousePosition.X, MousePosition.Y  + (TILE_SIZE * 0.5f), 0}));
                 XForm = mat4Multiply(XForm, mat4MakeScale(v2Expand(v2Cast(HotbarSprite.SpriteSize), 1)));
-                DrawSpriteXForm(TransientState, XForm, HotbarSprite, 0, vec4{0.2, 0.2, 0.2, 0.3f});
+                DrawSpriteXForm(RenderData, XForm, HotbarSprite, 0, vec4{0.2, 0.2, 0.2, 0.3f});
                 
                 if(IsGameKeyPressed(INTERACT, &GameState->GameInput))
                 {
@@ -1717,7 +1718,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
         mat4 Scale     = mat4Multiply(Identity, mat4MakeScale(vec3{100.0f, 100.0f, 1.0f}));
         
         mat4 Total = Translate * Scale;
-        DrawRectXForm(TransientState, Total, {16, 16}, 0, vec4{1.0f, 0.0f, 1.0f, 0.3f});
+        DrawRectXForm(RenderData, Total, {16, 16}, 0, vec4{1.0f, 0.0f, 1.0f, 0.3f});
     }
     
     
@@ -1762,20 +1763,20 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             {
                 real32 X = TileX * TILE_SIZE;
                 real32 Y = TileY * TILE_SIZE;
-                DrawQuadTextured(TransientState, {X, Y - (TILE_SIZE)}, vec2{16, 16}, ivec2{0, 0}, ivec2{16, 16}, 0, DARK_GRAY, 0, 0);
+                DrawQuadTextured(RenderData, {X, Y - (TILE_SIZE)}, vec2{16, 16}, ivec2{0, 0}, ivec2{16, 16}, 0, DARK_GRAY, 0, 0);
             }
             else
             {
                 real32 X = TileX * TILE_SIZE;
                 real32 Y = TileY * TILE_SIZE;
-                DrawQuadTextured(TransientState, {X, Y - (TILE_SIZE)}, vec2{16, 16}, ivec2{0, 0}, ivec2{16, 16}, 0, DARKER_GRAY, 0, 0);
+                DrawQuadTextured(RenderData, {X, Y - (TILE_SIZE)}, vec2{16, 16}, ivec2{0, 0}, ivec2{16, 16}, 0, DARKER_GRAY, 0, 0);
             }
         }
     }
     
     attenuation_data TestLightData = {.Constant = 0.05, .Linear = 0.0009, .Quadratic = 0.001};
-    CreatePointLight(TransientState, vec2{ 80, 80}, 2.0, 100, &TestLightData, RED);
-    CreatePointLight(TransientState, vec2{-80, 80}, 2.0, 100, &TestLightData, WHITE);
+    CreatePointLight(RenderData, TransientState, vec2{ 80, 80}, 2.0, 100, &TestLightData, RED);
+    CreatePointLight(RenderData, TransientState, vec2{-80, 80}, 2.0, 100, &TestLightData, WHITE);
     
     // NOTE(Sleepster): DRAW ENTITIES
     vec2 SelectionBoxDrawSize = {16, 16};
@@ -1798,14 +1799,14 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     RenderData->GameCamera.Target = Temp->Position;
                     
                     v2Approach(&RenderData->GameCamera.Position, RenderData->GameCamera.Target, 5.0f, Time.Delta);
-                    quad *PlayerQuad = DrawEntity(TransientState, GameState, Temp, Temp->Position, WHITE);
+                    quad *PlayerQuad = DrawEntity(RenderData, GameState, Temp, Temp->Position, WHITE);
                     
                     mat4 XForm = mat4Identity(1.0f);
                     XForm = mat4Translation(XForm, vec3{PlayerQuad->Position.X, PlayerQuad->Position.Y - 2, -0.0f});
                     XForm = mat4Scale(XForm, vec3{14, 2, 1});
 
-                    DrawRectXForm(TransientState, XForm, vec2{0}, 0, vec4{1.0f, 0.0f, 0.0f, 1.0f});
-                    DrawRectXForm(TransientState, XForm, vec2{0}, 0, vec4{0.1f, 0.1f, 0.1f, 0.1f});
+                    DrawRectXForm(RenderData, XForm, vec2{0}, 0, vec4{1.0f, 0.0f, 0.0f, 1.0f});
+                    DrawRectXForm(RenderData, XForm, vec2{0}, 0, vec4{0.1f, 0.1f, 0.1f, 0.1f});
                 }break;
                 default:
                 {
@@ -1825,7 +1826,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                         static_sprite_data SelectionBoxSprite = GetSprite(GameState, SPRITE_SelectionBox);
                         static_sprite_data EntitySprite = GetSprite(GameState, Temp->Sprite);
                         
-                        DrawSprite(TransientState, 
+                        DrawSprite(RenderData,
                                    SelectionBoxSprite, 
                                    Temp->Position 
                                    - vec2{0, real32(EntitySprite.SpriteSize.Y * 0.25f)},
@@ -1834,7 +1835,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                                    0, 
                                    0);
                     }
-                    DrawEntity(TransientState, GameState, Temp, Temp->Position, WHITE);
+                    DrawEntity(RenderData, GameState, Temp, Temp->Position, WHITE);
                 }break;
             }
         }

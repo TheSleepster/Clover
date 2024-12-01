@@ -98,6 +98,10 @@ struct shader
     gl_shader_source VertexShader;
     gl_shader_source FragmentShader;
     GLuint           ShaderID;
+
+    string           Filepath;
+    time_t           LastWriteTime;
+
     asset_state      ShaderState;    
 };
 
@@ -146,9 +150,44 @@ struct quad
     
     vec2   Position;
     vec2   Size;
-    real32 TextureIndex;
-    
     real32 Rotation;
+
+    real32 TextureIndex;
+    real32 ZLayer;
+};
+
+struct draw_frame_data
+{
+    quad       *QuadBuffer;
+    quad       *QuadSortingBuffer;
+    int32       QuadCounter;
+
+    vertex     *Vertices;
+    vertex     *VertexBufferptr;
+    vertex     *TransparentVertexBufferptr;
+
+    uint32      OpaqueQuadCount;
+    uint32      TransparentQuadCount;
+    uint32      LastFrameQuadCount;
+
+    vertex     *UIVertices;
+    vertex     *UIVertexBufferptr;
+    vertex     *TransparentUIVertexBufferptr;
+
+    uint32      OpaqueUIElementCount;
+    uint32      TransparentUIElementCount;
+
+    uint32      TotalQuadCount;
+    uint32      TotalUIElementCount;
+
+    point_light PointLights[MAX_POINT_LIGHTS];
+    spot_light  SpotLights [MAX_SPOT_LIGHTS];
+
+    int32       PointLightCount;
+    int32       SpotLightCount;
+
+    bool32      EnableZLayering;
+    bool32      EnableZSorting;
 };
 
 // TODO(Sleepster): Figure out a better way to store our textures and shaders
@@ -215,13 +254,18 @@ struct gl_render_data
     ImGuiContext *CurrentImGuiContext;
     uint32        LastFrameQuadCount;
 
-    memory_arena   VertexArena;
-    memory_arena UIVertexArena;
+    memory_arena  VertexArena;
+    memory_arena  UIVertexArena;
+    memory_arena  QuadBufferArena;
+
+    memory_arena  RendererArena;
 
     // DEBUG TIMERS
     GLuint StartTimer;
     GLuint EndTimer;
     real64 GPUTimeInMS;
+
+    draw_frame_data DrawFrameData;
 };
 
 #define CLOVER_OGL_RENDER(name) void name(game_memory *GameMemory, gl_render_data *RenderData, transient_state *TransientState)

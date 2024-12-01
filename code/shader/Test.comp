@@ -1,0 +1,21 @@
+#version 430 core
+
+layout(local_size_x = 8, local_size_y = 4, local_size_z = 1) in;
+layout(rgba32f, binding = 0) uniform image2D ColorBuffer;
+
+uniform float Time;
+
+void main()
+{
+    float Speed = 100.0f;
+    
+    ivec2 Position = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 ScreenSize = imageSize(ColorBuffer); 
+
+    vec4 Value;
+    Value.x = mod(float(Position.x) + Time * Speed, ScreenSize.x) / (gl_NumWorkGroups.x * gl_WorkGroupSize.x);
+    Value.y = float(Position.y) / (gl_NumWorkGroups.y * gl_WorkGroupSize.y);
+    Value.z = float(gl_NumWorkGroups.z);
+    
+    imageStore(ColorBuffer, Position, Value);
+}

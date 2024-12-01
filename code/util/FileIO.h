@@ -22,12 +22,17 @@ GetFileSizeInBytes(string Filepath)
 {
     int32 FileSize = 0;
     FILE *File = fopen((const char *)Filepath.Data, "rb");
-    
-    fseek(File, 0, SEEK_END);
-    FileSize = ftell(File);
-    fseek(File, 0, SEEK_SET);
-    fclose(File);
-    
+    if(File)
+    {
+        fseek(File, 0, SEEK_END);
+        FileSize = ftell(File);
+        fseek(File, 0, SEEK_SET);
+        fclose(File);
+    }
+    else
+    {
+        FileSize = 0;
+    }
     return(FileSize);
 }
 
@@ -59,9 +64,16 @@ ReadEntireFileMA(memory_arena *ArenaAllocator, string Filepath, uint32 *FileSize
     int32 FileSize2 = GetFileSizeInBytes(Filepath);
     Check(FileSize2 >= 0, "FileSize is less than 0!\n");
     
-    char *Buffer = (char *)PushSize(ArenaAllocator, uint64(FileSize2 + 1));
-    File.Data = (uint8 *)ReadEntireFile(Filepath, FileSize, Buffer);
-    File.Length = FileSize2;
+    if(FileSize2)
+    {
+        char *Buffer = (char *)PushSize(ArenaAllocator, uint64(FileSize2 + 1));
+        File.Data = (uint8 *)ReadEntireFile(Filepath, FileSize, Buffer);
+        File.Length = FileSize2;
+    }
+    else
+    {
+        cl_Error("File size is 0, File is either invalid or you provided the wrong path.\n");
+    }
     
     return(File);
 }

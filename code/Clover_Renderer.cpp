@@ -291,22 +291,25 @@ CloverCreateSDFTexture(transient_state *TransientState, texture2d *TextureInfo, 
 void
 CloverResetRendererState(gl_render_data *RenderData, transient_state *TransientState)
 {
-    TransientState->DrawFrameData.LastFrameQuadCount = TransientState->DrawFrameData.TotalQuadCount;
 
-    TransientState->DrawFrameData.VertexBufferptr            = &TransientState->DrawFrameData.Vertices[0];
-    TransientState->DrawFrameData.TransparentVertexBufferptr = &TransientState->DrawFrameData.Vertices[int32(MAX_VERTICES * 0.5f)];
-    TransientState->DrawFrameData.OpaqueQuadCount = 0;
-    TransientState->DrawFrameData.TransparentQuadCount = 0;
-    TransientState->DrawFrameData.TotalQuadCount = 0;
+    RenderData->DrawFrameData.LastFrameQuadCount = RenderData->DrawFrameData.QuadCounter;
+
+    RenderData->DrawFrameData.VertexBufferptr            = &RenderData->DrawFrameData.Vertices[0];
+    RenderData->DrawFrameData.TransparentVertexBufferptr = &RenderData->DrawFrameData.Vertices[int32(MAX_VERTICES * 0.5f)];
+    RenderData->DrawFrameData.OpaqueQuadCount = 0;
+    RenderData->DrawFrameData.TransparentQuadCount = 0;
+    RenderData->DrawFrameData.TotalQuadCount = 0;
     
-    TransientState->DrawFrameData.UIVertexBufferptr            = &TransientState->DrawFrameData.UIVertices[0];
-    TransientState->DrawFrameData.TransparentUIVertexBufferptr = &TransientState->DrawFrameData.UIVertices[int32(MAX_VERTICES * 0.5f)];
-    TransientState->DrawFrameData.OpaqueUIElementCount = 0;
-    TransientState->DrawFrameData.TransparentUIElementCount = 0;
-    TransientState->DrawFrameData.TotalUIElementCount = 0;
+    RenderData->DrawFrameData.UIVertexBufferptr            = &RenderData->DrawFrameData.UIVertices[0];
+    RenderData->DrawFrameData.TransparentUIVertexBufferptr = &RenderData->DrawFrameData.UIVertices[int32(MAX_VERTICES * 0.5f)];
+    RenderData->DrawFrameData.OpaqueUIElementCount = 0;
+    RenderData->DrawFrameData.TransparentUIElementCount = 0;
+    RenderData->DrawFrameData.TotalUIElementCount = 0;
 
-    TransientState->DrawFrameData.PointLightCount = 0;
-    TransientState->DrawFrameData.SpotLightCount = 0;
+    RenderData->DrawFrameData.PointLightCount = 0;
+    RenderData->DrawFrameData.SpotLightCount = 0;
+
+    RenderData->DrawFrameData.QuadCounter = 0;
 }
 
 internal int32
@@ -418,6 +421,9 @@ CloverSetupRenderer(game_memory *GameMemory, gl_render_data *RenderData, transie
         
         RenderData->ClearColor = DARK_GRAY;
         TransientState->GameAssets->TextureCount = 0;
+
+        RenderData->DrawFrameData.EnableZLayering = true;
+        RenderData->DrawFrameData.EnableZSorting;
     }
     
     
@@ -450,6 +456,7 @@ CloverSetupRenderer(game_memory *GameMemory, gl_render_data *RenderData, transie
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, RenderData->GameEBOID);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Indices), Indices, GL_STATIC_DRAW);
         
+        // NOTE(Sleepster): Try 4 on position??? 
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (void *)offsetof(vertex, Position));
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vertex), (void *)offsetof(vertex, TextureCoords));
         glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (void *)offsetof(vertex, VertexNormals));
@@ -600,8 +607,8 @@ DrawImGui(game_state *State, gl_render_data *RenderData, time_data Time)
 
         ImGui::SeparatorText("GAME DEBUG INFO");
         ImGui::Text("Entity Count: %i", State->World.EntityCounter);
-        ImGui::Text("Quad Count: %i", RenderData->LastFrameQuadCount);
-        ImGui::Text("Vertex Count: %i", RenderData->LastFrameQuadCount * 4);
+        ImGui::Text("Quad Count: %i", RenderData->DrawFrameData.QuadCounter);
+        ImGui::Text("Vertex Count: %i", RenderData->DrawFrameData.QuadCounter * 4);
         ImGui::Text("GPU Time: %f", RenderData->GPUTimeInMS);
         ImGui::End();
     }
@@ -619,7 +626,7 @@ CLOVER_OGL_RENDER(CloverRender)
 
 
     // OPAQUE GAME OBJECT RENDERING PASS
-    if(TransientState->DrawFrameData.OpaqueQuadCount > 0)
+    if(RenderData->DrawFrameData.OpaqueQuadCount > 0)
     {
         // GBUFFER RENDERING
         {
@@ -637,8 +644,8 @@ CLOVER_OGL_RENDER(CloverRender)
             glBindBuffer(GL_ARRAY_BUFFER, RenderData->GameVBOID);
             glBufferSubData(GL_ARRAY_BUFFER, 
                             0, 
-                            (TransientState->DrawFrameData.OpaqueQuadCount * 4) * sizeof(vertex), 
-                             TransientState->DrawFrameData.Vertices);
+                            (RenderData->DrawFrameData.OpaqueQuadCount * 4) * sizeof(vertex), 
+                             RenderData->DrawFrameData.Vertices);
 
             glUniformMatrix4fv(RenderData->gBufferProjectionMatrixUID, 1, GL_FALSE, &RenderData->GameCamera.ProjectionMatrix.Elements[0][0]);
             glUniformMatrix4fv(RenderData->gBufferViewMatrixUID, 1, GL_FALSE, &RenderData->GameCamera.ViewMatrix.Elements[0][0]);
@@ -652,7 +659,7 @@ CLOVER_OGL_RENDER(CloverRender)
 
             glBindVertexArray(RenderData->GameVAOID);
             glDrawElements(GL_TRIANGLES, 
-                        TransientState->DrawFrameData.OpaqueQuadCount * 6, 
+                        RenderData->DrawFrameData.OpaqueQuadCount * 6, 
                         GL_UNSIGNED_INT, 
                         0); 
         }
@@ -681,9 +688,9 @@ CLOVER_OGL_RENDER(CloverRender)
             glBindTexture(GL_TEXTURE_2D, RenderData->gBufferTextures[2]);
 
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, RenderData->PointLightSBOID);
-            glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(point_light) * TransientState->DrawFrameData.PointLightCount, TransientState->DrawFrameData.PointLights);
+            glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(point_light) * RenderData->DrawFrameData.PointLightCount, RenderData->DrawFrameData.PointLights);
 
-            glUniform1i(RenderData->PointLightCountUID, TransientState->DrawFrameData.PointLightCount);
+            glUniform1i(RenderData->PointLightCountUID, RenderData->DrawFrameData.PointLightCount);
             glUniform1f(RenderData->LightingShaderUserBrightnessUID, RenderBrightness);
             glUniform1f(RenderData->LightingShaderWorldBrightnessUID, CurrentWorldBrightness);
 
@@ -697,10 +704,10 @@ CLOVER_OGL_RENDER(CloverRender)
     }
 
     glUseProgram(BasicShader->ShaderID);
-    if(TransientState->DrawFrameData.TransparentQuadCount > 0)
+    if(RenderData->DrawFrameData.TransparentQuadCount > 0)
     {
-        GLintptr BufferOffset   =  (TransientState->DrawFrameData.OpaqueQuadCount * 4) * sizeof(vertex);
-        GLintptr ElementOffset  =  (TransientState->DrawFrameData.OpaqueQuadCount * 6) * sizeof(uint32); 
+        GLintptr BufferOffset   =  (RenderData->DrawFrameData.OpaqueQuadCount * 4) * sizeof(vertex);
+        GLintptr ElementOffset  =  (RenderData->DrawFrameData.OpaqueQuadCount * 6) * sizeof(uint32); 
         // TRANSPARENT GAME OBJECT RENDERERING PASS
         {
             glDisable(GL_DEPTH_TEST);
@@ -711,8 +718,8 @@ CLOVER_OGL_RENDER(CloverRender)
 
             glBufferSubData(GL_ARRAY_BUFFER, 
                             BufferOffset, 
-                            (TransientState->DrawFrameData.TransparentQuadCount * 4) * sizeof(vertex), 
-                            &TransientState->DrawFrameData.Vertices[int32(MAX_VERTICES * 0.5f)]);
+                            (RenderData->DrawFrameData.TransparentQuadCount * 4) * sizeof(vertex), 
+                            &RenderData->DrawFrameData.Vertices[int32(MAX_VERTICES * 0.5f)]);
 
             glUniformMatrix4fv(RenderData->ProjectionMatrixUID, 1, GL_FALSE, &RenderData->GameCamera.ProjectionMatrix.Elements[0][0]);
             glUniformMatrix4fv(RenderData->ViewMatrixUID, 1, GL_FALSE, &RenderData->GameCamera.ViewMatrix.Elements[0][0]);
@@ -726,17 +733,17 @@ CLOVER_OGL_RENDER(CloverRender)
 
             glBindVertexArray(RenderData->GameVAOID);
             glDrawElements(GL_TRIANGLES, 
-                        TransientState->DrawFrameData.TransparentQuadCount * 6, 
+                        RenderData->DrawFrameData.TransparentQuadCount * 6, 
                         GL_UNSIGNED_INT, 
                         (void*)ElementOffset);
         }
     }
     
     // TODO(Sleepster): Make Transparent Objects affected by the uBrightnessFactor of the game world 
-    if(TransientState->DrawFrameData.TransparentUIElementCount > 0)
+    if(RenderData->DrawFrameData.TransparentUIElementCount > 0)
     {
-        GLintptr UIBufferOffset   = int32((TransientState->DrawFrameData.OpaqueUIElementCount * 4) * sizeof(vertex));
-        GLintptr UIElementOffset  = (TransientState->DrawFrameData.OpaqueUIElementCount * 6) * sizeof(uint32); 
+        GLintptr UIBufferOffset   = int32((RenderData->DrawFrameData.OpaqueUIElementCount * 4) * sizeof(vertex));
+        GLintptr UIElementOffset  = (RenderData->DrawFrameData.OpaqueUIElementCount * 6) * sizeof(uint32); 
         // TRANSPARENT UI RENDERING PASS
         {
             glDisable(GL_DEPTH_TEST);
@@ -747,8 +754,8 @@ CLOVER_OGL_RENDER(CloverRender)
             glBindBuffer(GL_ARRAY_BUFFER, RenderData->GameUIVBOID);
             glBufferSubData(GL_ARRAY_BUFFER, 
                             UIBufferOffset, 
-                            (TransientState->DrawFrameData.TransparentUIElementCount * 4) * sizeof(vertex), 
-                            &TransientState->DrawFrameData.UIVertices[int32(MAX_VERTICES * 0.5f)]);
+                            (RenderData->DrawFrameData.TransparentUIElementCount * 4) * sizeof(vertex), 
+                            &RenderData->DrawFrameData.UIVertices[int32(MAX_VERTICES * 0.5f)]);
 
             glUniformMatrix4fv(RenderData->ProjectionMatrixUID, 1, GL_FALSE, &RenderData->GameUICamera.ProjectionMatrix.Elements[0][0]);
             glUniformMatrix4fv(RenderData->ViewMatrixUID, 1, GL_FALSE, &RenderData->GameUICamera.ViewMatrix.Elements[0][0]);
@@ -762,13 +769,13 @@ CLOVER_OGL_RENDER(CloverRender)
 
             glBindVertexArray(RenderData->GameUIVAOID);
             glDrawElements(GL_TRIANGLES, 
-                        TransientState->DrawFrameData.TransparentUIElementCount * 6, 
+                        RenderData->DrawFrameData.TransparentUIElementCount * 6, 
                         GL_UNSIGNED_INT, 
                         (void *)UIElementOffset); 
         }
     }
     
-    if(TransientState->DrawFrameData.OpaqueUIElementCount > 0)
+    if(RenderData->DrawFrameData.OpaqueUIElementCount > 0)
     {
         // OPAQUE UI RENDERING PASS
         {
@@ -777,8 +784,8 @@ CLOVER_OGL_RENDER(CloverRender)
             glBindBuffer(GL_ARRAY_BUFFER, RenderData->GameUIVBOID);
             glBufferSubData(GL_ARRAY_BUFFER, 
                             0, 
-                            (TransientState->DrawFrameData.OpaqueUIElementCount * 4) * sizeof(vertex), 
-                            TransientState->DrawFrameData.UIVertices);
+                            (RenderData->DrawFrameData.OpaqueUIElementCount * 4) * sizeof(vertex), 
+                            RenderData->DrawFrameData.UIVertices);
 
             glUniformMatrix4fv(RenderData->ProjectionMatrixUID, 1, GL_FALSE, &RenderData->GameUICamera.ProjectionMatrix.Elements[0][0]);
             glUniformMatrix4fv(RenderData->ViewMatrixUID, 1, GL_FALSE, &RenderData->GameUICamera.ViewMatrix.Elements[0][0]);
@@ -792,7 +799,7 @@ CLOVER_OGL_RENDER(CloverRender)
 
             glBindVertexArray(RenderData->GameUIVAOID);
             glDrawElements(GL_TRIANGLES, 
-                        TransientState->DrawFrameData.OpaqueUIElementCount * 6, 
+                        RenderData->DrawFrameData.OpaqueUIElementCount * 6, 
                         GL_UNSIGNED_INT, 
                         0); 
         }

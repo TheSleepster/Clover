@@ -111,3 +111,8 @@
     - [ ] Create a particle system
     - [ ] Allow the system to control the kind of particles and the rate with which they are output
     - [ ] Allow images to be used on particles
+
+
+
+Layers 11-15 Do NOT write to the depth buffer.
+Transparency testing can be done in the shader

@@ -257,33 +257,6 @@ struct transient_state
     game_assets *GameAssets;
 
     entity *SelectedEntityThisFrame;
-    // RENDERER
-    struct
-    {
-        vertex     *Vertices;
-        vertex     *VertexBufferptr;
-        vertex     *TransparentVertexBufferptr;
-
-        uint32      OpaqueQuadCount;
-        uint32      TransparentQuadCount;
-        uint32      LastFrameQuadCount;
-
-        vertex     *UIVertices;
-        vertex     *UIVertexBufferptr;
-        vertex     *TransparentUIVertexBufferptr;
-
-        uint32      OpaqueUIElementCount;
-        uint32      TransparentUIElementCount;
-
-        uint32      TotalQuadCount;
-        uint32      TotalUIElementCount;
-
-        point_light PointLights[MAX_POINT_LIGHTS];
-        spot_light  SpotLights [MAX_SPOT_LIGHTS];
-
-        int32       PointLightCount;
-        int32       SpotLightCount;
-    }DrawFrameData;
 };
 
 // NOTE(Sleepster): Utilities
