@@ -23,20 +23,26 @@ struct string
 
 #define STR(s)  (string{GetStringLength((const char *)s), (uint8 *)s})
 #define CSTR(s) ((const char *)s.Data)
-#define NULLSTR (NULL_STRING)
 
-const string NULL_STRING = {};
+string NULLSTR = string{.Length = 0, .Data = 0};
 
 internal inline uint64
 GetStringLength(const char *String)
 {
-    uint64 Length = 0;
-    while(*String != 0)
+    if(String)
     {
-        ++Length;
-        ++String;
+        uint64 Length = 0;
+        while(*String != 0)
+        {
+            ++Length;
+            ++String;
+        }
+        return(Length);
     }
-    return(Length);
+    else
+    {
+        return(0);
+    }
 }
 
 internal inline bool32
@@ -68,26 +74,16 @@ StringCopy(string A, memory_arena *Scratch)
 }
 
 internal inline string
-ConcatinatePair(memory_arena *Arena, const string Left, const string Right)
+ConcatString(memory_arena *Arena, string A, string B)
 {
-    if(Right.Length + Left.Length == 0) return(NULL_STRING);
-    if(Left.Length == 0) return(Right);
-    if(Right.Length == 0) return(Left);
-    
     string Result = {};
-    Result.Length = Left.Length + Right.Length;
-    Result.Data = (uint8 *)PushSize(Arena, Result.Length);
-    
-    const char *LeftS = (const char *)Left.Data;
-    const char *RightS = (const char *)Right.Data;
-    
-    strcpy((char *)Result.Data, LeftS);
-    strcpy((char *)Result.Data + Left.Length, RightS);
-    
-    // NOTE(Sleepster): memcpy is replaced because it caused weirdness when hotreloading (Shader Header was ending up in a sound filepath)
-    //    memcpy(Result.Data, Left.Data, Left.Length);
-    //    memcpy(Result.Data + Left.Length, Right.Data, Right.Length);
-    
+
+    uint64 Length = A.Length + B.Length;
+    Result = HeapString(Arena, Length);
+
+    memcpy(Result.Data, A.Data, A.Length);
+    memcpy(Result.Data + A.Length, B.Data, B.Length);
+
     return(Result);
 }
 
@@ -291,6 +287,57 @@ ConcatinateCString(memory_arena *Memory, char *A, char *B)
     memcpy(Result, A, strlen(A));
     memcpy(Result + strlen(A), B, strlen(B) + 1);
     return(Result);
+}
+
+internal string
+GetLine(string *Source, int32 *Offset)
+{
+    uint8 Buffer[2048] = {};
+    string Result = {};
+    Result.Data = Buffer;
+    if(Source->Data)
+    {
+        char C = 0;
+        while(*Offset < Source->Length)
+        {
+            C = Source->Data[*Offset];
+            // LINE ENDING
+            if(C == '\r' || C == '\n')
+            {
+                Result.Data[Result.Length++] = C;
+                if(C == '\r' && Source->Data[(*Offset) + 1] == '\n')
+                {
+                    Result.Data[Result.Length++] = '\n';
+                    (*Offset)++;
+                }
+
+                (*Offset)++;
+                break;
+            };
+
+            // EOF
+            if(C == '\0' && *Offset == Source->Length - 1)
+            {
+                Result.Data[Result.Length++] = C;
+            }
+
+            Result.Data[Result.Length++] = C;
+            (*Offset)++;
+        }
+
+        Result.Data[Result.Length] = '\0';
+        return(Result);
+    }
+    else
+    {
+        return(NULLSTR);
+    }
+}
+
+internal inline bool32
+operator!=(string A, string B)
+{
+    return(!StringsMatch(A, B));
 }
 
 #endif // STRING_H

@@ -174,7 +174,7 @@ CloverLoadFontForUse(game_memory *GameMemory, asset_slot *FontSlot, uint32 Size,
 }
 
 internal font_data*
-GetFontFromID(game_memory *GameMemory, int32 Size, font_id ID)
+GetFontFromID(game_memory *GameMemory, uint32 Size, font_id ID)
 {
     transient_state *TransientState = (transient_state *)GameMemory->TransientStorage.MemoryBlock;
     asset_slot *FontSlot = &TransientState->GameAssets->Fonts[ID];

@@ -18,9 +18,6 @@
 #define int32  int
 #define uint32 unsigned int
 
-const uint32 RENDERING_OPTION_FLIP_X = 0x00000001u;
-const uint32 RENDERING_OPTION_FLIP_Y = 0x00000002u;
-
 #define alignas(x) 
 
 vec3 GammaCorrection(vec3 Color, float Gamma)
@@ -41,6 +38,11 @@ vec3 ToneMap(vec3 Color)
 
 #endif
 // SHARED
+
+const unsigned int RENDERING_OPTION_FONT = 0x00000001U;
+
+// const uint32 RENDERING_OPTION_FLIP_X = 0x00000001u;
+// const uint32 RENDERING_OPTION_FLIP_Y = 0x00000002u;
 
 struct attenuation_data
 {

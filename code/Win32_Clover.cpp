@@ -441,7 +441,7 @@ Win32LoadWGLFunctions(WNDCLASS Window, HINSTANCE hInstance, wgl_function_pointer
     
     HGLRC TempRC = wglCreateContext(DummyContext);
     wglMakeCurrent(DummyContext, TempRC);
-    
+
     WGLFunctions->wglChoosePixelFormatARB = (PFNWGLCHOOSEPIXELFORMATARBPROC)
         wglGetProcAddress("wglChoosePixelFormatARB");
     WGLFunctions->wglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC)
@@ -454,7 +454,7 @@ Win32LoadWGLFunctions(WNDCLASS Window, HINSTANCE hInstance, wgl_function_pointer
     {
         Check(false, "Failed to extract OpenGL function Pointers!\n");
     }
-    
+
     wglMakeCurrent(DummyContext, 0);
     wglDeleteContext(TempRC);
     ReleaseDC(DummyWindow, DummyContext);
@@ -1026,6 +1026,25 @@ WinMain(HINSTANCE hInstance,
                 // VSYNC
                 WGLFunctions.wglSwapIntervalEXT(0);
                 // VSYNC
+
+                const uint8 *VendorInfo    = glGetString(GL_VENDOR);
+                const uint8 *RendererInfo  = glGetString(GL_RENDERER);
+                const uint8 *VersionInfo   = glGetString(GL_VERSION);
+
+                cl_Info("OpenGL Vendor:     %s\n", VendorInfo);
+                cl_Info("OpenGL Renderer:   %s\n", RendererInfo);
+                cl_Info("OpenGL Version:    %s\n", VersionInfo);
+
+                int32 nExtensions = 0;
+                glGetIntegerv(GL_NUM_EXTENSIONS, &nExtensions);
+                cl_Info("Supported Extensions:\n");
+                for(int32 Index = 0;
+                    Index < nExtensions;
+                    ++Index)
+                {
+                    const GLubyte* extension = glGetStringi(GL_EXTENSIONS, Index);
+                    printf("  %s\n", extension);
+                }
                 
                 // RENDERER INIT
                 //CloverSetupRenderer(&GameMemory, &RenderData, TransientState);

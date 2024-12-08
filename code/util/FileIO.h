@@ -52,7 +52,7 @@ ReadEntireFile(string Filepath, uint32 *Size, char *Buffer)
     
     memset(Buffer, 0, *Size + 1);
     fread(Buffer, sizeof(char), *Size, File);
-    
+
     fclose(File);
     return(Buffer);
 }
@@ -67,7 +67,9 @@ ReadEntireFileMA(memory_arena *ArenaAllocator, string Filepath, uint32 *FileSize
     if(FileSize2)
     {
         char *Buffer = (char *)PushSize(ArenaAllocator, uint64(FileSize2 + 1));
+        memset(Buffer, 0, FileSize2 + 1);
         File.Data = (uint8 *)ReadEntireFile(Filepath, FileSize, Buffer);
+        File.Data[FileSize2 + 1] = 0;
         File.Length = FileSize2;
     }
     else

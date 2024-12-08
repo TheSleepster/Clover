@@ -1,5 +1,3 @@
-#shader VERTEX
-
 #version 430 core
 
 out vec2 vUV;
@@ -28,19 +26,4 @@ void main()
 
     gl_Position = vec4(Vertices[gl_VertexID], 0.0, 1.0);
     vUV = TexCoords[gl_VertexID];
-}
-
-#shader FRAGMENT
-
-#version 430 core
-
-in  vec2 vUV;
-out vec4 FragColor;
-
-layout(binding = 0) uniform sampler2D Image;
-
-void main()
-{
-    vec4 ImageColor = texture(Image, vUV); 
-    FragColor = vec4(ImageColor.rgb, 1.0);
 }
