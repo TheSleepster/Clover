@@ -656,6 +656,18 @@ static inline float RadianToTurn(float Angle)
     return Result;
 }
 
+static inline vec4
+PositionFromMat4(mat4 M)
+{
+    vec4 Result = {};
+    Result.X = M.Elements[3][0];
+    Result.Y = M.Elements[3][1];
+    Result.Z = M.Elements[3][2];
+    Result.W = M.Elements[3][3];
+
+    return(Result);
+}
+
 /*
  * Floating-point math functions
  */

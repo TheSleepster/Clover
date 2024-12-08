@@ -1,24 +1,28 @@
-#version 450 core
+#version 430 core
 #extension GL_ARB_shading_language_include : require
 
 #line 4
 #include "/../code/shader/CommonShader.glh"
 #line 6
 
-     in vec4    vFragColor;
-     in vec2    vTexCoords;
-flat in int     vTextureIndex;
-flat in unsigned int  vRenderingOptions;
+     in vec4  vFragColor;
+     in vec4  vWorldPosition;
+     in vec2  vTexCoords;
+     in vec3  vNormals;
+flat in int   vTextureIndex;
+flat in unsigned int vRenderingOptions;
 
 uniform sampler2D Textures[MAX_TEXTURES];
 layout(binding = 16) uniform sampler2D FontAtlas;
 
 out vec4 FragColor;
+out vec4 WorldPositionColor;
+out vec4 VertexNormalsColor;
 
 void main()
 {
     ivec2 TexCoords = ivec2(vTexCoords);
-
+    
     bool Textured = vTextureIndex > -1;
     bool Font     = ((vRenderingOptions & RENDERING_OPTION_FONT) != 0);
 
@@ -28,6 +32,8 @@ void main()
         TextureColor = Textured ? texelFetch(Textures[vTextureIndex], TexCoords, 0) : vec4(1.0);
         if(TextureColor.a == 0) discard;
         FragColor = TextureColor * vFragColor;
+        WorldPositionColor = vec4(vWorldPosition.rg, 0.0, 1.0);
+        VertexNormalsColor = vec4(vNormals, 1.0);
     }
     else
     {
@@ -39,5 +45,8 @@ void main()
         real32 Alpha = smoothstep(0.5 - SmoothEdge, 0.5 + SmoothEdge, Distance);
         
         FragColor = vec4(vFragColor.rgb, vFragColor.a * Alpha);
+        WorldPositionColor = vec4(vWorldPosition.rg, 0.0, 1.0);
+        VertexNormalsColor = vec4(vNormals, 1.0);
     }
 }
+

@@ -30,7 +30,7 @@ AddTextureToBoundList(gl_draw_frame_data *DrawFrame, GLuint TextureID)
 
 internal render_quad
 CreateRenderQuad(gl_draw_frame_data *DrawFrame,
-                 vec2                Position,
+                 vec2                WorldPosition,
                  vec2                RenderSize,
                  clover_texture     *Texture,
                  vec2                AtlasOffset,
@@ -40,16 +40,16 @@ CreateRenderQuad(gl_draw_frame_data *DrawFrame,
                  int32               Layer,
                  uint32              RenderingOptions = 0)
 {
-    const real32 Top    = Position.Y;
-    const real32 Bottom = Position.Y + RenderSize.Y;
-    const real32 Left   = Position.X;
-    const real32 Right  = Position.X + RenderSize.X;
+    const real32 Top    = WorldPosition.Y;
+    const real32 Bottom = WorldPosition.Y + RenderSize.Y;
+    const real32 Left   = WorldPosition.X;
+    const real32 Right  = WorldPosition.X + RenderSize.X;
 
     render_quad Quad  = {};
-    Quad.TopLeft.Position     = v2Expand(vec2{Left, Top}, 0, 1);
-    Quad.TopRight.Position    = v2Expand(vec2{Right, Top}, 0, 1);
-    Quad.BottomLeft.Position  = v2Expand(vec2{Left, Bottom}, 0, 1);
-    Quad.BottomRight.Position = v2Expand(vec2{Right, Bottom}, 0, 1);
+    Quad.TopLeft.WorldPosition     = v2Expand(vec2{Left, Top}, 0, 1);
+    Quad.TopRight.WorldPosition    = v2Expand(vec2{Right, Top}, 0, 1);
+    Quad.BottomLeft.WorldPosition  = v2Expand(vec2{Left, Bottom}, 0, 1);
+    Quad.BottomRight.WorldPosition = v2Expand(vec2{Right, Bottom}, 0, 1);
 
     if(Texture)
     {
@@ -77,6 +77,7 @@ CreateRenderQuad(gl_draw_frame_data *DrawFrame,
         Quad.Elements[Index].Color = Quad.QuadColor;
         Quad.Elements[Index].TextureIndex = TextureIndex;
         Quad.Elements[Index].RenderingOptions = RenderingOptions;
+        Quad.Elements[Index].Normals = vec3{0.5, 0.5, 1};
     }
 
     return(Quad);
@@ -97,16 +98,16 @@ DrawQuadProjected(gl_draw_frame_data *DrawFrame, render_quad Quad, mat4 WorldToC
 {
     Assert(DrawFrame->QuadCounter < MAX_QUADS);
     
-	Quad.BottomLeft.Position  = mat4Transform(WorldToClip, Quad.BottomLeft.Position);
-	Quad.BottomRight.Position = mat4Transform(WorldToClip, Quad.BottomRight.Position);
-	Quad.TopLeft.Position     = mat4Transform(WorldToClip, Quad.TopLeft.Position);
-	Quad.TopRight.Position    = mat4Transform(WorldToClip, Quad.TopRight.Position);
+	Quad.BottomLeft.NDCPosition  = mat4Transform(WorldToClip, Quad.BottomLeft.WorldPosition);
+	Quad.BottomRight.NDCPosition = mat4Transform(WorldToClip, Quad.BottomRight.WorldPosition);
+	Quad.TopLeft.NDCPosition     = mat4Transform(WorldToClip, Quad.TopLeft.WorldPosition);
+	Quad.TopRight.NDCPosition    = mat4Transform(WorldToClip, Quad.TopRight.WorldPosition);
 
     bool32 ShouldCull =
-        (Quad.BottomLeft.Position.X < -1 && Quad.TopLeft.Position.X < -1 && Quad.BottomRight.Position.X < -1 && Quad.TopRight.Position.X < -1 ||
-         Quad.BottomLeft.Position.X >  1 && Quad.TopLeft.Position.X >  1 && Quad.BottomRight.Position.X >  1 && Quad.TopRight.Position.X >  1 ||
-         Quad.BottomLeft.Position.Y < -1 && Quad.TopLeft.Position.Y < -1 && Quad.BottomRight.Position.Y < -1 && Quad.TopRight.Position.Y < -1 ||
-         Quad.BottomLeft.Position.Y >  1 && Quad.TopLeft.Position.Y >  1 && Quad.BottomRight.Position.Y >  1 && Quad.TopRight.Position.Y >  1);
+        (Quad.BottomLeft.NDCPosition.X < -1 && Quad.TopLeft.NDCPosition.X < -1 && Quad.BottomRight.NDCPosition.X < -1 && Quad.TopRight.NDCPosition.X < -1 ||
+         Quad.BottomLeft.NDCPosition.X >  1 && Quad.TopLeft.NDCPosition.X >  1 && Quad.BottomRight.NDCPosition.X >  1 && Quad.TopRight.NDCPosition.X >  1 ||
+         Quad.BottomLeft.NDCPosition.Y < -1 && Quad.TopLeft.NDCPosition.Y < -1 && Quad.BottomRight.NDCPosition.Y < -1 && Quad.TopRight.NDCPosition.Y < -1 ||
+         Quad.BottomLeft.NDCPosition.Y >  1 && Quad.TopLeft.NDCPosition.Y >  1 && Quad.BottomRight.NDCPosition.Y >  1 && Quad.TopRight.NDCPosition.Y >  1);
     if(ShouldCull)
     {
         return(&DrawFrame->NullQuad);
@@ -176,7 +177,8 @@ DrawQuadXFormInFrame(gl_draw_frame_data *DrawFrame, render_quad Quad, mat4 XForm
 internal render_quad*
 DrawQuadXForm(gl_draw_frame_data *DrawFrame, mat4 XForm, vec2 RenderSize, vec4 Color, uint32 RenderingOptions)
 {
-    render_quad Quad = CreateRenderQuad(DrawFrame, {0, 0}, RenderSize, 0, {0, 0}, {16, 16}, -1, Color, DrawFrame->ActiveZLayer, RenderingOptions);
+    vec4 WorldPosition = PositionFromMat4(XForm);
+    render_quad Quad = CreateRenderQuad(DrawFrame, {WorldPosition.X, WorldPosition.Y}, RenderSize, 0, {0, 0}, {16, 16}, -1, Color, DrawFrame->ActiveZLayer, RenderingOptions);
     return(DrawQuadXFormInFrame(DrawFrame, Quad, XForm));
 }
 
@@ -191,8 +193,9 @@ DrawTextureXForm(gl_draw_frame_data *DrawFrame,
                  vec4                Color,
                  uint32              RenderingOptions)
 {
+    vec4 WorldPosition = PositionFromMat4(XForm);
     render_quad Quad = CreateRenderQuad(DrawFrame,
-                                        {0, 0},
+                                        {WorldPosition.X, WorldPosition.Y},
                                         RenderSize,
                                         Texture,
                                         v2Cast(AtlasOffset),
@@ -203,15 +206,6 @@ DrawTextureXForm(gl_draw_frame_data *DrawFrame,
                                         RenderingOptions);
     return(DrawQuadXFormInFrame(DrawFrame, Quad, XForm));
 }
-
-enum text_alignment
-{
-    TA_Left,
-    TA_Right,
-    TA_Center,
-    TA_Top,
-    TA_Bottom
-};
 
 internal void
 DisplayText(gl_draw_frame_data *DrawFrame,
@@ -258,6 +252,28 @@ DisplayText(gl_draw_frame_data *DrawFrame,
     {
         cl_Error("Failed to find font!\n");
     }
+}
+
+internal point_light*
+CreatePointLight(gl_draw_frame_data *DrawFrame,
+                 vec2                Position, // THIS IS IN WORLDSPACE POSITION
+                 real32              Strength,
+                 real32              Radius,   // PIXELS
+                 attenuation_data   *Attenuation,
+                 vec4                Color)
+{   
+    point_light *Light    = &DrawFrame->PointLights[DrawFrame->PointLightCounter++];
+    mat4 WorldToClip = mat4Multiply(DrawFrame->ProjectionMatrix, DrawFrame->ViewMatrix);
+    vec4 NDCPosition = mat4Transform(WorldToClip, v2Expand(Position, 0, 1));
+    
+    Light->NDCPosition    = NDCPosition.XYZ;
+    Light->WorldPosition  = v2Expand(Position, 0);
+    Light->Radius         = Radius;
+    Light->Strength       = Strength;
+    Light->LightColor     = Color;
+    Light->Attenuation    = *Attenuation;
+
+    return(Light);
 }
 
 internal inline void

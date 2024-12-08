@@ -39,6 +39,9 @@ vec3 ToneMap(vec3 Color)
 #endif
 // SHARED
 
+#define CLOVER_FONT_ATLAS_SIZE 800 
+#define MAX_TEXTURES            32
+
 const unsigned int RENDERING_OPTION_FONT = 0x00000001U;
 
 // const uint32 RENDERING_OPTION_FLIP_X = 0x00000001u;
@@ -53,12 +56,14 @@ struct attenuation_data
 
 struct alignas(16) point_light
 {
-    vec3   Position;
-    vec2   Direction;
-    vec4   LightColor;
-
+    vec3   NDCPosition;   // Actual display position;
     real32 Strength;
+
+    vec3   WorldPosition; // Lighting strength calculations
     real32 Radius;
+
+    vec4   LightColor;
+    vec2   Direction;
 
     attenuation_data Attenuation;
 };

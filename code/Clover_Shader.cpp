@@ -25,25 +25,25 @@ struct clover_shader
 internal clover_shader_source_data
 CloverLoadShaderSourceData(memory_arena *Arena, string Filepath, GLenum Type)
 {
-    clover_shader_source_data Result = {};
+    clover_shader_source_data ReturnSource = {};
     
     uint32 Size = 0;
-    Result.Contents = ReadEntireFileMA(Arena, Filepath, &Size);
-    if(Result.Contents != NULLSTR)
+    ReturnSource.Contents = ReadEntireFileMA(Arena, Filepath, &Size);
+    if(ReturnSource.Contents != NULLSTR)
     {
-        Result.LastWriteTime = FileGetLastWriteTime(Filepath); 
-        Result.Type = Type; 
+        ReturnSource.LastWriteTime = FileGetLastWriteTime(Filepath); 
+        ReturnSource.Type = Type; 
 
-        Result.SourceID = glCreateShader(Result.Type);
-        glShaderSource(Result.SourceID, 1, &CSTR(Result.Contents), 0);
-        glCompileShader(Result.SourceID);
-        CloverTestShader(Result.SourceID, Result.Type);
+        ReturnSource.SourceID = glCreateShader(ReturnSource.Type);
+        glShaderSource(ReturnSource.SourceID, 1, &CSTR(ReturnSource.Contents), 0);
+        glCompileShader(ReturnSource.SourceID);
+        CloverTestShader(ReturnSource.SourceID, ReturnSource.Type);
     }
     else
     {
         cl_Error("File failed to load. It is either invalid or do not exist\n");
     }
-    return(Result);
+    return(ReturnSource);
 }
 
 internal inline void
@@ -83,25 +83,31 @@ CloverCleanupShaderSources(clover_shader *Shader)
 internal clover_shader 
 CloverLoadBasicPixelShader(memory_arena *Arena, string VertexFilepath, string FragmentFilepath)
 {
-    clover_shader Result = {};
+    clover_shader ReturnShader = {};
 
-    Result.Sources[0] = CloverLoadShaderSourceData(Arena, VertexFilepath, GL_VERTEX_SHADER);
-    Result.Sources[1] = CloverLoadShaderSourceData(Arena, FragmentFilepath, GL_FRAGMENT_SHADER);
+    ReturnShader.Sources[0] = CloverLoadShaderSourceData(Arena, VertexFilepath, GL_VERTEX_SHADER);
+    ReturnShader.Sources[1] = CloverLoadShaderSourceData(Arena, FragmentFilepath, GL_FRAGMENT_SHADER);
 
-    Result.ProgramID = glCreateProgram();
-    glAttachShader(Result.ProgramID, Result.Sources[0].SourceID);
-    glAttachShader(Result.ProgramID, Result.Sources[1].SourceID);
+    ReturnShader.ProgramID = glCreateProgram();
+    if(ReturnShader.ProgramID != 0)
+    {
+        glAttachShader(ReturnShader.ProgramID, ReturnShader.Sources[0].SourceID);
+        glAttachShader(ReturnShader.ProgramID, ReturnShader.Sources[1].SourceID);
 
-    glLinkProgram(Result.ProgramID);
-    CloverTestShader(Result.ProgramID, GL_PROGRAM);
+        glLinkProgram(ReturnShader.ProgramID);
+        CloverTestShader(ReturnShader.ProgramID, GL_PROGRAM);
 
-    glDetachShader(Result.ProgramID, Result.Sources[0].SourceID);
-    glDetachShader(Result.ProgramID, Result.Sources[1].SourceID);
+        glDetachShader(ReturnShader.ProgramID, ReturnShader.Sources[0].SourceID);
+        glDetachShader(ReturnShader.ProgramID, ReturnShader.Sources[1].SourceID);
 
-    glDeleteShader(Result.Sources[0].SourceID);
-    glDeleteShader(Result.Sources[1].SourceID);
-
-    return(Result);
+        glDeleteShader(ReturnShader.Sources[0].SourceID);
+        glDeleteShader(ReturnShader.Sources[1].SourceID);
+    }
+    else
+    {
+        cl_Error("Failure to create the program!\n");
+    }
+    return(ReturnShader);
 }
 
 internal clover_shader 
