@@ -27,7 +27,6 @@ AddTextureToBoundList(gl_draw_frame_data *DrawFrame, GLuint TextureID)
     return(false);
 }
 
-
 internal render_quad
 CreateRenderQuad(gl_draw_frame_data *DrawFrame,
                  vec2                WorldPosition,
@@ -38,7 +37,8 @@ CreateRenderQuad(gl_draw_frame_data *DrawFrame,
                  int32               TextureIndex,
                  vec4                Color,
                  int32               Layer,
-                 uint32              RenderingOptions = 0)
+                 uint32              RenderingOptions = 0,
+                 real32              LitFactor = 1.0f)
 {
     const real32 Top    = WorldPosition.Y;
     const real32 Bottom = WorldPosition.Y + RenderSize.Y;
@@ -77,7 +77,8 @@ CreateRenderQuad(gl_draw_frame_data *DrawFrame,
         Quad.Elements[Index].Color = Quad.QuadColor;
         Quad.Elements[Index].TextureIndex = TextureIndex;
         Quad.Elements[Index].RenderingOptions = RenderingOptions;
-        Quad.Elements[Index].Normals = vec3{0.5, 0.5, 1};
+        Quad.Elements[Index].Normals = vec3{0.0, 0.0, 1};
+        Quad.Elements[Index].LitFactor = LitFactor;
     }
 
     return(Quad);
@@ -131,9 +132,9 @@ DrawQuadInView(gl_draw_frame_data *DrawFrame, render_quad Quad)
 }
 
 internal render_quad*
-DrawQuad(gl_draw_frame_data *DrawFrame, vec2 Position, vec2 Size, vec4 Color, uint32 RenderingOptions)
+DrawQuad(gl_draw_frame_data *DrawFrame, vec2 Position, vec2 Size, vec4 Color, uint32 RenderingOptions, real32 LitFactor)
 {
-    render_quad Quad = CreateRenderQuad(DrawFrame, Position, Size, 0, {0, 0}, {16, 16}, -1, Color, DrawFrame->ActiveZLayer, RenderingOptions);
+    render_quad Quad = CreateRenderQuad(DrawFrame, Position, Size, 0, {0, 0}, {16, 16}, -1, Color, DrawFrame->ActiveZLayer, RenderingOptions, LitFactor);
     return(DrawQuadInView(DrawFrame, Quad));
 }
 
@@ -145,7 +146,8 @@ DrawQuadTextured(gl_draw_frame_data *DrawFrame,
                  ivec2               AtlasOffset,
                  ivec2               SpriteSize,
                  vec4                Color,
-                 uint32              RenderingOptions)
+                 uint32              RenderingOptions,
+                 real32              LitFactor)
 {
     AddTextureToBoundList(DrawFrame, Texture->TextureID);
     render_quad Quad = CreateRenderQuad(DrawFrame,
@@ -157,7 +159,8 @@ DrawQuadTextured(gl_draw_frame_data *DrawFrame,
                                         DrawFrame->ActiveTextureCount,
                                         Color,
                                         DrawFrame->ActiveZLayer,
-                                        RenderingOptions);
+                                        RenderingOptions,
+                                        LitFactor);
     return(DrawQuadInView(DrawFrame, Quad));
 }
 
@@ -175,10 +178,10 @@ DrawQuadXFormInFrame(gl_draw_frame_data *DrawFrame, render_quad Quad, mat4 XForm
 }
 
 internal render_quad*
-DrawQuadXForm(gl_draw_frame_data *DrawFrame, mat4 XForm, vec2 RenderSize, vec4 Color, uint32 RenderingOptions)
+DrawQuadXForm(gl_draw_frame_data *DrawFrame, mat4 XForm, vec2 RenderSize, vec4 Color, uint32 RenderingOptions, real32 LitFactor)
 {
     vec4 WorldPosition = PositionFromMat4(XForm);
-    render_quad Quad = CreateRenderQuad(DrawFrame, {WorldPosition.X, WorldPosition.Y}, RenderSize, 0, {0, 0}, {16, 16}, -1, Color, DrawFrame->ActiveZLayer, RenderingOptions);
+    render_quad Quad = CreateRenderQuad(DrawFrame, {WorldPosition.X, WorldPosition.Y}, RenderSize, 0, {0, 0}, {16, 16}, -1, Color, DrawFrame->ActiveZLayer, RenderingOptions, LitFactor);
     return(DrawQuadXFormInFrame(DrawFrame, Quad, XForm));
 }
 
@@ -191,7 +194,8 @@ DrawTextureXForm(gl_draw_frame_data *DrawFrame,
                  ivec2               AtlasOffset,
                  ivec2               SpriteSize,
                  vec4                Color,
-                 uint32              RenderingOptions)
+                 uint32              RenderingOptions,
+                 real32              LitFactor)
 {
     vec4 WorldPosition = PositionFromMat4(XForm);
     render_quad Quad = CreateRenderQuad(DrawFrame,
@@ -203,7 +207,8 @@ DrawTextureXForm(gl_draw_frame_data *DrawFrame,
                                         DrawFrame->ActiveTextureCount,
                                         Color,
                                         DrawFrame->ActiveZLayer,
-                                        RenderingOptions);
+                                        RenderingOptions,
+                                        LitFactor);
     return(DrawQuadXFormInFrame(DrawFrame, Quad, XForm));
 }
 
@@ -214,7 +219,8 @@ DisplayText(gl_draw_frame_data *DrawFrame,
             uint32              FontSize,
             vec4                Color,
             clover_font_data   *FontID,
-            uint32              RenderingOptions)
+            uint32              RenderingOptions,
+            real32              LitFactor)
             //font_id             FontID = GF_UbuntuMono,
 {
     clover_font_data *Font = FontID;
@@ -244,7 +250,7 @@ DisplayText(gl_draw_frame_data *DrawFrame,
             vec2  GlyphRenderSize = v2Cast(Glyph.Size) * (ScaleFactor * 2);
             ivec2 AtlasOffset     = Glyph.UVs;
 
-            DrawQuadTextured(DrawFrame, GlyphPosition, GlyphRenderSize, &Font->FontAtlas, AtlasOffset, Glyph.Size, Color, RenderingOptions);
+            DrawQuadTextured(DrawFrame, GlyphPosition, GlyphRenderSize, &Font->FontAtlas, AtlasOffset, Glyph.Size, Color, RenderingOptions, LitFactor);
             Position.X += Glyph.Advance.X * (ScaleFactor * 2);
         }
     }

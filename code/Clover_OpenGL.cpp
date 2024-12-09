@@ -1,4 +1,4 @@
-/* =========
+/* ========================================================================
    $File: Clover_OpenGL.cpp $
    $Date: Mon, 25 Nov 24: 08:PM $
    $Revision: $
@@ -36,6 +36,7 @@ struct gl_vertex
     
     int32   TextureIndex;
     uint32  RenderingOptions;
+    real32  LitFactor;
 };
 
 struct render_quad
@@ -167,11 +168,11 @@ struct gl_draw_frame_data
 
 constexpr uint32 IndirectDrawCommandBufferSize   = (MAX_LAYERS * 2) * sizeof(draw_elements_indirect_command);
 
-internal render_quad* DrawQuad(gl_draw_frame_data *DrawFrame, vec2 Position, vec2 RenderSize, vec4 Color, uint32 RenderingOptions = 0);
-internal render_quad* DrawQuadTextured(gl_draw_frame_data *DrawFrame, vec2 Position, vec2 RenderSize, clover_texture *Texture, ivec2 AtlasOffset, ivec2 SpriteSize, vec4 Color, uint32 RenderingOptions = 0);
-internal render_quad* DrawTextureXForm(gl_draw_frame_data *DrawFrame, mat4 XForm, vec2 RenderSize, clover_texture *Texture, ivec2 AtlasOffset, ivec2 SpriteSize, vec4 Color, uint32 RenderingOptions = 0);
-internal render_quad* DrawQuadXForm(gl_draw_frame_data *DrawFrame, mat4 XForm, vec2 RenderSize, vec4 Color, uint32 RenderingOptions = 0);
-internal void         DisplayText(gl_draw_frame_data *DrawFrame, string TextToRender, vec2 Position, uint32 FontSize, vec4 Color, clover_font_data *FontID, uint32 RenderingOptions = 0);
+internal render_quad* DrawQuad(gl_draw_frame_data *DrawFrame, vec2 Position, vec2 RenderSize, vec4 Color, uint32 RenderingOptions = 0, real32 LitFactor = 1.0f);
+internal render_quad* DrawQuadTextured(gl_draw_frame_data *DrawFrame, vec2 Position, vec2 RenderSize, clover_texture *Texture, ivec2 AtlasOffset, ivec2 SpriteSize, vec4 Color, uint32 RenderingOptions = 0, real32 LitFactor = 1.0f);
+internal render_quad* DrawTextureXForm(gl_draw_frame_data *DrawFrame, mat4 XForm, vec2 RenderSize, clover_texture *Texture, ivec2 AtlasOffset, ivec2 SpriteSize, vec4 Color, uint32 RenderingOptions = 0, real32 LitFactor = 1.0f);
+internal render_quad* DrawQuadXForm(gl_draw_frame_data *DrawFrame, mat4 XForm, vec2 RenderSize, vec4 Color, uint32 RenderingOptions = 0, real32 LitFactor = 1.0f);
+internal void         DisplayText(gl_draw_frame_data *DrawFrame, string TextToRender, vec2 Position, uint32 FontSize, vec4 Color, clover_font_data *FontID, uint32 RenderingOptions = 0, real32 LitFactor = 1.0f);
 internal point_light* CreatePointLight(gl_draw_frame_data *DrawFrame, vec2 Position, real32 Strength, real32 Radius, attenuation_data *Attenuation, vec4 Color);
 
 
@@ -452,6 +453,7 @@ CloverInitializeOpenGLRenderer(gl_render_info *RenderInfo, gl_draw_frame_data *D
         glVertexAttribIPointer(5, 1, GL_INT,  sizeof(gl_vertex), (void *)offsetof(gl_vertex, TextureIndex));
         glVertexAttribIPointer(6, 1, GL_UNSIGNED_INT, sizeof(gl_vertex), (void *)offsetof(gl_vertex,  RenderingOptions));
 
+        glVertexAttribPointer(7, 1, GL_FLOAT, GL_FALSE, sizeof(gl_vertex), (void *)offsetof(gl_vertex,  LitFactor));
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
         glEnableVertexAttribArray(2);
@@ -459,6 +461,7 @@ CloverInitializeOpenGLRenderer(gl_render_info *RenderInfo, gl_draw_frame_data *D
         glEnableVertexAttribArray(4);
         glEnableVertexAttribArray(5);
         glEnableVertexAttribArray(6);
+        glEnableVertexAttribArray(7);
     }
 
     // DEFERRED LIGHTING
@@ -478,7 +481,7 @@ CloverInitializeOpenGLRenderer(gl_render_info *RenderInfo, gl_draw_frame_data *D
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
         glBindTexture(GL_TEXTURE_2D, RenderInfo->gBufferTextures[2]);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, SizeData.Width, SizeData.Height, 0, GL_RGB, GL_FLOAT, 0);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, SizeData.Width, SizeData.Height, 0, GL_RGBA, GL_FLOAT, 0);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
@@ -631,19 +634,21 @@ CloverOpenGLRender(gl_render_info *RenderInfo, gl_draw_frame_data *DrawFrame, ti
     DrawQuad(DrawFrame, {-32, 0}, {16, 16}, WHITE);
 
     PushZLayer(DrawFrame, 5);
-    DrawQuad(DrawFrame, {-42, 0}, {16, 16}, {0.0f, 0.2f, 0.0f, 0.3f});
+    DrawQuad(DrawFrame, {-42, 0}, {16, 16}, {0.0f, 0.2f, 0.0f, 0.3f}, 0, 1.0f);
 
     PushZLayer(DrawFrame, 3);
-    DrawQuad(DrawFrame, {-36, -10}, {16, 16}, {0.4f, 0.0f, 0.0f, 0.6f});
+    DrawQuad(DrawFrame, {-36, -10}, {16, 16}, {0.4f, 0.0f, 0.0f, 0.6f}, 0, 0.0f);
 
 
     attenuation_data TestLightData = {.Constant = 0.05, .Linear = 0.0009, .Quadratic = 0.001};
-    CreatePointLight(DrawFrame, vec2{-100, 10}, 2.0, 100, &TestLightData, RED);
-    CreatePointLight(DrawFrame, vec2{ 100, 10}, 2.0, 100, &TestLightData, BLUE);
+    CreatePointLight(DrawFrame, vec2{-100, 0}, 20.0, 100, &TestLightData, GREEN);
+    CreatePointLight(DrawFrame, vec2{ 100, 0}, 10.0, 100, &TestLightData, BLUE);
+    CreatePointLight(DrawFrame, vec2{ 0,  -100}, 40.0, 100, &TestLightData, RED);
+    CreatePointLight(DrawFrame, vec2{ 0,   100}, 50.0, 100, &TestLightData, YELLOW);
 
     PushZLayer(DrawFrame, 15);
-    DrawTextureXForm(DrawFrame, XForm, {16, 16}, &RenderInfo->Testure, {96, 0}, {11, 11}, WHITE);
-    DisplayText(DrawFrame, STR("The Quick, Brown Fox Jumps Over The Lazy Dog!"), {-150, -20}, 6, GREEN, &DrawFrame->CurrentlyActiveFont, FontOptions);
+    DrawTextureXForm(DrawFrame, XForm, {16, 16}, &RenderInfo->Testure, {96, 0}, {11, 11}, WHITE, 0, 0.0f);
+    DisplayText(DrawFrame, STR("The Quick, Brown Fox Jumps Over The Lazy Dog!"), {-150, -20}, 6, GREEN, &DrawFrame->CurrentlyActiveFont, FontOptions, 0.0f);
 
     PushZLayer(DrawFrame, 0);
     ivec2  TileRadius   = {32, 32};
@@ -819,6 +824,11 @@ CloverOpenGLRender(gl_render_info *RenderInfo, gl_draw_frame_data *DrawFrame, ti
             TopLeft->Normals 	  = Quad->TopLeft.Normals;
             TopRight->Normals	  = Quad->TopRight.Normals;
             BottomRight->Normals  = Quad->BottomRight.Normals;
+
+            BottomLeft->LitFactor  = Quad->BottomLeft.LitFactor;
+            TopLeft->LitFactor 	   = Quad->TopLeft.LitFactor;
+            TopRight->LitFactor	   = Quad->TopRight.LitFactor;
+            BottomRight->LitFactor = Quad->BottomRight.LitFactor;
         }
     }
 

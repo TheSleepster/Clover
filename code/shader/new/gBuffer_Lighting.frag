@@ -27,6 +27,8 @@ void main()
     vec3 Normal      = texture(gBufferNormals,  vUV).rgb;
     vec3 AlbedoColor = texture(gBufferTexture,  vUV).rgb;
     vec3 FragPos     = texture(gBufferPosition, vUV).rgb;
+
+    float LitFactor  = Normal.b;
     
     float AmbientStrength = (uWorldBrightness * uBrightnessFactor);
     vec3  AmbientLighting = vec3(1.0) * AmbientStrength;
@@ -41,11 +43,18 @@ void main()
         if(LightDist > PointLight.Radius) continue;
 
         float Attenuation = 1.0 / (PointLight.Attenuation.Constant + PointLight.Attenuation.Linear * LightDist + PointLight.Attenuation.Quadratic * (LightDist * LightDist));
-        float DistanceFactor = smoothstep(PointLight.Radius * 0.5, PointLight.Radius, LightDist);
+        float DistanceFactor = smoothstep(PointLight.Radius * 0.75, PointLight.Radius, LightDist);
 
         vec3  DiffuseLighting = AlbedoColor * PointLight.LightColor.rgb * Attenuation * PointLight.Strength * (1 - DistanceFactor);
         TotalLighting        += DiffuseLighting;
     }
     
-    FragColor = vec4(AlbedoColor * AmbientLighting, 1.0) + vec4(TotalLighting, 1.0);
+    if(LitFactor == 0)
+    {
+        FragColor = vec4(AlbedoColor, 1.0);
+    }
+    else
+    {
+        FragColor = vec4(AlbedoColor * (AmbientLighting * LitFactor), 1.0) + vec4((TotalLighting * LitFactor), 1.0);
+    }
 }

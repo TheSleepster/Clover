@@ -9,6 +9,7 @@
      in vec4  vWorldPosition;
      in vec2  vTexCoords;
      in vec3  vNormals;
+     in float vLitFactor;
 flat in int   vTextureIndex;
 flat in unsigned int vRenderingOptions;
 
@@ -33,7 +34,7 @@ void main()
         if(TextureColor.a == 0) discard;
         FragColor = TextureColor * vFragColor;
         WorldPositionColor = vec4(vWorldPosition.rg, 0.0, 1.0);
-        VertexNormalsColor = vec4(vNormals, 1.0);
+        VertexNormalsColor = vec4(vNormals.xy, vLitFactor, 1.0);
     }
     else
     {
@@ -43,10 +44,11 @@ void main()
 
         real32 SmoothEdge = 0.02;
         real32 Alpha = smoothstep(0.5 - SmoothEdge, 0.5 + SmoothEdge, Distance);
+        if(Alpha == 0.0) discard;
         
         FragColor = vec4(vFragColor.rgb, vFragColor.a * Alpha);
         WorldPositionColor = vec4(vWorldPosition.rg, 0.0, 1.0);
-        VertexNormalsColor = vec4(vNormals, 1.0);
+        VertexNormalsColor = vec4(vNormals.xy, vLitFactor, 1.0);
     }
 }
 

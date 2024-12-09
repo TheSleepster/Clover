@@ -9,6 +9,7 @@
      in vec2    vTexCoords;
 flat in int     vTextureIndex;
 flat in unsigned int  vRenderingOptions;
+     in float   vLitFactor;
 
 uniform sampler2D Textures[MAX_TEXTURES];
 layout(binding = 16) uniform sampler2D FontAtlas;
