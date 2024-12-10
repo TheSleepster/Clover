@@ -4,180 +4,10 @@
    $Revision: $
    $Creator: Justin Lewis $
    ======================================================================== */
-#include "Clover_Shader.cpp"
-
+#include "Clover_Rendering.h"
 #include "shader/CommonShader.glh"
 
-constexpr uint32 MAX_LAYER_BITS      = 21;
-constexpr uint32 MAX_ACTIVE_TEXTURES = 32;
-constexpr uint32 MAX_LAYERS          = 32;
-
-struct clover_texture
-{
-    string Filepath;
-    time_t LastWriteTime;
-
-    ivec3  TextureChannelData;
-    char  *RawData;
-
-    GLuint TextureID;
-};
-
-uint32 QuadCounter = 3;
-uint32 TransparentQuadCounter = 4;
-
-struct gl_vertex
-{
-    vec4   NDCPosition;
-    vec4   WorldPosition;
-    vec4   Color;
-    vec2   TexCoords;
-    vec3   Normals;
-    
-    int32   TextureIndex;
-    uint32  RenderingOptions;
-    real32  LitFactor;
-};
-
-struct render_quad
-{
-    union
-    {
-        gl_vertex Elements[4];
-        struct
-        {
-            gl_vertex TopLeft;
-            gl_vertex TopRight;
-            gl_vertex BottomLeft;
-            gl_vertex BottomRight;
-        };
-    };
-    real32 Rotation;
-    int32  ZLayer;
-
-    mat4   xForm;
-    vec4   QuadColor;
-    int32  SortingTransparency;
-    uint32 RenderingOptions;
-
-    GLuint BoundTextureID;
-};
-
-struct clover_font_glyph
-{
-    vec2      Offset;
-    vec2      Bearing;
-    vec2      Advance;
-    ivec2     Size;
-    ivec2     UVs;
-};
-
-// NOTE(Sleepster): The Glyph count is 256 for ASCII
-struct clover_font_data
-{
-    clover_texture    FontAtlas;
-    clover_font_glyph Glyphs[256];
-
-    uint32            SizeOnLoad;
-    uint32            FontHeight;
-    uint32            GlyphSize;
-
-    char              *RawData;
-};
-
-struct gl_render_info
-{
-    GLuint PrimaryVAOID;
-    GLuint PrimaryVBOID;
-    GLuint PrimaryEBOID;
-
-    GLuint ProjectionMatrixUID;
-    GLuint ViewMatrixUID;
-
-    // INDIRECT DRAWING STUFF
-    GLuint IndirectDrawingCommandBufferID;
-
-    // DEFERRED LIGHTING BUFFER
-    GLuint gBufferFBID;
-    GLuint gBufferDepthRBID;
-    GLuint gBufferTextures[3];
-
-    // DEBUG
-    GLuint ComputeFramebuffer;
-    GLuint TestComputeTexture;
-    clover_texture Testure;
-};
-
-struct draw_elements_indirect_command
-{
-    GLuint IndexCount;
-    GLuint InstanceCount;
-    GLuint FirstIndex;
-    GLuint FirstVertex;
-    GLuint BaseInstance;
-};
-
-struct render_layer_info
-{
-    int32 BaseIndex;
-    int32 EndingIndex;
-
-    int32 LayerOpaqueQuadCount;
-    int32 LayerTransparentQuadCount;
-};
-
-// TODO(Sleepster): This is meant to transient. Make it so that resetting it is as a simple as DrawFrame = {}; 
-struct gl_draw_frame_data
-{
-    GLuint         ActiveTextures[MAX_ACTIVE_TEXTURES];
-    int32          ActiveTextureCount;
-
-    mat4      	   ProjectionMatrix;
-    mat4      	   ViewMatrix;
-
-    render_quad   *QuadBuffer;	
-    render_quad   *QuadSortingBuffer;
-    gl_vertex     *glVertexBuffer;
-
-    int32          QuadCounter;
-
-    bool32         ZSorting;
-    render_quad    NullQuad;
-
-    int32          ActiveZLayer;
-
-    clover_shader     Shader;
-    clover_shader     gBufferShader;
-    clover_shader     gBufferLightingShader;
-
-    GLuint            gBufferPointLightSBOID;
-    GLuint            uBrightnessFactorUID;
-    GLuint            uWorldBrightnessFactorUID;
-    GLuint            uPointLightCountUID;
-
-    point_light       PointLights[MAX_POINT_LIGHTS];
-    int32             PointLightCounter;
-    
-    clover_shader     TestComputeShader;
-    clover_font_data  CurrentlyActiveFont;
-
-    uint32            ActiveLayerCounter;
-    render_layer_info Layers[MAX_LAYERS];
-    draw_elements_indirect_command IndirectRenderCommandBuffer[MAX_LAYERS * 2];
-};
-
 constexpr uint32 IndirectDrawCommandBufferSize   = (MAX_LAYERS * 2) * sizeof(draw_elements_indirect_command);
-
-internal render_quad* DrawQuad(gl_draw_frame_data *DrawFrame, vec2 Position, vec2 RenderSize, vec4 Color, uint32 RenderingOptions = 0, real32 LitFactor = 1.0f);
-internal render_quad* DrawQuadTextured(gl_draw_frame_data *DrawFrame, vec2 Position, vec2 RenderSize, clover_texture *Texture, ivec2 AtlasOffset, ivec2 SpriteSize, vec4 Color, uint32 RenderingOptions = 0, real32 LitFactor = 1.0f);
-internal render_quad* DrawTextureXForm(gl_draw_frame_data *DrawFrame, mat4 XForm, vec2 RenderSize, clover_texture *Texture, ivec2 AtlasOffset, ivec2 SpriteSize, vec4 Color, uint32 RenderingOptions = 0, real32 LitFactor = 1.0f);
-internal render_quad* DrawQuadXForm(gl_draw_frame_data *DrawFrame, mat4 XForm, vec2 RenderSize, vec4 Color, uint32 RenderingOptions = 0, real32 LitFactor = 1.0f);
-internal void         DisplayText(gl_draw_frame_data *DrawFrame, string TextToRender, vec2 Position, uint32 FontSize, vec4 Color, clover_font_data *FontID, uint32 RenderingOptions = 0, real32 LitFactor = 1.0f);
-internal point_light* CreatePointLight(gl_draw_frame_data *DrawFrame, vec2 Position, real32 Strength, real32 Radius, attenuation_data *Attenuation, vec4 Color);
-
-
-internal inline void PushZLayer(gl_draw_frame_data *DrawFrame, int Layer);
-internal inline void PopZLayer(gl_draw_frame_data *DrawFrame);
 
 internal void APIENTRY
 OpenGLDebugMessageCallback(GLenum Source, GLenum Type, GLuint ID, GLenum Severity,
@@ -224,7 +54,9 @@ CloverTestShader(GLuint TestID, GLuint Type)
     }
 }
 
-internal void 
+#include "Clover_Shader.cpp"
+
+void 
 CloverLoadTextureData(gl_render_info *RenderInfo, clover_texture *Texture, string Filepath)
 {
     if(Texture)
@@ -241,22 +73,11 @@ CloverLoadTextureData(gl_render_info *RenderInfo, clover_texture *Texture, strin
                                              4);
         if(Texture->RawData)
         {
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB_ALPHA, 
-                         Texture->TextureChannelData.Width, Texture->TextureChannelData.Height, 0, 
-                         GL_RGBA, GL_UNSIGNED_BYTE, Texture->RawData);
+            return;
         }
-        else
-        {
-            cl_Error("Could not extract image data. Image may be invalid.\n");
-        }
-
+        cl_Error("Could not extract image data. Image may be invalid.\n");
         glBindTexture(GL_TEXTURE_2D, 0);
-    	stbi_image_free(Texture->RawData);
+        stbi_image_free(Texture->RawData);
     }
     else
     {
@@ -265,8 +86,8 @@ CloverLoadTextureData(gl_render_info *RenderInfo, clover_texture *Texture, strin
 }
 
 // NOTE)Sleepster): This creates and Loads an SDF Font 
-internal string
-CloverLoadFont(gl_render_info *RenderInfo, memory_arena *Arena, clover_font_data *FontData, string Filepath, uint32 FontSize)
+string
+CloverLoadFontData(memory_arena *Arena, clover_font_data *FontData, string Filepath, uint32 FontSize)
 {
     FT_Library FontFile;
     FT_Face    FontFace;
@@ -345,23 +166,6 @@ CloverLoadFont(gl_render_info *RenderInfo, memory_arena *Arena, clover_font_data
             
                         CurrentAtlasColumn += FontFace->glyph->bitmap.width + AtlasPadding;
                     }
-
-                    // TODO(Sleepster): When we hook this up to the asset system, remove this:
-                    glActiveTexture(GL_TEXTURE0 + 1);
-                    glGenTextures(1, &FontData->FontAtlas.TextureID);
-                    glBindTexture(GL_TEXTURE_2D, FontData->FontAtlas.TextureID);
-                    glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, CLOVER_FONT_ATLAS_SIZE, CLOVER_FONT_ATLAS_SIZE, 0, GL_RED, GL_UNSIGNED_BYTE, CSTR(TTFFontData));
-
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 3);
-                    glGenerateMipmap(GL_TEXTURE_2D);
-
-                    glBindTexture(GL_TEXTURE_2D, 0);
                 }
                 else
                 {
@@ -387,14 +191,104 @@ CloverLoadFont(gl_render_info *RenderInfo, memory_arena *Arena, clover_font_data
     return(TTFFontData);
 }
 
+internal void
+CloverCreateSDFTexture(gl_draw_frame_data *DrawFrame, clover_texture *Texture, string TextureData)
+{
+    glActiveTexture(GL_TEXTURE0 + DrawFrame->WorkingTextureIndex++);
+    glGenTextures(1, &Texture->TextureID);
+    glBindTexture(GL_TEXTURE_2D, Texture->TextureID);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, CLOVER_FONT_ATLAS_SIZE, CLOVER_FONT_ATLAS_SIZE, 0, GL_RED, GL_UNSIGNED_BYTE, CSTR(TextureData));
 
-GLuint TestTimeLocation;
-clover_shader TestQuadShader;
-float ShaderCounter;
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 3);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
 
 internal void
-CloverInitializeOpenGLRenderer(gl_render_info *RenderInfo, gl_draw_frame_data *DrawFrame, transient_state *TransientState)
+CloverCreateLinear2DTexture(gl_draw_frame_data *DrawFrame, clover_texture *Texture)
+{
+    glActiveTexture(GL_TEXTURE0 + DrawFrame->WorkingTextureIndex++);
+    glGenTextures(1, &Texture->TextureID);
+    glBindTexture(GL_TEXTURE_2D, Texture->TextureID);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB_ALPHA, 
+                 Texture->TextureChannelData.Width, Texture->TextureChannelData.Height, 0, 
+                 GL_RGBA, GL_UNSIGNED_BYTE, Texture->RawData);
+
+    stbi_image_free(Texture->RawData);
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+internal void
+CloverLoadInQueueOpenGLData(gl_draw_frame_data *DrawFrame, game_assets *Assets)
+{
+    for(uint32 Index = 0;
+        Index < GT_TextureIDCount;
+        ++Index)
+    {
+        asset_slot *TextureInfo = &Assets->Textures[Index];
+        if(TextureInfo->Texture && TextureInfo->SlotState == AssetState_Queued)
+        {
+            if(TextureInfo->Texture->RawData)
+            {
+                CloverCreateLinear2DTexture(DrawFrame, TextureInfo->Texture);
+                InterlockedCompareExchange((uint64 volatile *)&TextureInfo->SlotState,
+                                           AssetState_Loaded,
+                                           AssetState_Queued);
+                ++Assets->TextureCount;
+            }
+        }
+    }
+
+    for(uint32 Index = 0;
+        Index < GF_FontIDCount;
+        ++Index)
+    {
+        asset_slot *NewFont = &Assets->Fonts[Index];
+        if(NewFont->Font && (NewFont->Font->RawData != NULLSTR))
+        {
+            CloverCreateSDFTexture(DrawFrame, &NewFont->Font->FontAtlas, NewFont->Font->RawData);
+            NewFont->Font->RawData = {};
+            ++Assets->TextureCount;
+        }
+    }
+}
+
+internal void
+CloverDrawIMGUI(game_state *GameState, gl_render_info *RenderInfo, gl_draw_frame_data *DrawFrame, time_data Time)
+{
+    if(GameState->DrawDebug)
+    {
+        ImGui::SetCurrentContext(RenderInfo->CurrentImGuiContext);
+
+        ImGui::Begin("Render Quad Color Picker");
+        ImGui::SeparatorText("ENGINE DEBUG INFO");
+        ImGui::Text("Famerate: %i", Time.FPSCounter);
+        ImGui::Text("FrameTime: %.02f", Time.MSPerFrame);
+
+        ImGui::SeparatorText("GAME DEBUG INFO");
+        ImGui::Text("Entity Count: %i", GameState->World.EntityCounter);
+        ImGui::Text("Quad Count: %i", DrawFrame->QuadCounter);
+        ImGui::Text("Vertex Count: %i", DrawFrame->QuadCounter * 4);
+        ImGui::Text("GPU Time: %f", RenderInfo->GPUTimeInMS);
+        ImGui::End();
+    }
+}
+
+internal void
+CloverInitializeOpenGLRenderer(game_memory *GameMemory, gl_render_info *RenderInfo, gl_draw_frame_data *DrawFrame, transient_state *TransientState)
 {
     uint32 Indices[MAX_INDICES] = {};
     uint32 Offset               = 0;
@@ -496,6 +390,7 @@ CloverInitializeOpenGLRenderer(gl_render_info *RenderInfo, gl_draw_frame_data *D
         glBindRenderbuffer(GL_RENDERBUFFER, RenderInfo->gBufferDepthRBID);
         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, SizeData.Width, SizeData.Height);
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, RenderInfo->gBufferDepthRBID);
+        glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
         if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
@@ -530,54 +425,99 @@ CloverInitializeOpenGLRenderer(gl_render_info *RenderInfo, gl_draw_frame_data *D
         string CommonGLHeader = ReadEntireFileMA(&TransientState->Garbage, STR("../code/shader/CommonShader.glh"), &Size);
         glNamedStringARB(GL_SHADER_INCLUDE_ARB, -1, "/../code/shader/CommonShader.glh", int32(CommonGLHeader.Length), CSTR(CommonGLHeader));
 
-        DrawFrame->Shader =
-            CloverLoadBasicPixelShader(&TransientState->Garbage,
-                                       STR("../code/shader/new/Basic.vert"),
-                                       STR("../code/shader/new/Basic.frag"));
+        TransientState->GameAssets->Shaders[GS_BasicShader].Shader
+            = CloverLoadBasicPixelShader(TransientState,
+                                         STR("../code/shader/new/Basic.vert"),
+                                         STR("../code/shader/new/Basic.frag"));
 
-        TestQuadShader =
-            CloverLoadBasicPixelShader(&TransientState->Garbage,
-                                       STR("../code/shader/new/Quad.vert"),
-                                       STR("../code/shader/new/Quad.frag"));
+        TransientState->GameAssets->Shaders[GS_gBufferShader].Shader
+            = CloverLoadBasicPixelShader(TransientState,
+                                         STR("../code/shader/new/gBuffer_Geometry.vert"),
+                                         STR("../code/shader/new/gBuffer_Geometry.frag"));
         
-        DrawFrame->TestComputeShader =
-            CloverLoadComputeShader(&TransientState->Garbage,
-                                    STR("../code/shader/new/RenderWeirdGradient.comp"));
-
-        DrawFrame->gBufferShader =
-            CloverLoadBasicPixelShader(&TransientState->Garbage,
-                                       STR("../code/shader/new/gBuffer_Geometry.vert"),
-                                       STR("../code/shader/new/gBuffer_Geometry.frag"));
-        
-        DrawFrame->gBufferLightingShader =
-            CloverLoadBasicPixelShader(&TransientState->Garbage,
+        TransientState->GameAssets->Shaders[GS_LightingShader].Shader =
+            CloverLoadBasicPixelShader(TransientState,
                                        STR("../code/shader/new/Quad.vert"),
                                        STR("../code/shader/new/gBuffer_Lighting.frag"));
-        
+
+        TransientState->GameAssets->Shaders[GS_TestComputeShader].Shader =
+            CloverLoadComputeShader(TransientState,
+                                     STR("../code/shader/new/RenderWeirdGradient.comp"));
     }
+
+    clover_shader *gBufferLightingShader = GetShaderFromID(GameMemory, GS_LightingShader);
 
     // UNIFORMS
     {
-        DrawFrame->gBufferPointLightSBOID    = glGetUniformLocation(DrawFrame->gBufferLightingShader.ProgramID, "gBufferPointLightSBO");
-        DrawFrame->uBrightnessFactorUID      = glGetUniformLocation(DrawFrame->gBufferLightingShader.ProgramID, "uBrightnessFactor");
-        DrawFrame->uWorldBrightnessFactorUID = glGetUniformLocation(DrawFrame->gBufferLightingShader.ProgramID, "uWorldBrightness");
-        DrawFrame->uPointLightCountUID       = glGetUniformLocation(DrawFrame->gBufferLightingShader.ProgramID, "uPointLightCount");
-        
-        TestTimeLocation = glGetUniformLocation(DrawFrame->TestComputeShader.ProgramID, "Time");
+        RenderInfo->gBufferPointLightSBOID    = glGetUniformLocation(gBufferLightingShader->ProgramID, "gBufferPointLightSBO");
+        RenderInfo->uBrightnessFactorUID      = glGetUniformLocation(gBufferLightingShader->ProgramID, "uBrightnessFactor");
+        RenderInfo->uWorldBrightnessFactorUID = glGetUniformLocation(gBufferLightingShader->ProgramID, "uWorldBrightness");
+        RenderInfo->uPointLightCountUID       = glGetUniformLocation(gBufferLightingShader->ProgramID, "uPointLightCount");
     }
 
     // BUFFERS
     {
         uint64 MaxBufferSize = sizeof(struct point_light) * MAX_POINT_LIGHTS;
-        glGenBuffers(1, &DrawFrame->gBufferPointLightSBOID);
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, DrawFrame->gBufferPointLightSBOID);
+        glGenBuffers(1, &RenderInfo->gBufferPointLightSBOID);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, RenderInfo->gBufferPointLightSBOID);
         glBufferData(GL_SHADER_STORAGE_BUFFER, MaxBufferSize, 0, GL_DYNAMIC_DRAW);
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     }
-    
-    CloverLoadFont(RenderInfo, &TransientState->Garbage, &DrawFrame->CurrentlyActiveFont, STR("../data/res/fonts/UbuntuMono-B.ttf"), 48);
-    CloverLoadTextureData(RenderInfo, &RenderInfo->Testure, STR("../data/res/textures/TextureAtlas.png"));
+}
+
+internal void
+CloverResizeFramebuffers(gl_render_info *RenderInfo)
+{
+    if(RenderInfo->gBufferFBID != 0)
+    {
+        glDeleteFramebuffers(1, &RenderInfo->gBufferFBID);
+    }
+    if(RenderInfo->gBufferDepthRBID != 0)
+    {
+        glDeleteRenderbuffers(1, &RenderInfo->gBufferDepthRBID);
+    }
+
+    glDeleteTextures(3, RenderInfo->gBufferTextures);
+
+    glCreateFramebuffers(1, &RenderInfo->gBufferFBID); 
+    glBindFramebuffer(GL_FRAMEBUFFER, RenderInfo->gBufferFBID);
+
+    glGenTextures(3, RenderInfo->gBufferTextures);
+    glBindTexture(GL_TEXTURE_2D, RenderInfo->gBufferTextures[0]);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB_ALPHA, SizeData.Width, SizeData.Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glBindTexture(GL_TEXTURE_2D, RenderInfo->gBufferTextures[1]);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, SizeData.Width, SizeData.Height, 0, GL_RGB, GL_FLOAT, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glBindTexture(GL_TEXTURE_2D, RenderInfo->gBufferTextures[2]);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, SizeData.Width, SizeData.Height, 0, GL_RGBA, GL_FLOAT, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, RenderInfo->gBufferTextures[0], 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, RenderInfo->gBufferTextures[1], 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, RenderInfo->gBufferTextures[2], 0);
+
+    GLenum ColorAttachments[3] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2};
+    glDrawBuffers(3, ColorAttachments);
+
+    glGenRenderbuffers(1, &RenderInfo->gBufferDepthRBID);
+    glBindRenderbuffer(GL_RENDERBUFFER, RenderInfo->gBufferDepthRBID);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, SizeData.Width, SizeData.Height);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, RenderInfo->gBufferDepthRBID);
+
+    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    {
+        Check(0, "Framebuffer Failure\n");
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
 }
 
 internal void
@@ -592,90 +532,22 @@ ResetLayerData(gl_draw_frame_data *DrawFrame)
 }
 
 internal void
-CloverOpenGLRender(gl_render_info *RenderInfo, gl_draw_frame_data *DrawFrame, time_data Time)
+CloverOpenGLRender(game_memory *GameMemory, gl_render_info *RenderInfo, gl_draw_frame_data *DrawFrame, time_data Time)
 {
-
-    DrawFrame->QuadCounter = 0;
-    DrawFrame->ActiveTextureCount = 0;
-
-    DrawFrame->ZSorting = true;
-    DrawFrame->ActiveZLayer = 32;
-
-    DrawFrame->PointLightCounter = 0;
-
-    ResetLayerData(DrawFrame);
-
+    //clover_shader *BasicShader           = GetShaderFromID(GameMemory, GS_BasicShader); 
+    clover_shader *gBufferGeoShader      = GetShaderFromID(GameMemory, GS_gBufferShader);
+    clover_shader *gBufferLightingShader = GetShaderFromID(GameMemory, GS_LightingShader);
     // TODO(Sleepster): Change this ViewMatrix so that it zooms in when the screen gets larger  
-	DrawFrame->ViewMatrix 		= mat4Scale(mat4Identity(1.0f), vec3{real32(SizeData.Width / 160), real32(SizeData.Width / 160), 1.0});
-    DrawFrame->ProjectionMatrix = mat4RHGLOrtho((real32)-SizeData.Width,
-                                                (real32)SizeData.Width,
-                                                (real32)-SizeData.Height,
-                                                (real32)SizeData.Height,
-                                                -1.0f,
-                                                1.0f);
+#if 0
+	DrawFrame->SceneCamera.ViewMatrix 		= mat4Scale(mat4Identity(1.0f), vec3{real32(SizeData.Width / 160), real32(SizeData.Width / 160), 1.0});
+    DrawFrame->SceneCameraProjectionMatrix = mat4RHGLOrtho((real32)-SizeData.Width,
+                                                           (real32)SizeData.Width,
+                                                           (real32)-SizeData.Height,
+                                                           (real32)SizeData.Height,
+                                                           -1.0f,
+                                                           1.0f);
+#endif 
 #if 1
-    mat4 XForm = mat4Identity(1.0f);
-    XForm = mat4Translation(XForm, vec3{0, 32});
-    XForm = mat4Scale(XForm, vec3{16, 16, 1});
-
-    uint32 FontOptions = RENDERING_OPTION_FONT;
-
-    PushZLayer(DrawFrame, 14);
-    DrawQuadXForm(DrawFrame, XForm, {1, 1}, RED);
-
-    XForm = mat4Identity(1.0f);
-    XForm = mat4Translation(XForm, vec3{8, 32});
-
-    PushZLayer(DrawFrame, 3);
-    DrawQuad(DrawFrame, {-16, 0}, {16, 16}, BLUE);
-
-    PushZLayer(DrawFrame, 4);
-    DrawQuadTextured(DrawFrame, {32, 0}, {16, 16}, &RenderInfo->Testure, {96, 0}, {11, 11}, WHITE);
-    DrawQuad(DrawFrame, {-32, 0}, {16, 16}, WHITE);
-
-    PushZLayer(DrawFrame, 5);
-    DrawQuad(DrawFrame, {-42, 0}, {16, 16}, {0.0f, 0.2f, 0.0f, 0.3f}, 0, 1.0f);
-
-    PushZLayer(DrawFrame, 3);
-    DrawQuad(DrawFrame, {-36, -10}, {16, 16}, {0.4f, 0.0f, 0.0f, 0.6f}, 0, 0.0f);
-
-
-    attenuation_data TestLightData = {.Constant = 0.05, .Linear = 0.0009, .Quadratic = 0.001};
-    CreatePointLight(DrawFrame, vec2{-100, 0}, 20.0, 100, &TestLightData, GREEN);
-    CreatePointLight(DrawFrame, vec2{ 100, 0}, 10.0, 100, &TestLightData, BLUE);
-    CreatePointLight(DrawFrame, vec2{ 0,  -100}, 40.0, 100, &TestLightData, RED);
-    CreatePointLight(DrawFrame, vec2{ 0,   100}, 50.0, 100, &TestLightData, YELLOW);
-
-    PushZLayer(DrawFrame, 15);
-    DrawTextureXForm(DrawFrame, XForm, {16, 16}, &RenderInfo->Testure, {96, 0}, {11, 11}, WHITE, 0, 0.0f);
-    DisplayText(DrawFrame, STR("The Quick, Brown Fox Jumps Over The Lazy Dog!"), {-150, -20}, 6, GREEN, &DrawFrame->CurrentlyActiveFont, FontOptions, 0.0f);
-
-    PushZLayer(DrawFrame, 0);
-    ivec2  TileRadius   = {32, 32};
-    for(int32 TileX = 0;
-        TileX < TileRadius.X;
-        ++TileX)
-    {
-        for(int32 TileY = 0;
-            TileY < TileRadius.Y;
-            ++TileY)
-        {
-            if((TileX + (TileY % 2 == 0)) % 2 == 0)
-            {
-                real32 X = TileX * TILE_SIZE;
-                real32 Y = TileY * TILE_SIZE;
-                DrawQuad(DrawFrame, {X - (TILE_SIZE * 16), (Y - TILE_SIZE) - (TILE_SIZE * 12)}, {16, 16}, DARK_GRAY);
-            }
-            else
-            {
-                real32 X = TileX * TILE_SIZE;
-                real32 Y = TileY * TILE_SIZE;
-                DrawQuad(DrawFrame, {X - (TILE_SIZE * 16), (Y - TILE_SIZE) - (TILE_SIZE * 12)}, {16, 16}, DARKER_GRAY);
-            }
-        }
-    }
-    PopZLayer(DrawFrame);
-
     if(DrawFrame->QuadCounter > 0)
     {
         gl_vertex *VertexBufferptr = DrawFrame->glVertexBuffer;
@@ -762,19 +634,6 @@ CloverOpenGLRender(gl_render_info *RenderInfo, gl_draw_frame_data *DrawFrame, ti
 
                 if(CurrentWorkingLayer->LayerOpaqueQuadCount || CurrentWorkingLayer->LayerTransparentQuadCount) DrawFrame->ActiveLayerCounter++;
             }
-
-#if 0
-            for(uint32 LayerIndex = 0;
-                LayerIndex < MAX_LAYERS;
-                ++LayerIndex)
-            {
-                render_layer_info *CurrentWorkingLayer = &DrawFrame->Layers[LayerIndex];
-
-                cl_Info("Layer[%i]: CurrentWorkingLayer->BaseIndex = %d\n",      LayerIndex, CurrentWorkingLayer->BaseIndex);
-                cl_Info("Layer[%i]: CurrentWorkingLayer->EndingIndex = %d\n",    LayerIndex, CurrentWorkingLayer->EndingIndex);
-                cl_Info("Layer[%i]: CurrentWorkingLayer->LayerQuadCount = %d\n", LayerIndex, CurrentWorkingLayer->LayerQuadCount);
-            }
-#endif
         }
 
         for(int32 QuadIndex = 0;
@@ -897,7 +756,7 @@ CloverOpenGLRender(gl_render_info *RenderInfo, gl_draw_frame_data *DrawFrame, ti
     glBufferSubData(GL_ARRAY_BUFFER, 0, (DrawFrame->QuadCounter * 4) * sizeof(gl_vertex), DrawFrame->glVertexBuffer);
 
     glBindVertexArray(RenderInfo->PrimaryVAOID);
-    glUseProgram(DrawFrame->gBufferShader.ProgramID);
+    glUseProgram(gBufferGeoShader->ProgramID);
 
     for(int32 ActiveTextureIndex = 0;
         ActiveTextureIndex < DrawFrame->ActiveTextureCount;
@@ -910,7 +769,7 @@ CloverOpenGLRender(gl_render_info *RenderInfo, gl_draw_frame_data *DrawFrame, ti
     // TODO(Sleepster): Figure out what to actually do with this 
     Assert(DrawFrame->ActiveTextureCount <= 15);
     glActiveTexture(GL_TEXTURE0 + 16);
-    glBindTexture(GL_TEXTURE_2D, DrawFrame->CurrentlyActiveFont.FontAtlas.TextureID);
+    glBindTexture(GL_TEXTURE_2D, RenderInfo->CurrentlyActiveFont->FontAtlas.TextureID);
 
     // NOTE(Sleepster): Opaque pass
     for(uint32 LayerIndex = 0;
@@ -969,7 +828,7 @@ CloverOpenGLRender(gl_render_info *RenderInfo, gl_draw_frame_data *DrawFrame, ti
 
         glDisable(0x809D); // Disabling multisampling
 
-        glUseProgram(DrawFrame->gBufferLightingShader.ProgramID);
+        glUseProgram(gBufferLightingShader->ProgramID);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, RenderInfo->gBufferTextures[0]);
@@ -980,12 +839,12 @@ CloverOpenGLRender(gl_render_info *RenderInfo, gl_draw_frame_data *DrawFrame, ti
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, RenderInfo->gBufferTextures[2]);
 
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, DrawFrame->gBufferPointLightSBOID);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, RenderInfo->gBufferPointLightSBOID);
         glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(point_light) * DrawFrame->PointLightCounter, DrawFrame->PointLights);
 
-        glUniform1i(DrawFrame->uPointLightCountUID, DrawFrame->PointLightCounter);
-        glUniform1f(DrawFrame->uBrightnessFactorUID, RenderBrightness);
-        glUniform1f(DrawFrame->uWorldBrightnessFactorUID, CurrentWorldBrightness);
+        glUniform1i(RenderInfo->uPointLightCountUID, DrawFrame->PointLightCounter);
+        glUniform1f(RenderInfo->uBrightnessFactorUID, RenderBrightness);
+        glUniform1f(RenderInfo->uWorldBrightnessFactorUID, CurrentWorldBrightness);
 
         glDrawArrays(GL_TRIANGLES, 0, 6);
     }
@@ -1017,4 +876,15 @@ CloverOpenGLRender(gl_render_info *RenderInfo, gl_draw_frame_data *DrawFrame, ti
 #endif
 
     glFlush();
+
+    DrawFrame->QuadCounter = 0;
+    DrawFrame->ActiveTextureCount = 0;
+
+    DrawFrame->ZSorting = true;
+    DrawFrame->ActiveZLayer = 32;
+
+    DrawFrame->PointLightCounter = 0;
+    DrawFrame->WorkingTextureIndex = 0;
+
+    ResetLayerData(DrawFrame);
 }

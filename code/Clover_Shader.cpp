@@ -4,23 +4,7 @@
    $Revision: $
    $Creator: Justin Lewis $
    ======================================================================== */
-
-struct clover_shader_source_data
-{
-    string Filepath;
-    string Contents;
-    time_t LastWriteTime;
-
-    GLuint SourceID;
-    GLenum Type;
-};
-
-struct clover_shader
-{
-    clover_shader_source_data Sources[6];
-    int32                     SourceCount;
-    GLuint                    ProgramID;
-};
+#include "Clover_Shader.h"
 
 internal clover_shader_source_data
 CloverLoadShaderSourceData(memory_arena *Arena, string Filepath, GLenum Type)
@@ -80,28 +64,28 @@ CloverCleanupShaderSources(clover_shader *Shader)
 }
 
 // NOTE(Sleepster): These are basic functions to generate generic shaders
-internal clover_shader 
-CloverLoadBasicPixelShader(memory_arena *Arena, string VertexFilepath, string FragmentFilepath)
+internal clover_shader*
+CloverLoadBasicPixelShader(transient_state *TransientState, string VertexFilepath, string FragmentFilepath)
 {
-    clover_shader ReturnShader = {};
+    clover_shader *ReturnShader = PushStruct(&TransientState->GameAssets->AssetArena, clover_shader);
 
-    ReturnShader.Sources[0] = CloverLoadShaderSourceData(Arena, VertexFilepath, GL_VERTEX_SHADER);
-    ReturnShader.Sources[1] = CloverLoadShaderSourceData(Arena, FragmentFilepath, GL_FRAGMENT_SHADER);
+    ReturnShader->Sources[0] = CloverLoadShaderSourceData(&TransientState->Garbage, VertexFilepath, GL_VERTEX_SHADER);
+    ReturnShader->Sources[1] = CloverLoadShaderSourceData(&TransientState->Garbage, FragmentFilepath, GL_FRAGMENT_SHADER);
 
-    ReturnShader.ProgramID = glCreateProgram();
-    if(ReturnShader.ProgramID != 0)
+    ReturnShader->ProgramID = glCreateProgram();
+    if(ReturnShader->ProgramID != 0)
     {
-        glAttachShader(ReturnShader.ProgramID, ReturnShader.Sources[0].SourceID);
-        glAttachShader(ReturnShader.ProgramID, ReturnShader.Sources[1].SourceID);
+        glAttachShader(ReturnShader->ProgramID, ReturnShader->Sources[0].SourceID);
+        glAttachShader(ReturnShader->ProgramID, ReturnShader->Sources[1].SourceID);
 
-        glLinkProgram(ReturnShader.ProgramID);
-        CloverTestShader(ReturnShader.ProgramID, GL_PROGRAM);
+        glLinkProgram(ReturnShader->ProgramID);
+        CloverTestShader(ReturnShader->ProgramID, GL_PROGRAM);
 
-        glDetachShader(ReturnShader.ProgramID, ReturnShader.Sources[0].SourceID);
-        glDetachShader(ReturnShader.ProgramID, ReturnShader.Sources[1].SourceID);
+        glDetachShader(ReturnShader->ProgramID, ReturnShader->Sources[0].SourceID);
+        glDetachShader(ReturnShader->ProgramID, ReturnShader->Sources[1].SourceID);
 
-        glDeleteShader(ReturnShader.Sources[0].SourceID);
-        glDeleteShader(ReturnShader.Sources[1].SourceID);
+        glDeleteShader(ReturnShader->Sources[0].SourceID);
+        glDeleteShader(ReturnShader->Sources[1].SourceID);
     }
     else
     {
@@ -110,20 +94,20 @@ CloverLoadBasicPixelShader(memory_arena *Arena, string VertexFilepath, string Fr
     return(ReturnShader);
 }
 
-internal clover_shader 
-CloverLoadComputeShader(memory_arena *Arena, string ComputeFilepath)
+internal clover_shader*
+CloverLoadComputeShader(transient_state *TransientState, string ComputeFilepath)
 {
-    clover_shader Result = {};
-    Result.Sources[0] = CloverLoadShaderSourceData(Arena, ComputeFilepath, GL_COMPUTE_SHADER);
+    clover_shader *Result = PushStruct(&TransientState->GameAssets->AssetArena, clover_shader);
+    Result->Sources[0] = CloverLoadShaderSourceData(&TransientState->Garbage, ComputeFilepath, GL_COMPUTE_SHADER);
 
-    Result.ProgramID = glCreateProgram();
-    glAttachShader(Result.ProgramID, Result.Sources[0].SourceID);
+    Result->ProgramID = glCreateProgram();
+    glAttachShader(Result->ProgramID, Result->Sources[0].SourceID);
 
-    glLinkProgram(Result.ProgramID);
-    CloverTestShader(Result.ProgramID, GL_PROGRAM);
+    glLinkProgram(Result->ProgramID);
+    CloverTestShader(Result->ProgramID, GL_PROGRAM);
 
-    glDetachShader(Result.ProgramID, Result.Sources[0].SourceID);
-    glDeleteShader(Result.Sources[0].SourceID);
+    glDetachShader(Result->ProgramID, Result->Sources[0].SourceID);
+    glDeleteShader(Result->Sources[0].SourceID);
 
     return(Result);
 }

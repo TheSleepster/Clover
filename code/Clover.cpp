@@ -4,10 +4,6 @@
    $Revision: $
    $Creator: Justin Lewis $
    ======================================================================== */
-// NOTE(Sleepster): Freetype must come first due to the #define internal static inside of the intrinsics header
-#include "../data/deps/Freetype/include/ft2build.h"
-#include FT_FREETYPE_H
-
 // TODO(Sleepster): Maybe make it so that this doesn't have to be exposed to the game layer
 #ifndef STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
@@ -29,18 +25,16 @@
 #include "Clover_Platform.h"
 #include "Clover_Globals.h"
 #include "Clover_Input.h" 
-#include "Clover_Renderer.h"
-#include "Clover_UI.h"
 #include "Clover_Asset.h"
 #include "Clover_Audio.h"
 #include "shader/CommonShader.glh"
 
 // CLOVER ENGINE CPP FILES
 #include "Clover_Input.cpp"
-#include "Clover_Draw.cpp"
-#include "Clover_UI.cpp"
 #include "Clover_Audio.cpp"
 #include "Clover_Asset.cpp"
+#include "Clover_DrawingInterface.cpp"
+#include "Clover_GameUI.cpp"
 
 
 global_variable entity *Player = {};
@@ -254,7 +248,7 @@ InitGameItemSpritePairData(game_state *GameState)
 }
 
 internal inline void
-ResetGame(gl_render_data *RenderData, game_state *GameState, game_memory *GameMemory)
+ResetGame(gl_draw_frame_data *DrawFrame,  game_state *GameState, game_memory *GameMemory)
 {
     for(uint32 i = 0; i < MAX_ENTITIES; i++)
     {
@@ -338,7 +332,7 @@ SwapInventoryItems(entity_item_inventory *Inventory, item *ItemA, item *ItemB)
 }
 
 internal void
-SetupDroppedEntity(gl_render_data *RenderData, game_state *GameState, item *SelectionItem, entity *SpawnedItem)
+SetupDroppedEntity(gl_draw_frame_data *DrawFrame, game_state *GameState, item *SelectionItem, entity *SpawnedItem)
 {
     switch(SelectionItem->Archetype)
     {
@@ -383,7 +377,7 @@ SetupDroppedEntity(gl_render_data *RenderData, game_state *GameState, item *Sele
     SpawnedItem->Flags -= CAN_BE_PICKED_UP;
     SpawnedItem->DroppedFromInventoryItemCount = SelectionItem->CurrentStack;
     
-    vec2 WorldMouseCoords = TransformMouseCoords(RenderData->GameCamera.ViewMatrix, RenderData->GameCamera.ProjectionMatrix, GameState->GameInput.Keyboard.CurrentMouse, SizeData);
+    vec2 WorldMouseCoords = TransformMouseCoords(DrawFrame->ViewMatrix, DrawFrame->ProjectionMatrix, GameState->GameInput.Keyboard.CurrentMouse, SizeData);
     real32 Distance = fabsf(v2Distance(Player->Position, WorldMouseCoords));
     vec2 Direction = v2Normalize(WorldMouseCoords - Player->Position);
     
@@ -645,8 +639,9 @@ AddItemToPlayerInventory(game_state *GameState, entity *PlayerEntity, entity *Te
 }
 
 internal void
-RenderHotbarUI(game_state *GameState, transient_state *TransientState, gl_render_data *RenderData)
+RenderHotbarUI(game_state *GameState, transient_state *TransientState, gl_draw_frame_data *DrawFrame)
 {
+    #if 0
     // NOTE(Sleepster): New Hotbar UI 
     if(GameState->DisplayPlayerHotbar)
     {
@@ -779,11 +774,13 @@ RenderHotbarUI(game_state *GameState, transient_state *TransientState, gl_render
             }
         }
     }
+    #endif
 }
 
 internal void
-RenderInventoryUI(game_state *GameState, transient_state *TransientState, gl_render_data *RenderData)
+RenderInventoryUI(game_state *GameState, transient_state *TransientState, gl_draw_frame_data *RenderData)
 {
+    #if 0
     if(GameState->DisplayPlayerInventory)
     {
         const real32 InventoryYOffset = -70.0f;
@@ -896,12 +893,13 @@ RenderInventoryUI(game_state *GameState, transient_state *TransientState, gl_ren
             }
         }
     }
+    #endif 
 }
 
 extern
 GAME_ON_AWAKE(GameOnAwake)
 {
-    ResetGame(RenderData, GameState, GameMemory);
+    ResetGame(DrawFrame, GameState, GameMemory);
     InitGameSpriteData(GameState);
     InitGameItemData(GameState);
     InitGameItemSpritePairData(GameState);
@@ -1003,35 +1001,24 @@ GAME_FIXED_UPDATE(GameFixedUpdate)
 extern
 GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
 {
+    SizeData = SizeDataIn;
     TransientState->SelectedEntityThisFrame = {};
     // MATRICES
     {
         // NOTE(Sleepster): GAME 
-        RenderData->GameCamera.Zoom = 5.3f;
+        DrawFrame->SceneCamera.Zoom = 5.3f;
         
-        mat4 ScaleMatrix                              = mat4MakeScale(vec3{1.0f * RenderData->GameCamera.Zoom, 1.0f * RenderData->GameCamera.Zoom, 1.0f});
-        mat4 TranslationMatrix                        = mat4Translate(vec3{-RenderData->GameCamera.Position.X, -RenderData->GameCamera.Position.Y, 0.0f});
+        mat4 ScaleMatrix                              = mat4MakeScale(vec3{1.0f * DrawFrame->SceneCamera.Zoom, 1.0f * DrawFrame->SceneCamera.Zoom, 1.0f});
+        mat4 TranslationMatrix                        = mat4Translate(vec3{-DrawFrame->SceneCamera.Position.X, -DrawFrame->SceneCamera.Position.Y, 0.0f});
         
-        RenderData->GameCamera.ViewMatrix             = mat4Identity(1.0f);
-        RenderData->GameCamera.ViewMatrix             = mat4Multiply(TranslationMatrix, RenderData->GameCamera.ViewMatrix);
-        RenderData->GameCamera.ViewMatrix             = mat4Multiply(ScaleMatrix, RenderData->GameCamera.ViewMatrix);
-        RenderData->GameCamera.ProjectionMatrix       = mat4RHGLOrtho((real32)SizeData.Width * -0.5f, (real32)SizeData.Width * 0.5f, (real32)SizeData.Height * -0.5f, (real32)SizeData.Height * 0.5f, -1.0f, 1.0f); 
-        RenderData->GameCamera.ProjectionViewMatrix   = mat4Multiply(RenderData->GameCamera.ProjectionMatrix, RenderData->GameCamera.ViewMatrix);        
-        
-        // NOTE(Sleepster): UI
-        RenderData->GameUICamera.ProjectionMatrix     = mat4RHGLOrtho((real32)SizeData.Width * -0.5f, (real32)SizeData.Width * 0.5f, (real32)SizeData.Height * -0.5f, (real32)SizeData.Height * 0.5f, -1.0f, 1.0f); 
-        RenderData->GameUICamera.ViewMatrix           = mat4Multiply(mat4Identity(1.0f), ScaleMatrix);
-        RenderData->GameUICamera.ProjectionViewMatrix = mat4Multiply(RenderData->GameUICamera.ProjectionMatrix, RenderData->GameUICamera.ViewMatrix);
-        
-        GameState->UIContext.UICameraViewMatrix       = RenderData->GameUICamera.ViewMatrix;
-        GameState->UIContext.UICameraProjectionMatrix = RenderData->GameUICamera.ProjectionMatrix;
-        GameState->UIContext.GameInput                = &GameState->GameInput;
-        GameState->UIContext.ActiveFont               = TransientState->GameAssets->Fonts[GF_UbuntuMono].Font;
-        GameState->UIContext.ActiveFontIndex          = GF_UbuntuMono;
+        DrawFrame->SceneCamera.ViewMatrix             = mat4Identity(1.0f);
+        DrawFrame->SceneCamera.ViewMatrix             = mat4Multiply(TranslationMatrix, DrawFrame->SceneCamera.ViewMatrix);
+        DrawFrame->SceneCamera.ViewMatrix             = mat4Multiply(ScaleMatrix, DrawFrame->SceneCamera.ViewMatrix);
+        DrawFrame->SceneCamera.ProjectionMatrix       = mat4RHGLOrtho((real32)SizeData.Width * -0.5f, (real32)SizeData.Width * 0.5f, (real32)SizeData.Height * -0.5f, (real32)SizeData.Height * 0.5f, -1.0f, 1.0f); 
     }
     
-    vec2 MouseToWorld  = TransformMouseCoords(RenderData->GameCamera.ViewMatrix, 
-                                              RenderData->GameCamera.ProjectionMatrix, 
+    vec2 MouseToWorld  = TransformMouseCoords(DrawFrame->SceneCamera.ViewMatrix, 
+                                              DrawFrame->SceneCamera.ProjectionMatrix, 
                                               GameState->GameInput.Keyboard.CurrentMouse, 
                                               SizeData);
     
@@ -1085,7 +1072,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                                 entity *CreatedEntity = CreateEntity(GameState);
                                 item DroppedItem = GameState->GameData.GameItems[Temp->EntityDrops[DropCount].DroppedItem];
                                 
-                                SetupDroppedEntity(RenderData, GameState, &DroppedItem, CreatedEntity);
+                                SetupDroppedEntity(DrawFrame, GameState, &DroppedItem, CreatedEntity);
                                 CreatedEntity->Position = Temp->Position;
                                 CreatedEntity->Target   = Temp->Position;
                             }
@@ -1101,9 +1088,9 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
         }
     }
 
-    RenderHotbarUI(GameState, TransientState, RenderData);
-    RenderInventoryUI(GameState, TransientState, RenderData);
-    
+    //RenderHotbarUI(GameState, TransientState, RenderData);
+    //RenderInventoryUI(GameState, TransientState, RenderData);
+#if 0    
     // NOTE(Sleepster): Swapping Inventory Positions 
     for(uint32 InventoryIndexSlot = 0;
         InventoryIndexSlot < TOTAL_INVENTORY_SIZE;
@@ -1147,10 +1134,6 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             if((Player->Inventory.SelectedInventoryItem && Player->Inventory.SelectedInventoryItem->Sprite != SPRITE_Nil))
             {
                 item *Selection = Player->Inventory.SelectedInventoryItem;
-                vec2 MousePos = TransformMouseCoords(RenderData->GameUICamera.ViewMatrix, 
-                                                     RenderData->GameUICamera.ProjectionMatrix, 
-                                                     GameState->GameInput.Keyboard.CurrentMouse, 
-                                                     SizeData);
                 
                 static_sprite_data SelectionSprite = GetSprite(GameState, Selection->Sprite);
                 
@@ -1328,7 +1311,6 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                     CloverUISpriteElement(&GameState->UIContext, {0, 0}, {0, 0}, XForm, Sprite, WHITE);
 
                     CloverUIMakeTextElement(&GameState->UIContext, sprints(&TransientState->Garbage, STR("%d/%d"), InventoryCount[MaterialIndex], Material->RequiredCount), {10, NewYOffset + 5}, 10, TEXT_ALIGNMENT_Center, BLACK);
-                    
                     CloverUIPushLayer(&GameState->UIContext, 0);
                 }
                 
@@ -1709,24 +1691,34 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             }
         }
     }
-    
-    
-    // TRANSPARENCY TEST
+#endif    
+    PushZLayer(DrawFrame, 8);
+    //ivec2  TileRadius   = {32, 32};
+    ivec2  PlayerOffset = WorldToTilePos(Player->Position);
+    ivec2  TileRadius   = {14, 16};
+    for(int32 TileX = PlayerOffset.X - TileRadius.X;
+        TileX < PlayerOffset.X + TileRadius.X;
+        ++TileX)
     {
-        mat4 Identity  = mat4Identity(1.0f);
-        mat4 Translate = mat4Multiply(Identity, mat4Translate(vec3{10.0f, 10.0f, 0.0f}));
-        mat4 Scale     = mat4Multiply(Identity, mat4MakeScale(vec3{100.0f, 100.0f, 1.0f}));
-        
-        mat4 Total = Translate * Scale;
-        DrawRectXForm(RenderData, Total, {16, 16}, 0, vec4{1.0f, 0.0f, 1.0f, 0.3f});
+        for(int32 TileY = PlayerOffset.Y - TileRadius.Y;
+            TileY < PlayerOffset.Y + TileRadius.Y;
+            ++TileY)
+        {
+            if((TileX + (TileY % 2 == 0)) % 2 == 0)
+            {
+                real32 X = TileX * TILE_SIZE;
+                real32 Y = TileY * TILE_SIZE;
+                DrawQuad(DrawFrame, {X, (Y - TILE_SIZE) - (TILE_SIZE)}, {16, 16}, DARK_GRAY);
+            }
+            else
+            {
+                real32 X = TileX * TILE_SIZE;
+                real32 Y = TileY * TILE_SIZE;
+                DrawQuad(DrawFrame, {X, (Y - TILE_SIZE) - (TILE_SIZE)}, {16, 16}, DARKER_GRAY);
+            }
+        }
     }
-    
-    
-    // NOTE(Sleepster): Sorting, off for now. Breaks too much 
-    {
-        //qsort(GameState->World.Entities, GameState->World.EntityCounter, sizeof(struct entity), CompareEntityYAxis); 
-    }
-    
+
     for(uint32 EntityIndex = 0;
         EntityIndex <= GameState->World.EntityCounter;
         ++EntityIndex)
@@ -1738,7 +1730,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             real32 PlayerToObjectDistance = fabsf(v2Distance(Temp->Position, Player->Position));
             if(Distance <= SelectionDistance && PlayerToObjectDistance <= MaxHitRange)
             {
-                if(!TransientState->SelectedEntityThisFrame || (Distance < MinimumDistance))
+                if(!TransientState->SelectedEntityThisFrame || (Distance < MinimumDistance) || (Temp->EntityID != TransientState->SelectedEntityThisFrame->EntityID))
                 {
                     TransientState->SelectedEntityThisFrame = Temp;
                     MinimumDistance = Distance;
@@ -1746,37 +1738,13 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
             }
         }
     }
-    
-    // NOTE(Sleepster): DRAW FLOOR TILES
-    ivec2  PlayerOffset = WorldToTilePos(Player->Position);
-    ivec2  TileRadius   = {14, 16};
-    
-    for(int32 TileX = PlayerOffset.X - TileRadius.X;
-        TileX < PlayerOffset.X + TileRadius.Y;
-        ++TileX)
-    {
-        for(int32 TileY = PlayerOffset.Y - TileRadius.Y;
-            TileY < PlayerOffset.Y + TileRadius.Y;
-            ++TileY)
-        {
-            if((TileX + (TileY % 2 == 0)) % 2 == 0)
-            {
-                real32 X = TileX * TILE_SIZE;
-                real32 Y = TileY * TILE_SIZE;
-                DrawQuadTextured(RenderData, {X, Y - (TILE_SIZE)}, vec2{16, 16}, ivec2{0, 0}, ivec2{16, 16}, 0, DARK_GRAY, 0, 0);
-            }
-            else
-            {
-                real32 X = TileX * TILE_SIZE;
-                real32 Y = TileY * TILE_SIZE;
-                DrawQuadTextured(RenderData, {X, Y - (TILE_SIZE)}, vec2{16, 16}, ivec2{0, 0}, ivec2{16, 16}, 0, DARKER_GRAY, 0, 0);
-            }
-        }
-    }
+
     
     attenuation_data TestLightData = {.Constant = 0.05, .Linear = 0.0009, .Quadratic = 0.001};
-    CreatePointLight(RenderData, TransientState, vec2{ 80, 80}, 2.0, 100, &TestLightData, RED);
-    CreatePointLight(RenderData, TransientState, vec2{-80, 80}, 2.0, 100, &TestLightData, WHITE);
+    CreatePointLight(DrawFrame, vec2{ 80, 80}, 2.0, 100, &TestLightData, RED);
+    CreatePointLight(DrawFrame, vec2{-80, 80}, 2.0, 100, &TestLightData, WHITE);
+
+    clover_texture *Texture = GetTextureFromID(GameMemory, GT_GameAtlas);
     
     // NOTE(Sleepster): DRAW ENTITIES
     vec2 SelectionBoxDrawSize = {16, 16};
@@ -1796,20 +1764,15 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                 {
                     Player = Temp;
                     HandleInput(GameState, Temp, Time);
-                    RenderData->GameCamera.Target = Temp->Position;
+                    DrawFrame->SceneCamera.Target = Temp->Position;
                     
-                    v2Approach(&RenderData->GameCamera.Position, RenderData->GameCamera.Target, 5.0f, Time.Delta);
-                    quad *PlayerQuad = DrawEntity(RenderData, GameState, Temp, Temp->Position, WHITE);
-                    
-                    mat4 XForm = mat4Identity(1.0f);
-                    XForm = mat4Translation(XForm, vec3{PlayerQuad->Position.X, PlayerQuad->Position.Y - 2, -0.0f});
-                    XForm = mat4Scale(XForm, vec3{14, 2, 1});
-
-                    DrawRectXForm(RenderData, XForm, vec2{0}, 0, vec4{1.0f, 0.0f, 0.0f, 1.0f});
-                    DrawRectXForm(RenderData, XForm, vec2{0}, 0, vec4{0.1f, 0.1f, 0.1f, 0.1f});
+                    PushZLayer(DrawFrame, 9);
+                    v2Approach(&DrawFrame->SceneCamera.Position, DrawFrame->SceneCamera.Target, 5.0f, Time.Delta);
+                    DrawEntity(DrawFrame, GameState, Temp, v2Cast(GetSprite(GameState, Temp->Sprite).SpriteSize), WHITE, Texture);
                 }break;
                 default:
                 {
+                    PushZLayer(DrawFrame, 10);
                     if(Temp->Flags & IS_ITEM)
                     {
                         v2Approach(&Temp->Position, Temp->Target, 5.0f, Time.Delta);
@@ -1826,16 +1789,16 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
                         static_sprite_data SelectionBoxSprite = GetSprite(GameState, SPRITE_SelectionBox);
                         static_sprite_data EntitySprite = GetSprite(GameState, Temp->Sprite);
                         
-                        DrawSprite(RenderData,
+                        DrawSprite(DrawFrame,
                                    SelectionBoxSprite, 
                                    Temp->Position 
                                    - vec2{0, real32(EntitySprite.SpriteSize.Y * 0.25f)},
                                    SelectionBoxDrawSize, 
                                    WHITE, 
-                                   0, 
-                                   0);
+                                   Texture);
                     }
-                    DrawEntity(RenderData, GameState, Temp, Temp->Position, WHITE);
+
+                    DrawEntity(DrawFrame, GameState, Temp, v2Cast(GetSprite(GameState, Temp->Sprite).SpriteSize), WHITE, Texture);
                 }break;
             }
         }
@@ -1846,6 +1809,7 @@ GAME_UPDATE_AND_DRAW(GameUpdateAndDraw)
         GameState->GameInput.Controller.LeftRumble = 1000;
         GameState->GameInput.Controller.RightRumble = 1000;
     }
+    PopZLayer(DrawFrame);
 }
 
 extern

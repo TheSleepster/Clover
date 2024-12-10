@@ -12,6 +12,7 @@
 
 // PLATFORM DATA
 global_variable ivec4  SizeData = {0, 0, 1920, 1080};
+global_variable ivec4  OldSizeData = ivec4{0};
 global_variable bool32 Running  = 0;
 
 constexpr uint32 SampleRate = 48000;

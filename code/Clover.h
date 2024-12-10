@@ -12,10 +12,16 @@
 #include "util/Pairs.h"
 
 #include "Clover_Input.h"
-#include "Clover_Renderer.h"
-#include "Clover_UI.h"
 #include "Clover_Asset.h"
 #include "Clover_Audio.h"
+
+struct static_sprite_data
+{
+    ivec2 AtlasOffset;
+    ivec2 SpriteSize;
+
+    uint32 TextureID;
+};
 
 struct box2D : range_v2
 {
@@ -157,7 +163,7 @@ struct entity_item_inventory
     
     item *SelectedHotbarItem;
     
-    ui_element *InventorySlotButtons[TOTAL_INVENTORY_SIZE];
+    //ui_element *InventorySlotButtons[TOTAL_INVENTORY_SIZE];
     uint32 CurrentInventorySlot;
 };
 
@@ -229,7 +235,7 @@ struct game_state
     
     input             GameInput;
     
-    clover_ui_context UIContext;
+    //clover_ui_context UIContext;
     game_ui_state     GameUIState;
     
     // TODO(Sleepster): Get Rid of these bool32s 
@@ -338,11 +344,11 @@ IsRangeWithinBounds(vec2 Test, range_v2 Bounds)
 }
 
 internal inline range_v2
-RangeFromQuad(quad *Quad)
+RangeFromQuad(render_quad *Quad)
 {
     range_v2 Result = {};
-    Result.Min = Quad->TopLeft.Position.XY;
-    Result.Max = Quad->TopRight.Position.XY;
+    Result.Min = Quad->Position;
+    Result.Max = Quad->Position + Quad->RenderSize;
     
     return(Result);
 }

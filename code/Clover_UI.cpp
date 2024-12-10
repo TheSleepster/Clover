@@ -16,7 +16,6 @@
 // CLOVER HEADERS
 #include "Clover.h"
 #include "Clover_Globals.h"
-#include "Clover_Renderer.h"
 #include "Clover_Input.h"
 #include "Clover_UI.h"
 

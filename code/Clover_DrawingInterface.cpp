@@ -5,7 +5,7 @@
    $Creator: Justin Lewis $
    ======================================================================== */
 internal bool32
-AddTextureToBoundList(gl_draw_frame_data *DrawFrame, GLuint TextureID)
+AddTextureToBoundList(gl_draw_frame_data *DrawFrame, uint32 TextureID)
 {
     for(int32 TextureIndex = 0;
         TextureIndex < DrawFrame->ActiveTextureCount;
@@ -51,6 +51,9 @@ CreateRenderQuad(gl_draw_frame_data *DrawFrame,
     Quad.BottomLeft.WorldPosition  = v2Expand(vec2{Left, Bottom}, 0, 1);
     Quad.BottomRight.WorldPosition = v2Expand(vec2{Right, Bottom}, 0, 1);
 
+    Quad.Position   = WorldPosition;
+    Quad.RenderSize = RenderSize;
+
     if(Texture)
     {
         Quad.BoundTextureID = Texture->TextureID;
@@ -80,8 +83,7 @@ CreateRenderQuad(gl_draw_frame_data *DrawFrame,
         Quad.Elements[Index].Normals = vec3{0.0, 0.0, 1};
         Quad.Elements[Index].LitFactor = LitFactor;
     }
-
-    return(Quad);
+   return(Quad);
 }
 
 internal inline void
@@ -127,12 +129,12 @@ internal render_quad*
 DrawQuadInView(gl_draw_frame_data *DrawFrame, render_quad Quad)
 {
     // TODO(Sleepster): This may be expensive and unnecessary 
-	mat4 WorldToClip = mat4Multiply(DrawFrame->ProjectionMatrix, DrawFrame->ViewMatrix);
+	mat4 WorldToClip = mat4Multiply(DrawFrame->SceneCamera.ProjectionMatrix, DrawFrame->SceneCamera.ViewMatrix);
     return(DrawQuadProjected(DrawFrame, Quad, WorldToClip));
 }
 
 internal render_quad*
-DrawQuad(gl_draw_frame_data *DrawFrame, vec2 Position, vec2 Size, vec4 Color, uint32 RenderingOptions, real32 LitFactor)
+DrawQuad(gl_draw_frame_data *DrawFrame, vec2 Position, vec2 Size, vec4 Color, uint32 RenderingOptions = 0, real32 LitFactor = 1.0f)
 {
     render_quad Quad = CreateRenderQuad(DrawFrame, Position, Size, 0, {0, 0}, {16, 16}, -1, Color, DrawFrame->ActiveZLayer, RenderingOptions, LitFactor);
     return(DrawQuadInView(DrawFrame, Quad));
@@ -146,8 +148,8 @@ DrawQuadTextured(gl_draw_frame_data *DrawFrame,
                  ivec2               AtlasOffset,
                  ivec2               SpriteSize,
                  vec4                Color,
-                 uint32              RenderingOptions,
-                 real32              LitFactor)
+                 uint32              RenderingOptions = 0,
+                 real32              LitFactor = 1.0f)
 {
     AddTextureToBoundList(DrawFrame, Texture->TextureID);
     render_quad Quad = CreateRenderQuad(DrawFrame,
@@ -170,15 +172,15 @@ internal render_quad *
 DrawQuadXFormInFrame(gl_draw_frame_data *DrawFrame, render_quad Quad, mat4 XForm)
 {
     mat4 WorldToClip = mat4Identity(1.0f);
-    WorldToClip = mat4Multiply(WorldToClip, DrawFrame->ProjectionMatrix);
-    WorldToClip = mat4Multiply(WorldToClip, DrawFrame->ViewMatrix);
+    WorldToClip = mat4Multiply(WorldToClip, DrawFrame->SceneCamera.ProjectionMatrix);
+    WorldToClip = mat4Multiply(WorldToClip, DrawFrame->SceneCamera.ViewMatrix);
     WorldToClip = mat4Multiply(WorldToClip, XForm);
 
     return(DrawQuadProjected(DrawFrame, Quad, WorldToClip));
 }
 
 internal render_quad*
-DrawQuadXForm(gl_draw_frame_data *DrawFrame, mat4 XForm, vec2 RenderSize, vec4 Color, uint32 RenderingOptions, real32 LitFactor)
+DrawQuadXForm(gl_draw_frame_data *DrawFrame, mat4 XForm, vec2 RenderSize, vec4 Color, uint32 RenderingOptions = 0, real32 LitFactor = 1.0f)
 {
     vec4 WorldPosition = PositionFromMat4(XForm);
     render_quad Quad = CreateRenderQuad(DrawFrame, {WorldPosition.X, WorldPosition.Y}, RenderSize, 0, {0, 0}, {16, 16}, -1, Color, DrawFrame->ActiveZLayer, RenderingOptions, LitFactor);
@@ -221,7 +223,6 @@ DisplayText(gl_draw_frame_data *DrawFrame,
             clover_font_data   *FontID,
             uint32              RenderingOptions,
             real32              LitFactor)
-            //font_id             FontID = GF_UbuntuMono,
 {
     clover_font_data *Font = FontID;
     Assert(Font->SizeOnLoad != 0);
@@ -280,6 +281,25 @@ CreatePointLight(gl_draw_frame_data *DrawFrame,
     Light->Attenuation    = *Attenuation;
 
     return(Light);
+}
+
+internal inline static_sprite_data
+GetSprite(game_state *State, sprite_type Sprite)
+{
+    return(State->GameData.Sprites[Sprite]);
+}
+
+internal render_quad*
+DrawSprite(gl_draw_frame_data *DrawFrame, static_sprite_data SpriteData, vec2 Position, vec2 Size, vec4 Color, clover_texture *Texture, uint32 RenderingOptions = 0, real32 LitFactor = 1.0f)
+{
+    return(DrawQuadTextured(DrawFrame, Position, Size, Texture, SpriteData.AtlasOffset, SpriteData.SpriteSize, Color, RenderingOptions, LitFactor));
+}
+
+internal render_quad*
+DrawEntity(gl_draw_frame_data *DrawFrame, game_state *GameState, entity *Entity, vec2 Size, vec4 Color, clover_texture *Texture, uint32 RenderingOptions = 0, real32 LitFactor = 1.0f)
+{
+    static_sprite_data SpriteData = GetSprite(GameState, Entity->Sprite);
+    return(DrawQuadTextured(DrawFrame, Entity->Position, Size, Texture, SpriteData.AtlasOffset, SpriteData.SpriteSize, Color, RenderingOptions, LitFactor));
 }
 
 internal inline void

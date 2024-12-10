@@ -19,9 +19,14 @@
 // CLOVER HEADERS
 #include "Clover.h"
 #include "Clover_Globals.h"
-#include "Clover_Renderer.h"
 #include "Clover_Input.h"
 #include "Clover_Asset.h"
+
+struct static_sprite_data
+{
+    ivec2 AtlasOffset;
+    ivec2 SpriteSize;
+};
 
 enum ui_layer
 {
@@ -116,7 +121,7 @@ struct clover_ui_context
     mat4 UICameraProjectionMatrix;
     
     input     *GameInput;
-    font_data *ActiveFont;
+    clover_font_data *ActiveFont;
     font_id    ActiveFontIndex;
     real32     LastActiveFontSize;
     

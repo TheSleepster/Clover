@@ -9,9 +9,8 @@
 #define CLOVER_ASSET_H
 
 #include "Clover_Input.h"
-#include "Clover_Renderer.h"
-#include "Clover_UI.h"
 #include "Clover_Audio.h"
+#include "Clover_Rendering.h"
 
 typedef uint64 asset_id;
 
@@ -28,8 +27,9 @@ enum shader_id
 {
     GS_NullShader,
     GS_BasicShader,
-    GS_GBufferShader,
+    GS_gBufferShader,
     GS_LightingShader,
+    GS_TestComputeShader,
     GS_ShaderIDCount,
 };
 
@@ -70,10 +70,10 @@ struct asset_slot
     asset_state SlotState;
     union
     {
-        texture2d    *Texture;
-        font_data    *Font;
-        loaded_sound *Sound;
-        shader       *Shader;
+        clover_texture      *Texture;
+        clover_font_data    *Font;
+        loaded_sound        *Sound;
+        clover_shader       *Shader;
     };
 };
 
@@ -97,7 +97,7 @@ struct game_assets
     asset_slot              Fonts[GF_FontIDCount];
 
     uint32                  ShaderCount;
-    shader                  Shaders[GS_ShaderIDCount];
+    asset_slot              Shaders[GS_ShaderIDCount];
 
     uint32                  SoundCount;
     asset_slot              Sounds[GSFX_IDCount];
@@ -121,7 +121,7 @@ const pair<uint32, string> FontFilepaths[] =
     pair<uint32, string>(GF_LiberationMono,          STR("../data/res/fonts/LiberationMono-Regular.ttf")),
 };
 
-const pair<uint32, string>SoundFilepaths[] = 
+const pair<uint32, string> SoundFilepaths[] = 
 {
     pair<uint32, string>(GSFX_NullSound,             STR("")),
     pair<uint32, string>(GSFX_SunkenSeaTheme,        STR("../data/res/sounds/Test.wav")),

@@ -17,7 +17,6 @@
 #include "util/Pairs.h"
 
 #include "Clover.h"
-#include "Clover_Renderer.h"
 
 struct platform_work_queue;
 #define PLATFORM_JOB_ENTRY_CALLBACK(name) void name(platform_work_queue *Queue, void *Data)
@@ -87,19 +86,19 @@ GetRandomReal32_Range(real32 Minimum, real32 Maximum)
 }
 
 
-#define GAME_ON_AWAKE(name) void name(game_memory *GameMemory, gl_render_data *RenderData, game_state *GameState, transient_state *TransientState)
+#define GAME_ON_AWAKE(name) void name(game_memory *GameMemory, gl_draw_frame_data *DrawFrame, game_state *GameState, transient_state *TransientState)
 typedef GAME_ON_AWAKE(game_on_awake);
 GAME_ON_AWAKE(GameOnAwakeStub)
 {
 }
 
-#define GAME_FIXED_UPDATE(name) void name(game_memory *GameMemory, gl_render_data *RenderData, game_state *GameState, transient_state *TransientState, time_data Time)
+#define GAME_FIXED_UPDATE(name) void name(game_memory *GameMemory, gl_draw_frame_data *DrawFrame, game_state *GameState, transient_state *TransientState, time_data Time)
 typedef GAME_FIXED_UPDATE(game_fixed_update);
 GAME_FIXED_UPDATE(GameFixedUpdateStub)
 {
 }
 
-#define GAME_UPDATE_AND_DRAW(name) void name(game_memory *GameMemory, gl_render_data *RenderData, game_state *GameState, transient_state *TransientState, time_data Time, ivec4 SizeDataIn)
+#define GAME_UPDATE_AND_DRAW(name) void name(game_memory *GameMemory, gl_draw_frame_data *DrawFrame, game_state *GameState, transient_state *TransientState, time_data Time, ivec4 SizeDataIn)
 typedef GAME_UPDATE_AND_DRAW(game_update_and_draw);
 GAME_UPDATE_AND_DRAW(GameUpdateAndDrawStub)
 {

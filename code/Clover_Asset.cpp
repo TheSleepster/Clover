@@ -16,7 +16,6 @@
 
 #include "Clover_Asset.h"
 #include "Clover_Platform.h"
-#include "Clover_Renderer.h"
 #include "Clover.h"
 
 struct load_texture_job
@@ -56,9 +55,9 @@ PLATFORM_JOB_ENTRY_CALLBACK(LoadTextureCallback)
     if(LoadTextureJob && LoadTextureJob->TextureSlot->SlotState == AssetState_Queued)
     {
         LoadTextureJob->TextureSlot->Texture->RawData = (char *)stbi_load((const char *)LoadTextureJob->Filepath.Data, 
-                &LoadTextureJob->TextureSlot->Texture->TextureData.Width, 
-                &LoadTextureJob->TextureSlot->Texture->TextureData.Height, 
-                &LoadTextureJob->TextureSlot->Texture->TextureData.Channels, 
+                &LoadTextureJob->TextureSlot->Texture->TextureChannelData.Width, 
+                &LoadTextureJob->TextureSlot->Texture->TextureChannelData.Height, 
+                &LoadTextureJob->TextureSlot->Texture->TextureChannelData.Channels, 
                 4);
         LoadTextureJob->TextureSlot->Texture->Filepath = LoadTextureJob->Filepath;
     }
@@ -73,7 +72,7 @@ PLATFORM_JOB_ENTRY_CALLBACK(LoadFontDataCallback)
     {
         asset_slot *FontSlot = FontJob->FontSlot;
         FontSlot->Font->RawData = 
-            CloverLoadSDFFontData(FontJob->Assets->TransientState, FontJob->FontSlot->Font, FontJob->Filepath, FontJob->FontSize);
+            CloverLoadFontData(&FontJob->Assets->TransientState->Garbage, FontJob->FontSlot->Font, FontJob->Filepath, FontJob->FontSize);
     }
 }
 
@@ -92,28 +91,13 @@ PLATFORM_JOB_ENTRY_CALLBACK(LoadSoundDataCallback)
 }
 
 
-internal inline shader*
-GetShaderFromID(game_memory *GameMemory, shader_id ID)
-{
-    transient_state *TransientState = (transient_state *)GameMemory->TransientStorage.MemoryBlock;
-    shader *ShaderSlot = &TransientState->GameAssets->Shaders[ID];
-    if(ShaderSlot->ShaderState == AssetState_Loaded)
-    {
-        return(ShaderSlot);
-    }
-    else
-    {
-        return(0);
-    }
-}
-
-internal inline texture2d*
+internal inline clover_texture*
 PushTextureForRendering(game_memory *GameMemory, asset_slot *TextureSlot, texture_id ID)
 {
     if(TextureSlot->SlotState == AssetState_Unloaded)
     {
         transient_state *TransientState = (transient_state *)GameMemory->TransientStorage.MemoryBlock;
-        TextureSlot->Texture = PushStruct(&TransientState->GameAssets->AssetArena, texture2d);
+        TextureSlot->Texture = PushStruct(&TransientState->GameAssets->AssetArena, clover_texture);
 
         load_texture_job *TextureLoadJob = PushStruct(&TransientState->Garbage, load_texture_job);
         TextureLoadJob->TextureSlot = TextureSlot;
@@ -131,7 +115,7 @@ PushTextureForRendering(game_memory *GameMemory, asset_slot *TextureSlot, textur
     }
 }
 
-internal inline texture2d*
+internal inline clover_texture*
 GetTextureFromID(game_memory *GameMemory, texture_id ID)
 {
     transient_state *TransientState = (transient_state *)GameMemory->TransientStorage.MemoryBlock;
@@ -148,13 +132,13 @@ GetTextureFromID(game_memory *GameMemory, texture_id ID)
     return(0);
 }
 
-internal inline font_data*
+internal inline clover_font_data*
 CloverLoadFontForUse(game_memory *GameMemory, asset_slot *FontSlot, uint32 Size, font_id ID)
 {
     if(FontSlot->SlotState == AssetState_Unloaded)
     {
         transient_state *TransientState = (transient_state *)GameMemory->TransientStorage.MemoryBlock;
-        FontSlot->Font = PushStruct(&TransientState->GameAssets->AssetArena, font_data);
+        FontSlot->Font = PushStruct(&TransientState->GameAssets->AssetArena, clover_font_data);
 
         load_font_job *FontJob = PushStruct(&TransientState->Garbage, load_font_job);
         FontJob->Assets = TransientState->GameAssets;
@@ -173,7 +157,7 @@ CloverLoadFontForUse(game_memory *GameMemory, asset_slot *FontSlot, uint32 Size,
     }
 }
 
-internal font_data*
+internal clover_font_data*
 GetFontFromID(game_memory *GameMemory, uint32 Size, font_id ID)
 {
     transient_state *TransientState = (transient_state *)GameMemory->TransientStorage.MemoryBlock;
@@ -189,8 +173,6 @@ GetFontFromID(game_memory *GameMemory, uint32 Size, font_id ID)
     }
     return(0);
 }
-
-constexpr uint32 TWO_SECONDS = 48000*2;
 
 internal loaded_sound*
 LoadSoundFromID(game_memory *GameMemory, soundfx_id ID, 
@@ -232,4 +214,13 @@ GetSoundFromID(transient_state *TransientState, soundfx_id ID)
     {
         return(0);
     }
+}
+
+internal clover_shader*
+GetShaderFromID(game_memory *GameMemory, shader_id ID)
+{
+    transient_state *TransientState = (transient_state *)GameMemory->TransientStorage.MemoryBlock;
+    asset_slot *ShaderSlot = &TransientState->GameAssets->Shaders[ID];
+
+    return(ShaderSlot->Shader);
 }

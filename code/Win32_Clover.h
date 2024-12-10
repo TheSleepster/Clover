@@ -14,7 +14,6 @@
 #include "util/FileIO.h"
 #include "util/String.h"
 
-#include "Clover_Renderer.h"
 #include "Clover_Platform.h"
 
 #define NOMINMAX

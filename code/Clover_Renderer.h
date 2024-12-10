@@ -2,6 +2,7 @@
 
 #ifndef CLOVER_RENDERER_H
 #define CLOVER_RENDERER_H
+#if 0
 
 // NOTE(Sleepster): Freetype must come first due to the #define internal static inside of the intrinsics header
 #include "../data/deps/Freetype/include/ft2build.h"
@@ -32,12 +33,6 @@ struct transient_state;
 
 // TODO(Sleepster): Fix this, this is stupid
 enum   asset_state;
-
-struct static_sprite_data
-{
-    ivec2 AtlasOffset;
-    ivec2 SpriteSize;
-};
 
 struct texture2d
 {
@@ -105,7 +100,7 @@ struct shader
     asset_state      ShaderState;    
 };
 
-struct orthocamera2d
+struct camera2d
 {
     real32 Zoom;
     vec2   Position;
@@ -113,7 +108,6 @@ struct orthocamera2d
     
     mat4   ViewMatrix;
     mat4   ProjectionMatrix;
-    mat4   ProjectionViewMatrix;
 };
 
 struct material_data
@@ -188,6 +182,8 @@ struct draw_frame_data
 
     bool32      EnableZLayering;
     bool32      EnableZSorting;
+
+    camera2d    SceneCamera;
 };
 
 // TODO(Sleepster): Figure out a better way to store our textures and shaders
@@ -301,5 +297,6 @@ void             CloverLoadTexture(transient_state *TransientState, texture2d *T
 void             CloverReloadTexture(texture2d *TextureInfo, uint32 TextureIndex);
 char *           CloverLoadSDFFontData(transient_state *TransientState, font_data *NewFont, string Filepath, uint32 FontSize);
 void             CloverLoadSDFFont(transient_state *TransientState, font_data *NewFont, string Filepath, uint32 FontSize);
+#endif
 
 #endif // _CLOVER_RENDERER_H

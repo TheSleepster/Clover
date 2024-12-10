@@ -3381,6 +3381,12 @@ static inline vec4 operator-(vec4 In)
     return Result;
 }
 
+static inline bool
+operator!=(ivec4 A, ivec4 B)
+{
+    return(!((A.X == B.X) && (A.Y == B.Y) && (A.Width == B.Width) && (A.Height == B.Height)));
+}
+
 static inline 
 float NormalizeClamp(float value) 
 {
